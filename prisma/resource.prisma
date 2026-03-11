@@ -1,0 +1,19 @@
+model Resource {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String
+  designation String
+  password    String   // Store the hashed password here
+  role        Role
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  MANAGER
+  DEV
+  TESTER
+  DESIGNER
+  HR
+  BIZ_DEV
+}
