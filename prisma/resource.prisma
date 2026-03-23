@@ -2,9 +2,9 @@ model Resource {
   id          String   @id @default(uuid())
   email       String   @unique
   name        String
-  designation String
-  password    String   // Store the hashed password here
+  password    String
   role        Role
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

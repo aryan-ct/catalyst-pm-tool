@@ -45,3 +45,27 @@ Thumbs.db
 
 # env
 .env
+
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json
+.github/agents/ci-monitor-subagent.agent.md
+.github/prompts/monitor-ci.prompt.md
+.github/skills/link-workspace-packages/SKILL.md
+.github/skills/monitor-ci/SKILL.md
+.github/skills/monitor-ci/references/fix-flows.md
+.github/skills/monitor-ci/scripts/ci-poll-decide.mjs
+.github/skills/monitor-ci/scripts/ci-state-update.mjs
+.github/skills/nx-generate/SKILL.md
+.github/skills/nx-import/SKILL.md
+.github/skills/nx-import/references/ESLINT.md
+.github/skills/nx-import/references/GRADLE.md
+.github/skills/nx-import/references/JEST.md
+.github/skills/nx-import/references/NEXT.md
+.github/skills/nx-import/references/TURBOREPO.md
+.github/skills/nx-import/references/VITE.md
+.github/skills/nx-plugins/SKILL.md
+.github/skills/nx-run-tasks/SKILL.md
+.github/skills/nx-workspace/SKILL.md
+.github/skills/nx-workspace/references/AFFECTED.md
+AGENTS.md
