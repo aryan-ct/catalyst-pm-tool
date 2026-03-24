@@ -1,15 +1,16 @@
 model Lead {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   projectName String?
-  clientName String
-  leadStatus LeadStatus
+  clientName  String
+  links       String[]
+  leadStatus  LeadStatus
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum LeadStatus {
-    ACTIVE
-    CONVERTED
-    LOST
+  ACTIVE
+  CONVERTED
+  LOST
 }

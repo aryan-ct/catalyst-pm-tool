@@ -1,5 +1,5 @@
 import { LeadStatus } from '@prisma/client';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreateLeadDto {
   @IsString()
@@ -8,6 +8,11 @@ export class CreateLeadDto {
   @IsOptional()
   @IsString()
   projectName?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  links?: string[];
 
   @IsEnum(LeadStatus)
   leadStatus!: LeadStatus;
@@ -21,6 +26,11 @@ export class UpdateLeadDto {
   @IsString()
   @IsOptional()
   projectName?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  links?: string[];
 
   @IsEnum(LeadStatus)
   @IsOptional()

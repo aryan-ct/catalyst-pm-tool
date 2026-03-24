@@ -1,16 +1,16 @@
 model Project {
-  id          String   @id @default(uuid())
-  name        String
-  clientName String
+  id               String        @id @default(uuid())
+  name             String
+  clientName       String
   commencementDate DateTime
-  projectStatus ProjectStatus
-  description String?
-  documentLink String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  projectStatus    ProjectStatus
+  description      String?
+  documentLink     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 enum ProjectStatus {
-    ACTIVE
-    ARCHIVED
+  ACTIVE
+  ARCHIVED
 }
