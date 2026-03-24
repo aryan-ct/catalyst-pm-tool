@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -23,9 +24,10 @@ export class CreateResourceDto {
   @MinLength(3)
   name!: string;
 
-  @IsEnum({ enum: Role })
+  @IsEnum(Role)
   role!: Role;
 
+  @IsOptional()
   @IsBoolean()
   isActive!: boolean;
 }
@@ -41,9 +43,10 @@ export class UpdateResourceDto {
   @MinLength(3)
   name!: string;
 
-  @IsEnum({ enum: Role })
+  @IsEnum(Role)
   role!: Role;
 
+  @IsOptional()
   @IsBoolean()
   isActive!: boolean;
 }
