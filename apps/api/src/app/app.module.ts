@@ -6,9 +6,10 @@ import { ResourcesModule } from './modules/resource/resources.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './guards/roles.guard';
 import { ProjectsModule } from './modules/project/project.module';
+import { LeadsModule } from './modules/leads/lead.module';
 
 @Module({
-  imports: [AuthModule, ResourcesModule, ProjectsModule],
+  imports: [AuthModule, ResourcesModule, ProjectsModule, LeadsModule],
   controllers: [AppController],
   providers: [
     AppService,

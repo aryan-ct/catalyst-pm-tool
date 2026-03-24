@@ -21,7 +21,9 @@ export class ProjectsController {
   }
 
   @Get('all')
-  async getAllProjects(@Query('project_status') project_status: ProjectStatus) {
+  async getAllProjects(
+    @Query('project_status') project_status?: ProjectStatus,
+  ) {
     return this.projectService.findAll(project_status);
   }
 

@@ -4,7 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Max,
+  MaxLength,
 } from 'class-validator';
 import { ProjectStatus } from '@prisma/client';
 
@@ -18,7 +18,7 @@ export class CreateProjectDto {
   clientName!: string;
 
   @IsString()
-  @Max(255)
+  @MaxLength(255)
   description!: string;
 
   @IsOptional()
@@ -29,7 +29,7 @@ export class CreateProjectDto {
   @IsNotEmpty()
   commencementDate!: Date;
 
-  @IsEnum({ enum: ProjectStatus })
+  @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;
 }
 
@@ -43,7 +43,7 @@ export class UpdateProjectDto {
   clientName!: string;
 
   @IsString()
-  @Max(255)
+  @MaxLength(255)
   description!: string;
 
   @IsOptional()
@@ -54,6 +54,6 @@ export class UpdateProjectDto {
   @IsNotEmpty()
   commencementDate!: Date;
 
-  @IsEnum({ enum: ProjectStatus })
+  @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;
 }
