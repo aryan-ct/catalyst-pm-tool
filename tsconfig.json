@@ -9,5 +9,11 @@
     {
       "path": "./apps/web"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/web/src/*"]
+    }
+  }
 }
