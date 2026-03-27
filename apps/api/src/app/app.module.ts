@@ -8,6 +8,8 @@ import { RolesGuard } from './guards/roles.guard';
 import { ProjectsModule } from './modules/project/project.module';
 import { LeadsModule } from './modules/leads/lead.module';
 import { ResourceAllocationsModule } from './modules/resource-allocations/resource-allocations.module';
+import { MilestoneModule } from './modules/milestone/milestone.module';
+import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
@@ -16,13 +18,18 @@ import { ResourceAllocationsModule } from './modules/resource-allocations/resour
     ProjectsModule,
     LeadsModule,
     ResourceAllocationsModule,
+    MilestoneModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard, // keeps your role-based guard
     },
   ],
 })

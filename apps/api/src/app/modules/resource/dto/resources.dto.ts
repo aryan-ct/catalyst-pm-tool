@@ -27,7 +27,6 @@ export class CreateResourceDto {
   @IsEnum(Role)
   role!: Role;
 
-  @IsOptional()
   @IsBoolean()
   isActive!: boolean;
 }

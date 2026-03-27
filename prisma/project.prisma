@@ -8,6 +8,9 @@ model Project {
   documentLink     String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+
+  // Relation field (one project → many milestones)
+  milestones Milestone[]
 }
 
 enum ProjectStatus {

@@ -5,8 +5,11 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 import { ProjectStatus } from '@prisma/client';
+import { CreateMilestoneDto } from '../../milestone/dto/milestone.dto';
+import { Type } from 'class-transformer';
 
 export class CreateProjectDto {
   @IsString()
@@ -31,6 +34,11 @@ export class CreateProjectDto {
 
   @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestoneDto)
+  milestones?: CreateMilestoneDto[];
 }
 
 export class UpdateProjectDto {
@@ -56,4 +64,9 @@ export class UpdateProjectDto {
 
   @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestoneDto)
+  milestones?: CreateMilestoneDto[];
 }

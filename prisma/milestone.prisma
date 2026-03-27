@@ -1,0 +1,15 @@
+model Milestone {
+  id                   String @id @default(uuid())
+  milestoneName        String
+  milestoneDescription String
+  estimatedHours       Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign key
+  projectId String
+
+  // Relation
+  project Project @relation(fields: [projectId], references: [id])
+}

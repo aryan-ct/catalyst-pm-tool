@@ -2,7 +2,7 @@ import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class CreateResourceAllocationsDto {
   @IsString()
-  resourceName!: string;
+  resourceId!: string;
 
   @IsArray()
   @IsString({ each: true })

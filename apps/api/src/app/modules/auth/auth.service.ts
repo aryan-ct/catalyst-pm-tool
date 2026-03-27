@@ -25,9 +25,10 @@ export class AuthService {
         name: hrName,
         email: hrEmail,
         role: UserRole.HR,
+        id: 'catalyst-hr-007',
       };
       const accessToken = this.jwtService.sign(payload);
-      return { token: `Bearer_${accessToken}` };
+      return { token: `Bearer ${accessToken}` };
     }
 
     const resource = await prisma.resource.findUnique({ where: { email } });
@@ -49,10 +50,11 @@ export class AuthService {
       name: resource.name,
       email: resource.email,
       role: resource.role,
+      id: resource.id,
     };
 
     const token = this.jwtService.sign(payload);
 
-    return { token: `Bearer_${token}` };
+    return { token: `Bearer ${token}` };
   }
 }

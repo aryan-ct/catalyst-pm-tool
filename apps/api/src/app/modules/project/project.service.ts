@@ -6,9 +6,22 @@ import { ProjectStatus } from '@prisma/client';
 @Injectable()
 export class ProjectsService {
   async createProject(createProjectDto: CreateProjectDto) {
+    const { milestones, ...projectData } = createProjectDto;
     const project = await prisma.project.create({
-      data: { ...createProjectDto },
+      data: {
+        ...projectData,
+
+        milestones: milestones
+          ? {
+              create: milestones,
+            }
+          : undefined,
+      },
+      include: {
+        milestones: true,
+      },
     });
+
     return project;
   }
 
@@ -28,6 +41,35 @@ export class ProjectsService {
     return project;
   }
 
+  async findMyProjectsByResourceAllocationId(
+    id: string,
+    resource_allocation_id: string,
+  ) {
+    const resourceAllocation = await prisma.resourceAllocation.findUnique({
+      where: {
+        id: resource_allocation_id,
+      },
+    });
+
+    if (!resourceAllocation) {
+      throw new NotFoundException('Resource allocation not found.');
+    }
+
+    const projects = await prisma.project.findMany({
+      where: {
+        id: {
+          in: resourceAllocation.projectIds,
+        },
+      },
+    });
+
+    if (!projects || projects.length === 0) {
+      throw new NotFoundException('Projects not found');
+    }
+
+    return projects;
+  }
+
   async updateProject(id: string, updateProjectDto: UpdateProjectDto) {
     const project = await prisma.project.findUnique({ where: { id } });
 
@@ -35,11 +77,13 @@ export class ProjectsService {
       throw new NotFoundException('Project not found');
     }
 
+    const { milestones, ...updateData } = updateProjectDto;
+
     const updatedProject = await prisma.project.update({
       where: {
         id,
       },
-      data: { ...updateProjectDto },
+      data: { ...updateData },
     });
 
     return updatedProject;

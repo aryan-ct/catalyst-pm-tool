@@ -1,6 +1,8 @@
 model ResourceAllocation {
   id           String   @id @default(uuid())
   resourceName String
+  resourceId   String
+  role         Role
   projectIds   String[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
