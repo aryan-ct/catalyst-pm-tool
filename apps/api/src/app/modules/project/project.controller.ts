@@ -12,18 +12,21 @@ import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 import { ProjectStatus } from '@prisma/client';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import * as client from '@prisma/client';
+import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectService: ProjectsService) {}
 
   // Create Project
+  @Roles(UserRole.MANAGER)
   @Post('create')
   async createProject(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.createProject(createProjectDto);
   }
 
   // Get all Project
+  @Roles(UserRole.MANAGER)
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,
@@ -32,6 +35,7 @@ export class ProjectsController {
   }
 
   // Get Project by ID
+  @Roles(UserRole.MANAGER)
   @Get(':id')
   async getProjectById(@Param('id') id: string) {
     return this.projectService.findById(id);
@@ -50,6 +54,7 @@ export class ProjectsController {
   }
 
   // Updated project by Id
+  @Roles(UserRole.MANAGER)
   @Patch(':id')
   async updateProject(
     @Param('id') id: string,

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { Role } from '@prisma/client';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
 @Injectable()
@@ -12,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: { email: string; role: Role; id: string }) {
     // This object will be attached to request.user
     return { email: payload.email, role: payload.role, id: payload.id };
   }

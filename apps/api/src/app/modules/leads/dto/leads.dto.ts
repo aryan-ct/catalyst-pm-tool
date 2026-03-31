@@ -32,7 +32,7 @@ export class UpdateLeadDto {
   @IsString({ each: true })
   links?: string[];
 
-  @IsEnum(LeadStatus)
   @IsOptional()
+  @IsEnum(LeadStatus)
   leadStatus?: LeadStatus;
 }

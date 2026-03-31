@@ -2,7 +2,8 @@ model Milestone {
   id                   String @id @default(uuid())
   milestoneName        String
   milestoneDescription String
-  estimatedHours       Int
+  estimatedHours       Float
+  bugSheet             String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -12,4 +13,5 @@ model Milestone {
 
   // Relation
   project Project @relation(fields: [projectId], references: [id])
+  tasks Task[]
 }

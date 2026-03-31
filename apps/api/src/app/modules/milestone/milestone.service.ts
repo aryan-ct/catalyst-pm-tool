@@ -4,22 +4,29 @@ import { prisma } from '../../config/prima.config';
 
 @Injectable()
 export class MilestoneService {
-  async createMilestone(createMilestoneDto: CreateMilestoneDto) {
-    const { projectId, ...milestoneData } = createMilestoneDto;
-
-    if (!projectId) {
+  async createMilestone(
+    project_id: string,
+    createMilestoneDto: CreateMilestoneDto,
+  ) {
+    if (!project_id) {
       throw new Error('projectId is required to create a standalone milestone');
     }
 
-    const milestone = await prisma.milestone.create({
-      data: {
-        ...milestoneData,
-        project: {
-          connect: { id: projectId },
-        },
+    const project = await prisma.project.findUnique({
+      where: {
+        id: project_id,
       },
     });
-    return milestone;
+
+    if (!project) {
+      throw new NotFoundException('Project not found.');
+    }
+
+    const createdMileStone = await prisma.milestone.create({
+      data: { ...createMilestoneDto, projectId: project_id },
+    });
+
+    return createdMileStone;
   }
 
   async updateMilestone(id: string, updateMilestoneDto: UpdateMilestoneDto) {

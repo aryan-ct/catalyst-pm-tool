@@ -1,0 +1,19 @@
+model SubTask {
+  id     String @id @default(uuid())
+  title  String
+  taskType  TaskType   
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign key
+  taskId String
+
+  // Relation
+  task Task @relation(fields: [taskId], references: [id])
+}
+
+enum TaskType {
+  FEATURE
+  BUG
+}

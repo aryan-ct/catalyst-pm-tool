@@ -23,11 +23,13 @@ export class ResourcesController {
   }
 
   @Get(':id')
+  @Roles(UserRole.HR)
   async findOneById(@Param('id') id: string) {
     return this.resourcesService.findById(id);
   }
 
   @Post('create')
+  @Roles(UserRole.HR)
   async createResource(
     @Body() createResourceDto: CreateResourceDto,
   ): Promise<CreateResourceDto> {
@@ -35,6 +37,7 @@ export class ResourcesController {
   }
 
   @Patch('update/:id')
+  @Roles(UserRole.HR)
   async updateResource(
     @Param('id') id: string,
     @Body() updateResourceDto: UpdateResourceDto,
