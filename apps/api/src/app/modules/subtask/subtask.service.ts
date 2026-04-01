@@ -25,10 +25,21 @@ export class SubtaskService {
     return subtasks;
   }
 
-  async create(createSubtaskDto: CreateSubtaskDto) {
-    const createdSubtask = await prisma.subTask.create({
-      data: { ...createSubtaskDto },
+  async create(task_id: string, createSubtaskDto: CreateSubtaskDto) {
+    const task = await prisma.task.findUnique({
+      where: {
+        id: task_id,
+      },
     });
+
+    if (!task) {
+      throw new NotFoundException('Task not found.');
+    }
+
+    const createdSubtask = await prisma.subTask.create({
+      data: { ...createSubtaskDto, taskId: task_id },
+    });
+
     return createdSubtask;
   }
 

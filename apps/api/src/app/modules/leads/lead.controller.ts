@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { LeadsService } from './lead.service';
 import { CreateLeadDto, UpdateLeadDto } from './dto/leads.dto';
-import { LeadStatus, Role } from '@prisma/client';
+import { LeadStatus } from '@prisma/client';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('leads')

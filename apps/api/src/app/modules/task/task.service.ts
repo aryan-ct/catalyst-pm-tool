@@ -25,7 +25,7 @@ export class TaskService {
     return createdTask;
   }
 
-  async updat(task_id: string, updateTaskDto: UpdateTaskDto) {
+  async update(task_id: string, updateTaskDto: UpdateTaskDto) {
     const task = await prisma.task.findUnique({
       where: {
         id: task_id,

@@ -7,9 +7,6 @@ export class CreateSubtaskDto {
 
   @IsEnum(TaskType)
   taskType!: TaskType;
-
-  @IsString()
-  taskId!: string;
 }
 
 export class UpdateSubtaskDto {
