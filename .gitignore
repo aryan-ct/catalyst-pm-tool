@@ -8,7 +8,7 @@ out-tsc
 # dependencies
 node_modules
 
-./apps/web/node_modules
+apps/web/node_modules
 
 
 # IDEs and editors

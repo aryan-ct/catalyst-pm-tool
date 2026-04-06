@@ -1,6 +1,6 @@
 {
    "extends": "./tsconfig.json",
-  "compilerOptions": {
+   "compilerOptions": {
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "jsx": "react-jsx",

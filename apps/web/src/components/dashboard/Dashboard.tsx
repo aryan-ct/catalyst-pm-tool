@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Projects from '../projects/Projects';
 import Resources from '../resources/Resources';
+import Leads from '../leads/Leads';
+import ResourceAllocation from '../resource-allocation/ResourceAllocation';
 
 const menuItems = [
   'Projects',
@@ -24,9 +26,9 @@ export default function Dashboard() {
       case 'Project Management':
         return <p> This is Settings data</p>;
       case 'Resource Allocation':
-        return <p> This is Reports data</p>;
+        return <ResourceAllocation/>;
         case 'Leads':
-        return <p> This is Reports data</p>;
+        return <Leads/>;
       default:
         return null;
     }

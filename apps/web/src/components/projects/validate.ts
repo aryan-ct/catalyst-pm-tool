@@ -1,13 +1,4 @@
-export type ProjectForm = {
-  name: string;
-  client: string;
-  date: string;
-  hours: number;
-  status: string;
-  docLink: string;
-};
-
-export const validateProject = (form: ProjectForm) => {
+export const validateProject = (form: any) => {
   const errors = {
     name: "",
     client: "",
@@ -15,9 +6,12 @@ export const validateProject = (form: ProjectForm) => {
     hours: "",
     status: "",
     docLink: "",
+    milestones: [] as any[],
   };
 
   let isValid = true;
+
+  // ---------- BASIC FIELDS ----------
 
   if (!form.name.trim()) {
     errors.name = "Project name is required";
@@ -44,9 +38,34 @@ export const validateProject = (form: ProjectForm) => {
     isValid = false;
   }
 
-  if (!form.docLink.trim()) {
-    errors.docLink = "Document link required";
+  // ---------- OPTIONAL DOC LINK ----------
+
+  if (form.docLink && !/^https?:\/\/.+\..+/.test(form.docLink)) {
+    errors.docLink = "Enter valid URL";
     isValid = false;
+  }
+
+  // ---------- MILESTONES VALIDATION ----------
+
+  if (form.milestones && form.milestones.length > 0) {
+    errors.milestones = form.milestones.map((m:any) => {
+      const mErrors = {
+        name: "",
+        hours: "",
+      };
+
+      if (!m.name.trim()) {
+        mErrors.name = "Milestone name required";
+        isValid = false;
+      }
+
+      if (!m.hours || m.hours <= 0) {
+        mErrors.hours = "Enter valid hours";
+        isValid = false;
+      }
+
+      return mErrors;
+    });
   }
 
   return { isValid, errors };
