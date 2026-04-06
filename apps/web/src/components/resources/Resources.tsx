@@ -2,12 +2,6 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import ResourceModal from './ResourceModal';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '../ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
 
 type Resource = {
   name: string;
@@ -86,46 +81,30 @@ export default function Resources() {
                 <Trash2 className="h-4 w-4" />
               </Button>
 
-              <h3 className="font-semibold text-base">{r.name}</h3>
-              <p className="text-sm text-gray-500">Role: {r.role}</p>
-              <p className="text-sm text-gray-500">Email: {r.email}</p>
+              <h3 className="font-bold text-base">{r.name}</h3>
+              <div>
+                <p className="text-xs text-gray-500">Role:</p>
+                <h3 className="font-semibold">{r.role}</h3>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Email:</p>
+                <h3 className="font-semibold">{r.email}</h3>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Dialog
+      <ConfirmDeleteDialog
         open={deleteIndex !== null}
-        onOpenChange={() => setDeleteIndex(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Resource?</DialogTitle>
-          </DialogHeader>
-
-          <p className="text-sm text-gray-500">
-            Are you sure you want to delete this resource?
-          </p>
-
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setDeleteIndex(null)}>
-              Cancel
-            </Button>
-
-            <Button
-              className="bg-red-600 text-white"
-              onClick={() => {
-                setResources((prev) =>
-                  prev.filter((_, idx) => idx !== deleteIndex),
-                );
-                setDeleteIndex(null);
-              }}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          setResources((prev) => prev.filter((_, idx) => idx !== deleteIndex));
+          setDeleteIndex(null);
+        }}
+        title="Delete Resource?"
+        description="Are you sure you want to delete this resource?"
+      />
     </div>
   );
 }

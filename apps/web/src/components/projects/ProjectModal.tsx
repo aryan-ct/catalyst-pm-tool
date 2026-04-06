@@ -1,24 +1,157 @@
 // src/components/projects/ProjectModal.tsx
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
-import RichTextEditor from "./RichTextEditor";
-import { validateProject } from "./validate";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import CustomRTE from './RichTextEditor';
+import { validateProject } from './validate';
 
-
-export default function ProjectModal({ setProjects }: any) {
-
+export default function ProjectModal({
+  setProjects,
+  editData,
+  editIndex,
+  setEditData,
+  setEditIndex,
+  prefill,
+   onSubmitOverride,
+   isControlled
+}: any) {
   const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
+    name: '',
+    client: '',
+    date: '',
+    hours: 0,
+    status: '',
+    docLink: '',
+  });
+
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [errors, setErrors] = useState<any>({
+    milestones: [],
+  });
+
+  // ✅ Prefill on edit
+  useEffect(() => {
+    if (editData) {
+      setForm(editData);
+      setMilestones(editData.milestones || []);
+      setOpen(true);
+    }
+  }, [editData]);
+
+    useEffect(() => {
+  if (prefill) {
+    setForm((prev) => ({
+      ...prev,
+      ...prefill,
+    }));
+    setOpen(true);
+  }
+}, [prefill]);
+
+useEffect(() => {
+  if (prefill || editData || isControlled) {
+    setOpen(true);
+  }
+}, [prefill, editData]);
+
+
+  // ✅ Submit handler
+//   const handleSubmit = () => {
+//     const { isValid, errors } = validateProject({
+//       ...form,
+//       milestones,
+//     });
+
+//     setErrors(errors);
+
+//     if (!isValid) return;
+
+//     // if (editIndex !== null) {
+//     //   setProjects((prev: any[]) =>
+//     //     prev.map((item, idx) =>
+//     //       idx === editIndex ? { ...form, milestones } : item,
+//     //     ),
+//     //   );
+//     // } else {
+//     //   setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
+//     // }
+
+//      if (editIndex !== null) {
+//       setProjects((prev: any[]) =>
+//         prev.map((item, idx) =>
+//           idx === editIndex ? { ...form, milestones } : item,
+//         ),
+//       );
+//     }
+//     if (onSubmitOverride) {
+//   onSubmitOverride({ ...form, milestones });
+// } else {
+//   setProjects((prev:any) => [...prev, { ...form, milestones }]);
+// }
+
+//     // Reset
+//     setForm({
+//       name: '',
+//       client: '',
+//       date: '',
+//       hours: 0,
+//       status: '',
+//       docLink: '',
+//     });
+
+//     setMilestones([]);
+//     setErrors({ milestones: [] });
+//     setEditData(null);
+//     setEditIndex(null);
+//     setOpen(false);
+//   };
+
+const handleSubmit = () => {
+  const { isValid, errors } = validateProject({
+    ...form,
+    milestones,
+  });
+
+  setErrors(errors);
+  if (!isValid) return;
+
+  if (onSubmitOverride) {
+    // 🔥 LEAD → PROJECT
+    onSubmitOverride({ ...form, milestones });
+  } else if (editIndex !== null) {
+    // 🔥 EDIT
+    setProjects((prev: any[]) =>
+      prev.map((item, idx) =>
+        idx === editIndex ? { ...form, milestones } : item
+      )
+    );
+  } else {
+    // 🔥 CREATE
+    setProjects((prev: any[]) => [
+      ...prev,
+      { ...form, milestones },
+    ]);
+  }
+
+  // Reset
+  setForm({
     name: "",
     client: "",
     date: "",
@@ -27,121 +160,226 @@ export default function ProjectModal({ setProjects }: any) {
     docLink: "",
   });
 
-  const [errors, setErrors] = useState<any>({});
-
-  const [milestones, setMilestones] = useState<any[]>([]);
-
-  const handleSubmit = () => {
-    const { isValid, errors } = validateProject(form);
-    setErrors(errors);
-    if (!isValid) return;
-
-    setProjects((prev: any) => [
-      ...prev,
-      { ...form, milestones }
-    ]);
-
-    setForm({
-      name: "", client: "", date: "", hours: 0, status: "", docLink: ""
-    });
-
-    setMilestones([]);
-    setOpen(false);
-  };
+  setMilestones([]);
+  setErrors({});
+  setEditData(null);
+  setEditIndex(null);
+  setOpen(false);
+};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger >
-        <Button className="bg-blue-600 text-white">+ Create Project</Button>
-      </DialogTrigger>
+      {/* Open Button */}
+      {!isControlled && (
+  <Button
+    className="bg-blue-600 text-white"
+    onClick={() => {
+      setForm({
+        name: "",
+        client: "",
+        date: "",
+        hours: 0,
+        status: "",
+        docLink: "",
+      });
+      setMilestones([]);
+      setErrors({});
+      setEditData(null);
+      setEditIndex(null);
+      setOpen(true);
+    }}
+  >
+    + Create Project
+  </Button>
+)}
 
       <DialogContent className="max-h-[80vh] overflow-y-auto space-y-4">
         <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
+          <DialogTitle>
+            {editIndex !== null ? 'Edit Project' : 'Create Project'}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Name */}
+          <div className="space-y-1">
+            <Label>Project Name</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => {
+                setForm({ ...form, name: e.target.value });
+                setErrors((prev: any) => ({ ...prev, name: '' }));
+              }}
+            />
+            {errors.name && (
+              <p className="text-xs text-red-500">{errors.name}</p>
+            )}
+          </div>
 
-          <Input placeholder="Project Name"
-            onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
+          {/* Client */}
+          <div className="space-y-1">
+            <Label>Client Name</Label>
+            <Input
+              value={form.client}
+              onChange={(e) => {
+                setForm({ ...form, client: e.target.value });
+                setErrors((prev: any) => ({ ...prev, client: '' }));
+              }}
+            />
+            {errors.client && (
+              <p className="text-xs text-red-500">{errors.client}</p>
+            )}
+          </div>
 
-          <Input placeholder="Client Name"
-            onChange={(e) => setForm({ ...form, client: e.target.value })} />
+          {/* Date */}
+          <div className="space-y-1">
+            <Label>Date</Label>
+            <Input
+              type="date"
+              value={form.date}
+              onChange={(e) => {
+                setForm({ ...form, date: e.target.value });
+                setErrors((prev: any) => ({ ...prev, date: '' }));
+              }}
+            />
+            {errors.date && (
+              <p className="text-xs text-red-500">{errors.date}</p>
+            )}
+          </div>
 
-          <Input type="date"
-            onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          {/* Hours */}
+          <div className="space-y-1">
+            <Label>Estimated Hours</Label>
+            <Input
+              type="number"
+              value={form.hours}
+              onChange={(e) => {
+                setForm({ ...form, hours: Number(e.target.value) });
+                setErrors((prev: any) => ({ ...prev, hours: '' }));
+              }}
+            />
+            {errors.hours && (
+              <p className="text-xs text-red-500">{errors.hours}</p>
+            )}
+          </div>
 
-          <Input type="number" placeholder="Estimated Hours"
-            onChange={(e) => setForm({ ...form, hours: Number(e.target.value) })} />
+          {/* Doc Link */}
+          <div className="space-y-1">
+            <Label>Document Link (optional)</Label>
+            <Input
+              value={form.docLink}
+              onChange={(e) => {
+                setForm({ ...form, docLink: e.target.value });
+                setErrors((prev: any) => ({ ...prev, docLink: '' }));
+              }}
+            />
+            {errors.docLink && (
+              <p className="text-xs text-red-500">{errors.docLink}</p>
+            )}
+          </div>
 
-          <Input placeholder="Document Link"
-            onChange={(e) => setForm({ ...form, docLink: e.target.value })} />
+          {/* Status */}
+          <div className="space-y-1">
+            <Label>Status</Label>
+            <Select
+              value={form.status || undefined}
+              onValueChange={(value) => {
+                setForm({ ...form, status: value ?? '' });
+                setErrors((prev: any) => ({ ...prev, status: '' }));
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
 
-          
-         <Select
-  value={form.status || undefined}
-  onValueChange={(value) => {
-    setForm({
-      ...form,
-      status: value ?? "", 
-    });
-  }}
->
-  <SelectTrigger>
-    <SelectValue placeholder="Select status" />
-  </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
 
-  <SelectContent>
-    <SelectItem value="Active">Active</SelectItem>
-    <SelectItem value="Archived">Archived</SelectItem>
-  </SelectContent>
-</Select>
+            {errors.status && (
+              <p className="text-xs text-red-500">{errors.status}</p>
+            )}
+          </div>
 
-         
-          <div className="space-y-2">
-            <Button onClick={() =>
-              setMilestones([...milestones, { name: "", desc: "", hours: 0 }])
-            }>
+          {/* Milestones */}
+          <div className="space-y-3">
+            <Label>Milestones</Label>
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                setMilestones([...milestones, { name: '', desc: '', hours: 0 }])
+              }
+            >
               + Add Milestone
             </Button>
 
             {milestones.map((m, i) => (
-              <div key={i} className="border p-3 rounded space-y-2">
+              <div key={i} className="border p-4 rounded-md space-y-3">
+                <p className="text-sm font-medium">Milestone {i + 1}</p>
 
-                <Input placeholder="Milestone Name"
-                  onChange={(e) => {
-                    const updated = [...milestones];
-                    updated[i].name = e.target.value;
-                    setMilestones(updated);
-                  }}
-                />
+                {/* Name */}
+                <div className="space-y-1">
+                  <Label>Name</Label>
+                  <Input
+                    value={m.name}
+                    onChange={(e) => {
+                      const updated = [...milestones];
+                      updated[i].name = e.target.value;
+                      setMilestones(updated);
+                    }}
+                  />
+                  {errors.milestones?.[i]?.name && (
+                    <p className="text-xs text-red-500">
+                      {errors.milestones[i].name}
+                    </p>
+                  )}
+                </div>
 
-                <RichTextEditor
-                  value={m.desc}
-                  onChange={(val: string) => {
-                    const updated = [...milestones];
-                    updated[i].desc = val;
-                    setMilestones(updated);
-                  }}
-                />
+                {/* Description */}
+                <div className="space-y-1">
+                  <Label>Description</Label>
+                  <CustomRTE
+                    value={m.desc}
+                    onChange={(val: string) => {
+                      const updated = [...milestones];
+                      updated[i].desc = val;
+                      setMilestones(updated);
+                    }}
+                  />
+                </div>
 
-                <Input type="number" placeholder="Hours"
-                  onChange={(e) => {
-                    const updated = [...milestones];
-                    updated[i].hours = Number(e.target.value);
-                    setMilestones(updated);
-                  }}
-                />
-
+                {/* Hours */}
+                <div className="space-y-1">
+                  <Label>Hours</Label>
+                  <Input
+                    type="number"
+                    value={m.hours}
+                    onChange={(e) => {
+                      const updated = [...milestones];
+                      updated[i].hours = Number(e.target.value);
+                      setMilestones(updated);
+                    }}
+                  />
+                  {errors.milestones?.[i]?.hours && (
+                    <p className="text-xs text-red-500">
+                      {errors.milestones[i].hours}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
 
-          <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white">
-            Add Project
+          {/* Submit */}
+          <Button
+            onClick={handleSubmit}
+            className="w-full bg-blue-600 text-white"
+          >
+            {editIndex !== null ? 'Update Project' : 'Add Project'}
           </Button>
-
         </div>
       </DialogContent>
     </Dialog>

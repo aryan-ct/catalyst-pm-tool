@@ -1,30 +1,33 @@
-// src/components/projects/Projects.tsx
-
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import ProjectModal from "./ProjectModal";
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import ProjectModal from './ProjectModal';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
 
 export default function Projects() {
-
   const [projects, setProjects] = useState<any[]>([]);
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState('All');
 
-  const filtered = projects.filter(p =>
-    filter === "All" ? true : p.status === filter
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [editData, setEditData] = useState<any>(null);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+
+  const filtered = projects.filter((p) =>
+    filter === 'All' ? true : p.status === filter,
   );
 
   return (
     <div className="space-y-6">
-
-      <div className="flex justify-between">
-
-        <Select
-          value={filter}
-          onValueChange={(v) => setFilter(v ?? "All")}
-        >
+      {/* Top Bar */}
+      <div className="flex justify-between items-center">
+        <Select value={filter} onValueChange={(v) => setFilter(v ?? 'All')}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter" />
           </SelectTrigger>
@@ -36,37 +39,107 @@ export default function Projects() {
           </SelectContent>
         </Select>
 
-        <ProjectModal setProjects={setProjects} />
+        <ProjectModal
+          setProjects={setProjects}
+          editData={editData}
+          editIndex={editIndex}
+          setEditData={setEditData}
+          setEditIndex={setEditIndex}
+        />
       </div>
 
+      {/* List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         {filtered.map((p, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 space-y-2">
+          <Card key={i} className="relative hover:shadow-md transition">
+            <CardContent className="p-4 space-y-3">
+              {/* Edit */}
+              <button
+                className="absolute top-3 right-10 text-gray-400 hover:text-blue-500"
+                onClick={() => {
+                  setEditData(p);
+                  setEditIndex(i);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
 
-              <h3 className="font-semibold">{p.name}</h3>
-              <p className="text-sm text-gray-500">{p.client}</p>
-              <p className="text-sm">{p.status}</p>
+              {/* Delete */}
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
+                onClick={() => setDeleteIndex(i)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
 
-              <a href={p.docLink} className="text-blue-500 text-sm">
-                Document
-              </a>
-
-              <div className="text-sm">
-                {p.milestones.map((m: any, idx: number) => (
-                  <div key={idx}>
-                    <b>{m.name}</b>
-                    <div dangerouslySetInnerHTML={{ __html: m.desc }} />
-                  </div>
-                ))}
+              {/* Project Info */}
+              <div>
+                <p className="text-xs text-gray-500">Project Name:</p>
+                <h3 className="font-semibold">{p.name}</h3>
               </div>
 
+              <div>
+                <p className="text-xs text-gray-500">Client:</p>
+                <p className="text-sm">{p.client}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500">Status:</p>
+                <p className="text-sm">{p.status}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500">Estimated Hours:</p>
+                <p className="text-sm">{p.hours}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500">Document:</p>
+                <a
+                  href={p.docLink}
+                  className="text-blue-600 text-sm underline"
+                  target="_blank"
+                >
+                  Open Document
+                </a>
+              </div>
+
+              {/* Milestones */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Milestones:</p>
+
+                <div className="space-y-2">
+                  {p.milestones.map((m: any, idx: number) => (
+                    <div key={idx} className="border rounded-md p-2 text-sm">
+                      <p className="font-medium">
+                        {idx + 1}. {m.name}
+                      </p>
+
+                      <div
+                        className="text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: m.desc }}
+                      />
+
+                      <p className="text-xs text-gray-500">Hours: {m.hours}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
-
       </div>
+
+      <ConfirmDeleteDialog
+        open={deleteIndex !== null}
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          setProjects((prev) => prev.filter((_, idx) => idx !== deleteIndex));
+          setDeleteIndex(null);
+        }}
+        title="Delete Project?"
+        description="Are you sure you want to delete this project?"
+      />
     </div>
   );
 }
