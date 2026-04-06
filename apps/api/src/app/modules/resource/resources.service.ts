@@ -42,13 +42,9 @@ export class ResourcesService {
       throw new NotFoundException('Resourse does not exists.');
     }
 
-    const hashedPassword = await bcryptHashing.generatePasswordHash(
-      updateResourceDto.password,
-    );
-
     const updatedResource = await prisma.resource.update({
       where: { id },
-      data: { ...updateResourceDto, password: hashedPassword },
+      data: { ...updateResourceDto },
     });
 
     return updatedResource;
@@ -58,6 +54,9 @@ export class ResourcesService {
     const resources = await prisma.resource.findMany({
       where: {
         role,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 

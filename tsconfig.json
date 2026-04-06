@@ -2,18 +2,10 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": [
-    {
-      "path": "./apps/api"
-    },
-    {
-      "path": "./apps/web"
-    }
-  ],
+  "references": [{ "path": "./apps/api" }, { "path": "./apps/web" }],
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["apps/web/src/*"]
+      "@/*": ["./apps/web/src/*"]
     }
   }
 }

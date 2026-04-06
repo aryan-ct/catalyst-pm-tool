@@ -1,6 +1,8 @@
+import { Roles } from "@/lib/enum";
+
 export type ResourceForm = {
   name: string;
-  role: string;
+  role: Roles | null;
   email: string;
 };
 

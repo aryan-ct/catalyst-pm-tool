@@ -17,12 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { validateResource } from './validate';
-
-type Resource = {
-  name: string;
-  role: string;
-  email: string;
-};
+import { ResourceStatus, Roles } from '@/lib/enum';
+import { Resource, RESOURCE_API } from '@/api/resource.api';
 
 export default function ResourceModal({
   setResources,
@@ -30,13 +26,15 @@ export default function ResourceModal({
   editIndex,
   setEditData,
   setEditIndex,
+  onRefresh,
 }: any) {
   const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState<Resource>({
     name: '',
-    role: '',
+    role: null,
     email: '',
+    isActive: true,
   });
 
   const [errors, setErrors] = useState({
@@ -45,25 +43,40 @@ export default function ResourceModal({
     email: '',
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const { isValid, errors } = validateResource(form);
     setErrors(errors);
 
     if (!isValid) return;
 
-    if (editIndex !== null) {
-      setResources((prev: Resource[]) =>
-        prev.map((item, idx) => (idx === editIndex ? form : item)),
-      );
-    } else {
-      setResources((prev: Resource[]) => [...prev, form]);
-    }
+    try {
+      if (editData && editData.id) {
+        await RESOURCE_API.updateResource(editData.id, form);
+      } else {
+        await RESOURCE_API.createResource(form);
+      }
 
-    setForm({ name: '', role: '', email: '' });
-    setErrors({ name: '', role: '', email: '' });
-    setEditData(null);
-    setEditIndex(null);
-    setOpen(false);
+      if (onRefresh) {
+        onRefresh();
+      } else if (setResources) {
+        // Fallback for UI-only updates if onRefresh is not provided
+        if (editIndex !== null) {
+          setResources((prev: Resource[]) =>
+            prev.map((item, idx) => (idx === editIndex ? form : item)),
+          );
+        } else {
+          setResources((prev: Resource[]) => [...prev, form]);
+        }
+      }
+
+      setForm({ name: '', role: null, email: '', isActive: true });
+      setErrors({ name: '', role: '', email: '' });
+      setEditData(null);
+      setEditIndex(null);
+      setOpen(false);
+    } catch (e) {
+      console.error('Failed to save resource', e);
+    }
   };
 
   useEffect(() => {
@@ -79,7 +92,7 @@ export default function ResourceModal({
         <Button
           className="bg-blue-600 text-white"
           onClick={() => {
-            setForm({ name: '', role: '', email: '' });
+            setForm({ name: '', role: null, email: '', isActive: true });
             setErrors({ name: '', role: '', email: '' });
             setEditData(null);
             setEditIndex(null);
@@ -91,7 +104,9 @@ export default function ResourceModal({
 
       <DialogContent className="space-y-4">
         <DialogHeader>
-          <DialogTitle>Add Resource</DialogTitle>
+          <DialogTitle>
+            {editData ? 'Update Resource' : 'Add Resource'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -115,21 +130,21 @@ export default function ResourceModal({
             <Select
               value={form.role}
               onValueChange={(value) => {
-                setForm({ ...form, role: value ?? '' });
+                setForm({ ...form, role: value ?? null });
                 setErrors((prev) => ({ ...prev, role: '' }));
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className={'w-full'}>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="Manager">Manager</SelectItem>
-                <SelectItem value="Dev">Developer</SelectItem>
-                <SelectItem value="Tester">Tester</SelectItem>
-                <SelectItem value="Designer">Designer</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-                <SelectItem value="BDE">BDE</SelectItem>
+                <SelectItem value={Roles.MANAGER}>MANAGER</SelectItem>
+                <SelectItem value={Roles.DEV}>DEV</SelectItem>
+                <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
+                <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
+                <SelectItem value={Roles.HR}>HR</SelectItem>
+                <SelectItem value={Roles.BDE}>BDE</SelectItem>
               </SelectContent>
             </Select>
 
@@ -138,7 +153,7 @@ export default function ResourceModal({
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 w-full">
             <Label>Email</Label>
             <Input
               type="email"
@@ -151,6 +166,34 @@ export default function ResourceModal({
             {errors.email && (
               <p className="text-xs text-red-500">{errors.email}</p>
             )}
+          </div>
+
+          <div className="space-y-1">
+            <Label>Select Resource Status</Label>
+            <Select
+              onValueChange={(value) => {
+                const resourceStatus = value as ResourceStatus | null;
+                if (resourceStatus === ResourceStatus.ACTIVE) {
+                  setForm({ ...form, isActive: true });
+                } else {
+                  setForm({ ...form, isActive: false });
+                }
+              }}
+              value={
+                form.isActive ? ResourceStatus.ACTIVE : ResourceStatus.IN_ACTIVE
+              }
+            >
+              <SelectTrigger className={'w-full'}>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value={ResourceStatus.ACTIVE}>ACTIVE</SelectItem>
+                <SelectItem value={ResourceStatus.IN_ACTIVE}>
+                  IN_ACTIVE
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Button

@@ -15,5 +15,5 @@ enum Role {
   TESTER
   DESIGNER
   HR
-  BIZ_DEV
+  BDE
 }

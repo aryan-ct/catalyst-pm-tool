@@ -32,20 +32,18 @@ export class CreateResourceDto {
 }
 
 export class UpdateResourceDto {
-  @IsString()
-  @IsNotEmpty({ message: 'Password is required' })
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
-  password!: string;
-
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
-  name!: string;
-
-  @IsEnum(Role)
-  role!: Role;
+  name?: string;
 
   @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
+
+  @IsOptional()
+  @IsOptional()
   @IsBoolean()
-  isActive!: boolean;
+  isActive?: boolean;
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,19 +10,42 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-
+import axiosInstance from "@/api/axios-instance";
 
 export default function LoginForm() {
-
-   const [form, setForm] = useState({
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState<Boolean>(false)
 
- const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axiosInstance.post("/auth/login", form);
+      const { token } = response.data;
+      localStorage.setItem("authToken", token);
+      navigate("/");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleShowPassword=(e:React.ChangeEvent<HTMLInputElement>)=>{
+    setShowPassword(e.target.checked)
+  }
   return (
    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-200">
   
@@ -36,8 +60,8 @@ export default function LoginForm() {
       </CardDescription>
     </CardHeader>
 
-    <CardContent className="space-y-6">
-      
+    <CardContent>
+      <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label className="text-gray-700">Email</Label>
         <Input
@@ -54,7 +78,7 @@ export default function LoginForm() {
       <div className="space-y-2">
         <Label className="text-gray-700">Password</Label>
         <Input
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Enter your password"
           className="h-11 rounded-md border-gray-300 
           focus-visible:ring-2 focus-visible:ring-blue-500 
@@ -65,15 +89,23 @@ export default function LoginForm() {
       </div>
 
       <div className="flex items-center gap-2">
-        <input type="checkbox" />
+        <input type="checkbox" onChange={handleShowPassword}/>
         <span className="text-sm text-gray-600">Show Password</span>
       </div>
 
+      {error && (
+        <p className="text-sm text-red-500 font-medium">
+          {error}
+        </p>
+      )}
+
       <Button
+        type="submit"
+        disabled={loading}
         className="w-full h-11 rounded-md bg-blue-600 text-white 
         hover:bg-blue-700 active:scale-[0.98] transition-all"
       >
-        SIGN IN
+        {loading ? "Signing in..." : "SIGN IN"}
       </Button>
 
       <div className="text-center space-y-2 pt-2">
@@ -87,7 +119,7 @@ export default function LoginForm() {
           </span>
         </p> */}
       </div>
-
+      </form>
     </CardContent>
   </Card>
 </div>
