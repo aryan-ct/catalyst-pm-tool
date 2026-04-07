@@ -5,6 +5,7 @@ import Projects from '../projects/Projects';
 import Resources from '../resources/Resources';
 import Leads from '../leads/Leads';
 import ResourceAllocation from '../resource-allocation/ResourceAllocation';
+import ProjectManagement from '../project-management/ProjectManagement';
 
 const menuItems = [
   'Projects',
@@ -24,7 +25,7 @@ export default function Dashboard() {
       case 'Resources':
         return <Resources />;
       case 'Project Management':
-        return <p> This is Settings data</p>;
+        return <ProjectManagement/>;
       case 'Resource Allocation':
         return <ResourceAllocation/>;
         case 'Leads':
