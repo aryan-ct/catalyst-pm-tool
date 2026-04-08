@@ -15,6 +15,7 @@ import {
 } from './dto/resource-allocations.dto';
 import * as client from '@prisma/client';
 import { CurrentUser } from '../../decorators/current-user.decorator';
+import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('resource-allocations')
 export class ResourceAllocationsController {
@@ -23,11 +24,16 @@ export class ResourceAllocationsController {
   ) {}
 
   @Post('create')
-  create(@Body(new ParseArrayPipe({ items: CreateResourceAllocationDto })) createDto: CreateResourceAllocationDto[]) {
+  @Roles(UserRole.HR)
+  create(
+    @Body(new ParseArrayPipe({ items: CreateResourceAllocationDto }))
+    createDto: CreateResourceAllocationDto[],
+  ) {
     return this.resourceAllocationsService.create(createDto);
   }
 
   @Get()
+  @Roles(UserRole.HR)
   findAll(
     @Query('start_date') start_date: Date,
     @Query('end_date') end_date: Date,
@@ -46,6 +52,7 @@ export class ResourceAllocationsController {
   }
 
   // Get Resource allocation resource id
+  @Roles(UserRole.HR)
   @Get('resource/:resource_id')
   async getResourceAllocationByRoleAndId(
     @Param('resource_id') resource_id: client.Role,
@@ -54,6 +61,7 @@ export class ResourceAllocationsController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.HR)
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateResourceAllocationsDto,
