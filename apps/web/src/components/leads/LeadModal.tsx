@@ -8,20 +8,23 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 
-export default function LeadModal({ setLeads }: any) {
+import { LEAD_API } from "../../api/lead.api";
+import { Roles } from "@/lib/enum";
+
+export default function LeadModal({ onSuccess, role }: any) {
 
   const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
     client: "",
     projectName: "",
-    status: "",
+    status: "ACTIVE",
     docs: "",
   });
 
   const [errors, setErrors] = useState<any>({});
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     let err: any = {};
     let valid = true;
@@ -39,16 +42,14 @@ export default function LeadModal({ setLeads }: any) {
     setErrors(err);
     if (!valid) return;
 
-    setLeads((prev: any[]) => [
-      ...prev,
-      {
-        ...form,
-        createdAt: new Date().toLocaleString(),
-      },
-    ]);
-
-    setOpen(false);
-    setForm({ client: "", projectName: "", status: "", docs: "" });
+    try {
+      await LEAD_API.createLead(form);
+      if (onSuccess) onSuccess();
+      setOpen(false);
+      setForm({ client: "", projectName: "", status: "", docs: "" });
+    } catch (error) {
+      console.error("Failed to create lead", error);
+    }
   };
 
   return (
@@ -64,7 +65,6 @@ export default function LeadModal({ setLeads }: any) {
         </DialogHeader>
 
         <div className="space-y-3">
-
           <Input
             placeholder="Client Name"
             onChange={(e) => setForm({ ...form, client: e.target.value })}
@@ -81,8 +81,8 @@ export default function LeadModal({ setLeads }: any) {
             onChange={(e) => setForm({ ...form, docs: e.target.value })}
           />
 
-          <Select
-            onValueChange={(v:any) => setForm({ ...form, status:v ?? "" })}
+          {role === Roles.MANAGER && <Select
+            onValueChange={(v: any) => setForm({ ...form, status: v ?? "" })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
@@ -93,7 +93,7 @@ export default function LeadModal({ setLeads }: any) {
               <SelectItem value="Converted">Converted</SelectItem>
               <SelectItem value="Lost">Lost</SelectItem>
             </SelectContent>
-          </Select>
+          </Select>}
 
           {errors.status && <p className="text-red-500 text-xs">{errors.status}</p>}
 

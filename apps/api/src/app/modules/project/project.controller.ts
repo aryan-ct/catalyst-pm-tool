@@ -16,7 +16,7 @@ import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectService: ProjectsService) {}
+  constructor(private readonly projectService: ProjectsService) { }
 
   // Create Project
   @Roles(UserRole.MANAGER)

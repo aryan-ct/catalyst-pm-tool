@@ -19,16 +19,18 @@ import {
 } from '@/components/ui/select';
 import CustomRTE from './RichTextEditor';
 import { validateProject } from './validate';
+import { PROJECT_API } from '../../api/project.api';
 
 export default function ProjectModal({
   setProjects,
+  fetchProjects,
   editData,
   editIndex,
   setEditData,
   setEditIndex,
   prefill,
-   onSubmitOverride,
-   isControlled
+  onSubmitOverride,
+  isControlled
 }: any) {
   const [open, setOpen] = useState(false);
 
@@ -55,125 +57,112 @@ export default function ProjectModal({
     }
   }, [editData]);
 
-    useEffect(() => {
-  if (prefill) {
-    setForm((prev) => ({
-      ...prev,
-      ...prefill,
-    }));
-    setOpen(true);
-  }
-}, [prefill]);
+  useEffect(() => {
+    if (prefill) {
+      setForm((prev) => ({
+        ...prev,
+        ...prefill,
+      }));
+      setOpen(true);
+    }
+  }, [prefill]);
 
-useEffect(() => {
-  if (prefill || editData || isControlled) {
-    setOpen(true);
-  }
-}, [prefill, editData]);
+  useEffect(() => {
+    if (prefill || editData || isControlled) {
+      setOpen(true);
+    }
+  }, [prefill, editData]);
 
 
   // ✅ Submit handler
-//   const handleSubmit = () => {
-//     const { isValid, errors } = validateProject({
-//       ...form,
-//       milestones,
-//     });
+  //   const handleSubmit = () => {
+  //     const { isValid, errors } = validateProject({
+  //       ...form,
+  //       milestones,
+  //     });
 
-//     setErrors(errors);
+  //     setErrors(errors);
 
-//     if (!isValid) return;
+  //     if (!isValid) return;
 
-//     // if (editIndex !== null) {
-//     //   setProjects((prev: any[]) =>
-//     //     prev.map((item, idx) =>
-//     //       idx === editIndex ? { ...form, milestones } : item,
-//     //     ),
-//     //   );
-//     // } else {
-//     //   setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
-//     // }
+  //     // if (editIndex !== null) {
+  //     //   setProjects((prev: any[]) =>
+  //     //     prev.map((item, idx) =>
+  //     //       idx === editIndex ? { ...form, milestones } : item,
+  //     //     ),
+  //     //   );
+  //     // } else {
+  //     //   setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
+  //     // }
 
-//      if (editIndex !== null) {
-//       setProjects((prev: any[]) =>
-//         prev.map((item, idx) =>
-//           idx === editIndex ? { ...form, milestones } : item,
-//         ),
-//       );
-//     }
-//     if (onSubmitOverride) {
-//   onSubmitOverride({ ...form, milestones });
-// } else {
-//   setProjects((prev:any) => [...prev, { ...form, milestones }]);
-// }
+  //      if (editIndex !== null) {
+  //       setProjects((prev: any[]) =>
+  //         prev.map((item, idx) =>
+  //           idx === editIndex ? { ...form, milestones } : item,
+  //         ),
+  //       );
+  //     }
+  //     if (onSubmitOverride) {
+  //   onSubmitOverride({ ...form, milestones });
+  // } else {
+  //   setProjects((prev:any) => [...prev, { ...form, milestones }]);
+  // }
 
-//     // Reset
-//     setForm({
-//       name: '',
-//       client: '',
-//       date: '',
-//       hours: 0,
-//       status: '',
-//       docLink: '',
-//     });
+  //     // Reset
+  //     setForm({
+  //       name: '',
+  //       client: '',
+  //       date: '',
+  //       hours: 0,
+  //       status: '',
+  //       docLink: '',
+  //     });
 
-//     setMilestones([]);
-//     setErrors({ milestones: [] });
-//     setEditData(null);
-//     setEditIndex(null);
-//     setOpen(false);
-//   };
+  //     setMilestones([]);
+  //     setErrors({ milestones: [] });
+  //     setEditData(null);
+  //     setEditIndex(null);
+  //     setOpen(false);
+  //   };
 
-const handleSubmit = () => {
-  const { isValid, errors } = validateProject({
-    ...form,
-    milestones,
-  });
+  const handleSubmit = async () => {
+    const { isValid, errors } = validateProject({
+      ...form,
+      milestones,
+    });
 
-  setErrors(errors);
-  if (!isValid) return;
+    setErrors(errors);
+    if (!isValid) return;
 
-  if (onSubmitOverride) {
-    // 🔥 LEAD → PROJECT
-    onSubmitOverride({ ...form, milestones });
-  } else if (editIndex !== null) {
-    // 🔥 EDIT
-    setProjects((prev: any[]) =>
-      prev.map((item, idx) =>
-        idx === editIndex ? { ...form, milestones } : item
-      )
-    );
-  } else {
-    // 🔥 CREATE
-    setProjects((prev: any[]) => [
-      ...prev,
-      { ...form, milestones },
-    ]);
-  }
+    try {
+      if (onSubmitOverride) {
+        // 🔥 LEAD → PROJECT
+        onSubmitOverride({ ...form, milestones });
+      } else if (editIndex !== null) {
+        // 🔥 EDIT
+        if (editData && editData.id) {
+          await PROJECT_API.updateProject(editData.id, { ...form, milestones });
+          if (fetchProjects) await fetchProjects();
+        } else {
+          setProjects((prev: any[]) =>
+            prev.map((item, idx) =>
+              idx === editIndex ? { ...form, milestones } : item
+            )
+          );
+        }
+      } else {
+        // 🔥 CREATE
+        await PROJECT_API.createProject({ ...form, milestones });
+        if (fetchProjects) await fetchProjects();
+        else {
+          setProjects((prev: any[]) => [
+            ...prev,
+            { ...form, milestones },
+          ]);
+        }
+      }
 
-  // Reset
-  setForm({
-    name: "",
-    client: "",
-    date: "",
-    hours: 0,
-    status: "",
-    docLink: "",
-  });
-
-  setMilestones([]);
-  setErrors({});
-  setEditData(null);
-  setEditIndex(null);
-  setOpen(false);
-};
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {/* Open Button */}
-      {!isControlled && (
-  <Button
-    className="bg-blue-600 text-white"
-    onClick={() => {
+      // Reset
       setForm({
         name: "",
         client: "",
@@ -182,16 +171,42 @@ const handleSubmit = () => {
         status: "",
         docLink: "",
       });
+
       setMilestones([]);
       setErrors({});
       setEditData(null);
       setEditIndex(null);
-      setOpen(true);
-    }}
-  >
-    + Create Project
-  </Button>
-)}
+      setOpen(false);
+    } catch (error) {
+      console.error('Failed to save project', error);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {/* Open Button */}
+      {!isControlled && (
+        <Button
+          className="bg-blue-600 text-white"
+          onClick={() => {
+            setForm({
+              name: "",
+              client: "",
+              date: "",
+              hours: 0,
+              status: "",
+              docLink: "",
+            });
+            setMilestones([]);
+            setErrors({});
+            setEditData(null);
+            setEditIndex(null);
+            setOpen(true);
+          }}
+        >
+          + Create Project
+        </Button>
+      )}
 
       <DialogContent className="max-h-[80vh] overflow-y-auto space-y-4">
         <DialogHeader>
@@ -233,7 +248,7 @@ const handleSubmit = () => {
 
           {/* Date */}
           <div className="space-y-1">
-            <Label>Date</Label>
+            <Label>Commencement Date</Label>
             <Input
               type="date"
               value={form.date}

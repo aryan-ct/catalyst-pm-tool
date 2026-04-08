@@ -55,6 +55,15 @@ export class ResourcesService {
       where: {
         role,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -68,6 +77,15 @@ export class ResourcesService {
       where: {
         id,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
 
     return resource;

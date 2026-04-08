@@ -13,8 +13,8 @@ export class ProjectsService {
 
         milestones: milestones
           ? {
-              create: milestones,
-            }
+            create: milestones,
+          }
           : undefined,
       },
       include: {
@@ -30,11 +30,18 @@ export class ProjectsService {
       where: {
         projectStatus: project_status,
       },
+      include: {
+        milestones: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
   async findById(id: string) {
-    const project = await prisma.project.findUnique({ where: { id } });
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: { milestones: true }
+    });
     if (!project) {
       throw new NotFoundException('Project not found');
     }
@@ -57,10 +64,9 @@ export class ProjectsService {
 
     const projects = await prisma.project.findMany({
       where: {
-        id: {
-          in: resourceAllocation.projectIds,
-        },
+        id: resourceAllocation.projectId,
       },
+      include: { milestones: true }
     });
 
     if (!projects || projects.length === 0) {
@@ -83,7 +89,18 @@ export class ProjectsService {
       where: {
         id,
       },
-      data: { ...updateData },
+      data: {
+        ...updateData,
+        ...(milestones && {
+          milestones: {
+            deleteMany: {},
+            create: milestones,
+          }
+        })
+      },
+      include: {
+        milestones: true,
+      }
     });
 
     return updatedProject;

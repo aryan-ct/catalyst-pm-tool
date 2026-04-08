@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Projects from '../projects/Projects';
@@ -16,6 +17,12 @@ const menuItems = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('Projects');
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    navigate('/login');
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -26,9 +33,9 @@ export default function Dashboard() {
       case 'Project Management':
         return <p> This is Settings data</p>;
       case 'Resource Allocation':
-        return <ResourceAllocation/>;
-        case 'Leads':
-        return <Leads/>;
+        return <ResourceAllocation />;
+      case 'Leads':
+        return <Leads />;
       default:
         return null;
     }
@@ -36,21 +43,32 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <div className="w-60 bg-white border-r shadow-sm p-4 space-y-3">
+      <div className="w-60 bg-white border-r shadow-sm p-4 flex flex-col h-full">
         <h2 className="text-xl font-semibold text-blue-600 mb-4">PM Tool</h2>
 
-        {menuItems.map((item) => (
+        <div className="space-y-3 flex-1">
+          {menuItems.map((item) => (
+            <Button
+              key={item}
+              variant={activeTab === item ? 'default' : 'ghost'}
+              className={`w-full justify-start ${activeTab === item ? 'bg-blue-600 text-white' : ''
+                }`}
+              onClick={() => setActiveTab(item)}
+            >
+              {item}
+            </Button>
+          ))}
+        </div>
+
+        <div className="mt-auto pt-4 border-t">
           <Button
-            key={item}
-            variant={activeTab === item ? 'default' : 'ghost'}
-            className={`w-full justify-start ${
-              activeTab === item ? 'bg-blue-600 text-white' : ''
-            }`}
-            onClick={() => setActiveTab(item)}
+            variant="ghost"
+            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 justify-start"
+            onClick={handleLogout}
           >
-            {item}
+            Logout
           </Button>
-        ))}
+        </div>
       </div>
 
       <div className="flex-1 p-6">

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
-  CreateResourceAllocationsDto,
+  CreateResourceAllocationDto,
   UpdateResourceAllocationsDto,
 } from './dto/resource-allocations.dto';
 import { prisma } from '../../config/prima.config';
@@ -8,32 +8,46 @@ import { Role } from '@prisma/client';
 
 @Injectable()
 export class ResourceAllocationsService {
-  async create(createDto: CreateResourceAllocationsDto) {
-    const resource = await prisma.resource.findUnique({
-      where: {
-        id: createDto.resourceId,
-      },
+  async create(createDto: CreateResourceAllocationDto[]) {
+    const resourceIds = [...new Set(createDto.map((dto) => dto.resourceId))];
+    const projectIds = [...new Set(createDto.map((dto) => dto.projectId))];
+
+    const resources = await prisma.resource.findMany({
+      where: { id: { in: resourceIds } },
     });
 
-    if (!resource) {
-      throw new NotFoundException('Resource not found.');
+    const projects = await prisma.project.findMany({
+      where: { id: { in: projectIds } },
+    });
+
+    const resourceMap = new Map(resources.map((r) => [r.id, r]));
+    const projectMap = new Map(projects.map((p) => [p.id, p]));
+
+    const missingResources = resourceIds.filter((id) => !resourceMap.has(id));
+    if (missingResources.length > 0) {
+      throw new NotFoundException(`Resources not found: ${missingResources.join(', ')}`);
     }
 
-    const availableProjects = await prisma.project.findMany({
-      where: {
-        id: {
-          in: createDto.projectIds,
+    const missingProjects = projectIds.filter((id) => !projectMap.has(id));
+    if (missingProjects.length > 0) {
+      throw new NotFoundException(`Projects not found: ${missingProjects.join(', ')}`);
+    }
+
+    // Creating via transaction to ensure all or nothing
+    const createPromises = createDto.map((dto) => {
+      const resource = resourceMap.get(dto.resourceId);
+      return prisma.resourceAllocation.create({
+        data: {
+          resourceId: dto.resourceId,
+          projectId: dto.projectId,
+          desc: dto.desc,
+          resourceName: resource!.name,
+          role: resource!.role,
         },
-      },
+      });
     });
 
-    if (availableProjects.length == 0) {
-      throw new NotFoundException('Projects are not exists with the ids.');
-    }
-
-    return prisma.resourceAllocation.create({
-      data: { ...createDto, resourceName: resource.name, role: resource.role },
-    });
+    return prisma.$transaction(createPromises);
   }
 
   async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role }) {

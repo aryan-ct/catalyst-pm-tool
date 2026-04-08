@@ -1,12 +1,15 @@
 import { IsArray, IsOptional, IsString } from 'class-validator';
 
-export class CreateResourceAllocationsDto {
+export class CreateResourceAllocationDto {
   @IsString()
   resourceId!: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  projectIds!: string[];
+  @IsString()
+  projectId!: string;
+
+  @IsOptional()
+  @IsString()
+  desc?: string;
 }
 
 export class UpdateResourceAllocationsDto {
@@ -15,7 +18,10 @@ export class UpdateResourceAllocationsDto {
   resourceName?: string;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  projectIds?: string[];
+  @IsString()
+  projectId?: string;
+
+  @IsOptional()
+  @IsString()
+  desc?: string;
 }

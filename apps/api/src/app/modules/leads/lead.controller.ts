@@ -6,7 +6,9 @@ import {
   Patch,
   Post,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
+import { CurrentUser } from '../../decorators/current-user.decorator';
 import { LeadsService } from './lead.service';
 import { CreateLeadDto, UpdateLeadDto } from './dto/leads.dto';
 import { LeadStatus } from '@prisma/client';
@@ -30,7 +32,13 @@ export class LeadsController {
 
   @Roles(UserRole.BDE, UserRole.MANAGER)
   @Post('create')
-  async createLead(@Body() createLeadDto: CreateLeadDto) {
+  async createLead(
+    @Body() createLeadDto: CreateLeadDto,
+    @CurrentUser() user: any,
+  ) {
+    if (user.role === UserRole.BDE && createLeadDto.leadStatus !== 'ACTIVE') {
+      throw new ForbiddenException('BDEs can only add active leads');
+    }
     return this.leadsService.createLead(createLeadDto);
   }
 

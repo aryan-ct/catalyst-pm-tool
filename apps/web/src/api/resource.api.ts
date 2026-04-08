@@ -15,6 +15,11 @@ export type UpdateResource = {
   isActive?: boolean;
 };
 
+const findMe = async () => {
+  const response = await axiosInstance.get('/resources/me');
+  return response.data;
+}
+
 const createResource = async (createResourceData: Resource) => {
   const result = await axiosInstance.post('/resources/create', {
     ...createResourceData,
@@ -43,4 +48,5 @@ export const RESOURCE_API = {
   createResource,
   updateResource,
   findAllResources,
+  findMe
 };

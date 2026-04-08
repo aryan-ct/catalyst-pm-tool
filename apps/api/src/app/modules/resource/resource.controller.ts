@@ -11,15 +11,23 @@ import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
 import { ResourcesService } from './resources.service';
 import { Role } from '@prisma/client';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import * as client from '@prisma/client';
+
 
 @Controller('resources')
 export class ResourcesController {
-  constructor(private readonly resourcesService: ResourcesService) {}
+  constructor(private readonly resourcesService: ResourcesService) { }
 
   @Get('all')
   @Roles(UserRole.HR)
   async findAll(@Query('role') role?: Role) {
     return this.resourcesService.findAll(role);
+  }
+
+  @Get("me")
+  async findMe(@CurrentUser() user: client.Resource) {
+    return this.resourcesService.findById(user.id);
   }
 
   @Get(':id')

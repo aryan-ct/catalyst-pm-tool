@@ -19,7 +19,7 @@ export class LeadsService {
   }
 
   async findAllLeads(leadStatus?: LeadStatus) {
-    return prisma.lead.findMany({ where: { leadStatus } });
+    return prisma.lead.findMany({ where: { leadStatus }, orderBy: { createdAt: 'desc' } });
   }
 
   async findLeadById(id: string) {

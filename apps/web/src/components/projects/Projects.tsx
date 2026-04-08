@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Pencil, Trash2 } from 'lucide-react';
 import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
+import { PROJECT_API } from '../../api/project.api';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -18,6 +19,19 @@ export default function Projects() {
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+
+  const fetchProjects = async () => {
+    try {
+      const data = await PROJECT_API.getAllProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Failed to fetch projects', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   const filtered = projects.filter((p) =>
     filter === 'All' ? true : p.status === filter,
@@ -41,6 +55,7 @@ export default function Projects() {
 
         <ProjectModal
           setProjects={setProjects}
+          fetchProjects={fetchProjects}
           editData={editData}
           editIndex={editIndex}
           setEditData={setEditData}
@@ -55,7 +70,7 @@ export default function Projects() {
             <CardContent className="p-4 space-y-3">
               {/* Edit */}
               <button
-                className="absolute top-3 right-10 text-gray-400 hover:text-blue-500"
+                className="absolute top-3 right-4 text-gray-400 hover:text-blue-500 cursor-pointer"
                 onClick={() => {
                   setEditData(p);
                   setEditIndex(i);
@@ -65,12 +80,12 @@ export default function Projects() {
               </button>
 
               {/* Delete */}
-              <button
+              {/* <button
                 className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
                 onClick={() => setDeleteIndex(i)}
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </button> */}
 
               {/* Project Info */}
               <div>
@@ -133,12 +148,20 @@ export default function Projects() {
       <ConfirmDeleteDialog
         open={deleteIndex !== null}
         onClose={() => setDeleteIndex(null)}
-        onConfirm={() => {
-          setProjects((prev) => prev.filter((_, idx) => idx !== deleteIndex));
+        onConfirm={async () => {
+          if (deleteIndex !== null) {
+            const project = projects[deleteIndex];
+            if (project && project.id) {
+              await PROJECT_API.updateProject(project.id, { ...project, status: 'Archived' });
+              await fetchProjects();
+            } else {
+              setProjects((prev) => prev.filter((_, idx) => idx !== deleteIndex));
+            }
+          }
           setDeleteIndex(null);
         }}
-        title="Delete Project?"
-        description="Are you sure you want to delete this project?"
+        title="Archive Project?"
+        description="Are you sure you want to archive this project?"
       />
     </div>
   );

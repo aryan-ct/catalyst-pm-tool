@@ -6,10 +6,11 @@ import {
   Patch,
   Param,
   Query,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ResourceAllocationsService } from './resource-allocations.service';
 import {
-  CreateResourceAllocationsDto,
+  CreateResourceAllocationDto,
   UpdateResourceAllocationsDto,
 } from './dto/resource-allocations.dto';
 import * as client from '@prisma/client';
@@ -22,7 +23,7 @@ export class ResourceAllocationsController {
   ) {}
 
   @Post('create')
-  create(@Body() createDto: CreateResourceAllocationsDto) {
+  create(@Body(new ParseArrayPipe({ items: CreateResourceAllocationDto })) createDto: CreateResourceAllocationDto[]) {
     return this.resourceAllocationsService.create(createDto);
   }
 
