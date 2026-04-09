@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { allocations } from '../data/mockData';
+import { useResourceAllocation } from '../ResourceAllocationContext';
+import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
+import { AllocationRow } from '../types';
 import {
   Select,
   SelectContent,
@@ -11,8 +13,6 @@ import {
 } from '@/components/ui/select';
 import { CircleX } from 'lucide-react';
 
-const PROJECT_OPTIONS = ['PM Tool', 'Dashboard', 'Website', 'Mobile App'];
-
 const AllocationDetails = ({
   date,
   onBack,
@@ -20,12 +20,70 @@ const AllocationDetails = ({
   date: string;
   onBack: () => void;
 }) => {
+  const { allocations, projects, resources, refreshData } = useResourceAllocation();
+  const PROJECT_OPTIONS = projects.map(p => p.name);
+
   const today = new Date().toDateString();
   const isEditable = date === today;
 
-  const initialData = allocations.filter((a) => a.date === date);
+  const [rows, setRows] = useState<AllocationRow[]>(() => {
+    const dayAllocations = allocations.filter((a) => a.date === date);
+    if (!isEditable) return dayAllocations;
 
-  const [rows, setRows] = useState(initialData);
+    const resourceMap = new Map<string, AllocationRow>();
+    dayAllocations.forEach(a => resourceMap.set(a.resourceId, a));
+
+    return resources.map((r) => {
+      if (resourceMap.has(r.id)) {
+        return resourceMap.get(r.id)!;
+      }
+      return {
+        resourceId: r.id,
+        resourceName: r.name,
+        date: date,
+        projects: [],
+      };
+    });
+  });
+
+  useEffect(() => {
+    // Only reset rows on un-editable dates when allocations change
+    // If it's editable, we let the user edit the state freely
+    if (!isEditable) {
+      setRows(allocations.filter((a) => a.date === date));
+    }
+  }, [allocations, date, isEditable]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    const payload = rows.flatMap(row => 
+      row.projects.map(p => {
+        const project = projects.find(proj => proj.name === p.name);
+        return {
+          resourceId: row.resourceId,
+          projectId: project?.id,
+          desc: p.description || ''
+        };
+      }).filter(item => item.projectId)
+    );
+
+    if (payload.length === 0) {
+      onBack();
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await RESOURCE_ALLOCATIONS_API.createResourceAllocations(payload as any);
+      await refreshData();
+      onBack();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAddProject = (rowIndex: number, projectName: string) => {
     const updated = [...rows];
@@ -58,11 +116,19 @@ const AllocationDetails = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           ← Back
         </Button>
 
         <span className="font-semibold">{date}</span>
+
+        {isEditable ? (
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-blue-600 text-white">
+            {isSubmitting ? 'Saving...' : 'Submit'}
+          </Button>
+        ) : (
+          <div className="w-20"></div> /* Spacer for alignment */
+        )}
       </div>
 
       <div className="border rounded-xl p-4">

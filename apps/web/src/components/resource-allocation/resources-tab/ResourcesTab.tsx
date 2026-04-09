@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ResourceTable from './ResourceTable';
-import { resources } from '../data/mockData';
-import AllocationDetails from '../allocation/AllocationDetails';
+import { useResourceAllocation } from '../ResourceAllocationContext';
 import {
   Select,
   SelectContent,
@@ -13,18 +11,16 @@ import {
 } from '@/components/ui/select';
 
 const ResourcesTab = () => {
+  const { resources } = useResourceAllocation();
   const [selected, setSelected] = useState<string>('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [openAllocation, setOpenAllocation] = useState(false);
-
-  const today = new Date().toDateString();
 
   useEffect(() => {
-    if (resources.length) {
+    if (resources.length > 0 && !selected) {
       setSelected(resources[0].id);
     }
-  }, []);
+  }, [resources, selected]);
 
   const roles = ['all', ...new Set(resources.map((r) => r.role))];
 

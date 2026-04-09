@@ -1,44 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import AllocationSheets from './AllocationSheets';
 import ResourcesTab from '../resources-tab/ResourcesTab';
 import AllocationDetails from '../allocation/AllocationDetails';
-import { RESOURCE_API } from '@/api/resource.api';
-import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
+import { ResourceAllocationProvider } from '../ResourceAllocationContext';
 
-const AllocationTabs = () => {
-  const [activeTab, setActiveTab] = useState<'allocation' | 'resources'>(
-    'allocation',
-  );
+const AllocationTabsContent = () => {
+  const [activeTab, setActiveTab] = useState<'allocation' | 'resources'>('allocation');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [resources, setResoueces] = useState();
-  const [resourceAllocations, setResoueceAllocations] = useState();
 
   const today = new Date().toDateString();
-
-  const fetchResources = async () => {
-    try {
-      const resourcesData = await RESOURCE_API.findAllResources();
-      setResoueces(resourcesData);
-    } catch (error: any) {
-      console.log('Failed to fetch resources.');
-    }
-  };
-
-  const fetchResourceAllocations = async () => {
-    try {
-      const resourceAllocationsData =
-        await RESOURCE_ALLOCATIONS_API.getAllResourceAllocations();
-      setResoueceAllocations(resourceAllocationsData);
-    } catch (error) {
-      console.log('Failed to fetch resource allocations');
-    }
-  };
-
-  useEffect(() => {
-    fetchResources();
-    fetchResourceAllocations();
-  }, []);
 
   if (selectedDate) {
     return (
@@ -86,5 +57,11 @@ const AllocationTabs = () => {
     </div>
   );
 };
+
+const AllocationTabs = () => (
+  <ResourceAllocationProvider>
+    <AllocationTabsContent />
+  </ResourceAllocationProvider>
+);
 
 export default AllocationTabs;

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { allocations } from '../data/mockData';
+import { useResourceAllocation } from '../ResourceAllocationContext';
 
 const PAGE_SIZE = 5;
 
 const ResourceTable = ({ resourceId }: { resourceId: string }) => {
+  const { allocations } = useResourceAllocation();
   const data = allocations.filter((a) => a.resourceId === resourceId);
 
   const [page, setPage] = useState(1);

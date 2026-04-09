@@ -16,17 +16,17 @@ import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectService: ProjectsService) { }
+  constructor(private readonly projectService: ProjectsService) {}
 
   // Create Project
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.HR)
   @Post('create')
   async createProject(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.createProject(createProjectDto);
   }
 
   // Get all Project
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.HR)
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,
@@ -35,7 +35,7 @@ export class ProjectsController {
   }
 
   // Get Project by ID
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.HR)
   @Get(':id')
   async getProjectById(@Param('id') id: string) {
     return this.projectService.findById(id);
@@ -54,7 +54,7 @@ export class ProjectsController {
   }
 
   // Updated project by Id
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.HR)
   @Patch(':id')
   async updateProject(
     @Param('id') id: string,

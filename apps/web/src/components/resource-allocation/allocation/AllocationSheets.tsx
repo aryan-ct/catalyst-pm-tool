@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AllocationDetails from './AllocationDetails';
-import { allocations } from '../data/mockData';
+import { useResourceAllocation } from '../ResourceAllocationContext';
 import {
   Popover,
   PopoverContent,
@@ -17,6 +17,7 @@ const AllocationSheets = ({
   onSelectDate: (date: string) => void;
 }) => {
   const today = new Date().toDateString();
+  const { allocations } = useResourceAllocation();
 
   const uniqueDates = [...new Set(allocations.map((a) => a.date))];
 

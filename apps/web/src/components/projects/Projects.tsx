@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
 import { PROJECT_API } from '../../api/project.api';
 
