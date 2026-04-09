@@ -1,0 +1,165 @@
+// import { useState } from "react";
+// import { Button } from "@/components/ui/button";
+// import { allocations } from "../data/mockData";
+
+// const PAGE_SIZE = 5;
+
+// const ResourceTable = ({ resourceId }: { resourceId: string }) => {
+//   const data = allocations.filter((a) => a.resourceId === resourceId);
+
+//   const [page, setPage] = useState(1);
+
+//   const totalPages = Math.ceil(data.length / PAGE_SIZE);
+
+//   const paginated = data.slice(
+//     (page - 1) * PAGE_SIZE,
+//     page * PAGE_SIZE
+//   );
+
+//   return (
+//     <div className="space-y-4">
+//       {/* Table */}
+//       <div className="border rounded-xl p-4">
+//         <div className="grid grid-cols-3 font-semibold border-b pb-2">
+//           <span>Date</span>
+//           <span>Projects</span>
+//           <span>Description</span>
+//         </div>
+
+//         {paginated.map((row, i) => (
+//           <div key={i} className="grid grid-cols-3 py-3 border-b">
+//             <span>{row.date}</span>
+
+//             <div>
+//               {row.projects.map((p) => (
+//                 <div key={p.id}>{p.name}</div>
+//               ))}
+//             </div>
+
+//             <div>
+//               {row.projects.map((p) => (
+//                 <div key={p.id}>{p.description}</div>
+//               ))}
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Pagination */}
+//       <div className="flex justify-end gap-2">
+//         <Button
+//           variant="outline"
+//           disabled={page === 1}
+//           onClick={() => setPage((p) => p - 1)}
+//         >
+//           Prev
+//         </Button>
+
+//         <span className="px-2 py-1 text-sm">
+//           {page} / {totalPages}
+//         </span>
+
+//         <Button
+//           variant="outline"
+//           disabled={page === totalPages}
+//           onClick={() => setPage((p) => p + 1)}
+//         >
+//           Next
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ResourceTable;
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { allocations } from "../data/mockData";
+
+const PAGE_SIZE = 5;
+
+const ResourceTable = ({ resourceId }: { resourceId: string }) => {
+  const data = allocations.filter((a) => a.resourceId === resourceId);
+
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+
+  const paginated = data.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Table */}
+      <div className="border rounded-xl p-4">
+        
+        {/* Header */}
+        <div className="grid grid-cols-3 font-semibold border-b pb-2">
+          <span>Date</span>
+          <span>Projects</span>
+          <span>Description</span>
+        </div>
+
+        {data.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground text-sm">
+            No data available
+          </div>
+        ) : (
+          paginated.map((row, i) => (
+            <div key={i} className="border-b py-3">
+              
+              {row.projects.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="grid grid-cols-3 gap-4 mb-2 items-start"
+                >
+                  {/* Date */}
+                  <div className="font-medium">
+                    {index === 0 ? row.date : ""}
+                  </div>
+
+                  {/* Project */}
+                  <div>{p.name}</div>
+
+                  {/* Description */}
+                  <div className="break-word whitespace-pre-wrap">
+                    {p.description || "-"}
+                  </div>
+                </div>
+              ))}
+
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-end gap-2 items-center">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Prev
+        </Button>
+
+        <span className="px-2 py-1 text-sm">
+          {page} / {totalPages}
+        </span>
+
+        <Button
+          variant="outline"
+          disabled={page === totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default ResourceTable;
