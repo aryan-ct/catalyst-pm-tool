@@ -18,10 +18,8 @@ const AllocationTable = ({
 
       {data.map((row, i) => (
         <div key={i} className="grid grid-cols-3 py-3 border-b">
-          {/* Resource */}
           <span>{row.resourceName}</span>
 
-          {/* Projects */}
           <div>
             {row.projects.map((p, j) =>
               isEditable ? (
@@ -31,8 +29,6 @@ const AllocationTable = ({
               )
             )}
           </div>
-
-          {/* Description */}
           <div>
             {row.projects.map((p, j) =>
               isEditable ? (

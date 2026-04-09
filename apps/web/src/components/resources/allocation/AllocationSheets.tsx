@@ -11,7 +11,11 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 
-const AllocationSheets = () => {
+const AllocationSheets = ({
+  onSelectDate,
+}: {
+  onSelectDate: (date: string) => void;
+}) => {
   const today = new Date().toDateString();
 
   const uniqueDates = [...new Set(allocations.map((a) => a.date))];
@@ -36,7 +40,6 @@ const AllocationSheets = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Controls */}
       <div className="flex justify-between items-center">
         <Popover>
           <PopoverTrigger>
@@ -63,34 +66,31 @@ const AllocationSheets = () => {
           </PopoverContent>
         </Popover>
 
-        <Button
+        {/* <Button
           onClick={() => setSelectedDate(today)}
           className="bg-blue-600 text-white"
         >
           Add Allocation for today
-        </Button>
+        </Button> */}
       </div>
 
-      {/* Card */}
       <Card className="w-full">
         <CardContent className="p-4 space-y-4">
-          {/* Title */}
           <div className="text-sm font-medium text-muted-foreground">
             Latest 10 days data
           </div>
 
-          {/* Full Width Tabs */}
           <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto">
             {latest10Dates.map((date) => {
               const isToday = date === today;
 
-              // count resources for that date
               const count = allocations.filter((a) => a.date === date).length;
 
               return (
                 <div
                   key={date}
-                  onClick={() => setSelectedDate(date)}
+                  // onClick={() => setSelectedDate(date)}
+                  onClick={() => onSelectDate(date)}
                   className={`w-full border rounded-lg px-4 py-3 cursor-pointer transition-all
                     ${
                       isToday
@@ -100,13 +100,11 @@ const AllocationSheets = () => {
                   `}
                 >
                   <div className="flex justify-between items-center">
-                    {/* Date */}
                     <span className="font-medium">
                       {formatDate(date)}
                       {isToday && ' (Today)'}
                     </span>
 
-                    {/* Resource Count */}
                     <span className="text-sm opacity-80">
                       {count} resources
                     </span>
@@ -118,7 +116,6 @@ const AllocationSheets = () => {
         </CardContent>
       </Card>
 
-      {/* Empty State */}
       <div className="text-center text-muted-foreground py-10">
         Select a date to view allocation
       </div>

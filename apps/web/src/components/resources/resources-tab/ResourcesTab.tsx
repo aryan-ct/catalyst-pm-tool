@@ -50,17 +50,15 @@ const ResourcesTab = () => {
     }
   }, [search, roleFilter, filteredResources, selected]);
 
-  if (openAllocation) {
-    return (
-      <AllocationDetails date={today} onBack={() => setOpenAllocation(false)} />
-    );
-  }
+  // if (openAllocation) {
+  //   return (
+  //     <AllocationDetails date={today} onBack={() => setOpenAllocation(false)} />
+  //   );
+  // }
 
   return (
     <div className="space-y-4">
-      {/* Top Controls */}
       <div className="flex justify-between items-center gap-4">
-        {/* Filters */}
         <div className="flex gap-3 items-center">
           <Select<string>
             value={roleFilter}
@@ -82,7 +80,6 @@ const ResourcesTab = () => {
             </SelectContent>
           </Select>
 
-          {/* Search */}
           <Input
             placeholder="Search by name or role..."
             value={search}
@@ -91,16 +88,14 @@ const ResourcesTab = () => {
           />
         </div>
 
-        {/* Add Allocation */}
-        <Button
+        {/* <Button
           onClick={() => setOpenAllocation(true)}
           className="bg-blue-600 text-white"
         >
           Add Allocation for today
-        </Button>
+        </Button> */}
       </div>
 
-      {/* Resource List */}
       <div className="flex flex-wrap gap-2 overflow-x-auto">
         {filteredResources.map((r) => (
           <div
@@ -114,14 +109,12 @@ const ResourcesTab = () => {
         ))}
       </div>
 
-      {/* Empty State */}
       {filteredResources.length === 0 && (
         <div className="text-center text-muted-foreground py-6">
           No resources found
         </div>
       )}
 
-      {/* Table */}
       {selected && filteredResources.length > 0 && (
         <ResourceTable resourceId={selected} />
       )}
