@@ -43,6 +43,19 @@ export default function Leads({ setProjects }: any) {
   const [filter, setFilter] = useState("All");
   const [convertLead, setConvertLead] = useState<any>(null);
   const [lostLeadId, setLostLeadId] = useState<string | null>(null);
+  const [convertConfirmLeadId, setConvertConfirmLeadId] = useState<string | null>(null);
+
+  const handleMarkConverted = async () => {
+    if (!convertConfirmLeadId) return;
+    try {
+      await LEAD_API.updateLeadStatus(convertConfirmLeadId, "CONVERTED");
+      fetchLeads();
+    } catch (err) {
+      console.error("Failed to mark lead as converted:", err);
+    } finally {
+      setConvertConfirmLeadId(null);
+    }
+  };
 
   const handleMarkLost = async () => {
     if (!lostLeadId) return;
@@ -108,19 +121,30 @@ export default function Leads({ setProjects }: any) {
                 </p>
               )}
 
-              {l.status === "Active" && me?.role === Roles.MANAGER && (
+              {l.status === "Active" && me?.role === Roles.BDE && (
                 <div className="flex gap-2 mt-4">
                   <Button
                     className="bg-blue-600 text-white"
-                    onClick={() => setConvertLead({ ...l, index: i })}
+                    onClick={() => setConvertConfirmLeadId(l.id)}
                   >
-                    Convert to Project
+                    Mark as Converted
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => setLostLeadId(l.id)}
                   >
                     Mark as Lost
+                  </Button>
+                </div>
+              )}
+
+              {l.status === "Converted" && me?.role === Roles.MANAGER && (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    className="bg-blue-600 text-white"
+                    onClick={() => setConvertLead({ ...l, index: i })}
+                  >
+                    Create Project
                   </Button>
                 </div>
               )}
@@ -139,6 +163,27 @@ export default function Leads({ setProjects }: any) {
           onClose={() => setConvertLead(null)}
 
         />
+      )}
+
+      {convertConfirmLeadId && (
+        <Dialog open={!!convertConfirmLeadId} onOpenChange={(open) => !open && setConvertConfirmLeadId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Mark Lead as Converted</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to mark this lead as converted? This action will update the lead status and allow project creation.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setConvertConfirmLeadId(null)}>
+                Cancel
+              </Button>
+              <Button className="bg-blue-600 text-white" onClick={handleMarkConverted}>
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {lostLeadId && (

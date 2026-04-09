@@ -42,12 +42,26 @@ export class LeadsController {
     return this.leadsService.createLead(createLeadDto);
   }
 
-  @Roles(UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.BDE)
   @Patch('/:id')
   async updateLead(
     @Param('id') id: string,
     @Body() updateLeadDto: UpdateLeadDto,
+    @CurrentUser() user: any,
   ) {
+    if (user.role === UserRole.BDE) {
+      if (
+        updateLeadDto.clientName !== undefined ||
+        updateLeadDto.projectName !== undefined ||
+        updateLeadDto.links !== undefined
+      ) {
+        throw new ForbiddenException('BDEs can only update lead status');
+      }
+    } else if (user.role === UserRole.MANAGER) {
+      if (updateLeadDto.leadStatus !== undefined) {
+        throw new ForbiddenException('Managers cannot update lead status');
+      }
+    }
     return this.leadsService.updateLead(id, updateLeadDto);
   }
 }
