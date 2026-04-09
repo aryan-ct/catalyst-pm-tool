@@ -33,7 +33,7 @@ export class AuthService {
 
     const resource = await prisma.resource.findUnique({ where: { email } });
 
-    if (!resource) {
+    if (!resource || !resource.isActive) {
       throw new UnauthorizedException('Email or password is incorrect.');
     }
 

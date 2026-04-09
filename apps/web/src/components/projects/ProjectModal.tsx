@@ -30,7 +30,7 @@ export default function ProjectModal({
   setEditIndex,
   prefill,
   onSubmitOverride,
-  isControlled
+  isControlled,
 }: any) {
   const [open, setOpen] = useState(false);
 
@@ -72,7 +72,6 @@ export default function ProjectModal({
       setOpen(true);
     }
   }, [prefill, editData]);
-
 
   // ✅ Submit handler
   //   const handleSubmit = () => {
@@ -146,8 +145,8 @@ export default function ProjectModal({
         } else {
           setProjects((prev: any[]) =>
             prev.map((item, idx) =>
-              idx === editIndex ? { ...form, milestones } : item
-            )
+              idx === editIndex ? { ...form, milestones } : item,
+            ),
           );
         }
       } else {
@@ -155,21 +154,18 @@ export default function ProjectModal({
         await PROJECT_API.createProject({ ...form, milestones });
         if (fetchProjects) await fetchProjects();
         else {
-          setProjects((prev: any[]) => [
-            ...prev,
-            { ...form, milestones },
-          ]);
+          setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
         }
       }
 
       // Reset
       setForm({
-        name: "",
-        client: "",
-        date: "",
+        name: '',
+        client: '',
+        date: '',
         hours: 0,
-        status: "",
-        docLink: "",
+        status: '',
+        docLink: '',
       });
 
       setMilestones([]);
@@ -190,12 +186,12 @@ export default function ProjectModal({
           className="bg-blue-600 text-white"
           onClick={() => {
             setForm({
-              name: "",
-              client: "",
-              date: "",
+              name: '',
+              client: '',
+              date: '',
               hours: 0,
-              status: "",
-              docLink: "",
+              status: '',
+              docLink: '',
             });
             setMilestones([]);
             setErrors({});
@@ -325,7 +321,14 @@ export default function ProjectModal({
             <Button
               variant="outline"
               onClick={() =>
-                setMilestones([...milestones, { name: '', desc: '', hours: 0 }])
+                setMilestones([
+                  ...milestones,
+                  {
+                    milestoneName: '',
+                    milestoneDescription: '',
+                    estimatedHours: 0,
+                  },
+                ])
               }
             >
               + Add Milestone
@@ -339,16 +342,16 @@ export default function ProjectModal({
                 <div className="space-y-1">
                   <Label>Name</Label>
                   <Input
-                    value={m.name}
+                    value={m.milestoneName}
                     onChange={(e) => {
                       const updated = [...milestones];
-                      updated[i].name = e.target.value;
+                      updated[i].milestoneName = e.target.value;
                       setMilestones(updated);
                     }}
                   />
                   {errors.milestones?.[i]?.name && (
                     <p className="text-xs text-red-500">
-                      {errors.milestones[i].name}
+                      {errors.milestones[i].milestoneName}
                     </p>
                   )}
                 </div>
@@ -357,10 +360,10 @@ export default function ProjectModal({
                 <div className="space-y-1">
                   <Label>Description</Label>
                   <CustomRTE
-                    value={m.desc}
+                    value={m.milestoneDescription}
                     onChange={(val: string) => {
                       const updated = [...milestones];
-                      updated[i].desc = val;
+                      updated[i].milestoneDescription = val;
                       setMilestones(updated);
                     }}
                   />
@@ -371,16 +374,16 @@ export default function ProjectModal({
                   <Label>Hours</Label>
                   <Input
                     type="number"
-                    value={m.hours}
+                    value={m.estimatedHours}
                     onChange={(e) => {
                       const updated = [...milestones];
-                      updated[i].hours = Number(e.target.value);
+                      updated[i].estimatedHours = Number(e.target.value);
                       setMilestones(updated);
                     }}
                   />
-                  {errors.milestones?.[i]?.hours && (
+                  {errors.milestones?.[i]?.estimatedHours && (
                     <p className="text-xs text-red-500">
-                      {errors.milestones[i].hours}
+                      {errors.milestones[i].estimatedHours}
                     </p>
                   )}
                 </div>

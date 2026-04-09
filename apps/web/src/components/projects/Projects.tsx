@@ -127,15 +127,19 @@ export default function Projects() {
                   {p.milestones.map((m: any, idx: number) => (
                     <div key={idx} className="border rounded-md p-2 text-sm">
                       <p className="font-medium">
-                        {idx + 1}. {m.name}
+                        {idx + 1}. {m.milestoneName}
                       </p>
 
                       <div
                         className="text-gray-600"
-                        dangerouslySetInnerHTML={{ __html: m.desc }}
+                        dangerouslySetInnerHTML={{
+                          __html: m.milestoneDescription,
+                        }}
                       />
 
-                      <p className="text-xs text-gray-500">Hours: {m.hours}</p>
+                      <p className="text-xs text-gray-500">
+                        Estimated Hours: {m.estimatedHours}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -152,10 +156,15 @@ export default function Projects() {
           if (deleteIndex !== null) {
             const project = projects[deleteIndex];
             if (project && project.id) {
-              await PROJECT_API.updateProject(project.id, { ...project, status: 'Archived' });
+              await PROJECT_API.updateProject(project.id, {
+                ...project,
+                status: 'Archived',
+              });
               await fetchProjects();
             } else {
-              setProjects((prev) => prev.filter((_, idx) => idx !== deleteIndex));
+              setProjects((prev) =>
+                prev.filter((_, idx) => idx !== deleteIndex),
+              );
             }
           }
           setDeleteIndex(null);
