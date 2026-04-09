@@ -13,6 +13,7 @@ const createProject = async (data: any) => {
       description: m.desc,
       hours: Number(m.hours) || 0,
     })),
+    leadId: data.leadId,
   };
 
   const result = await axiosInstance.post('/projects/create', payload);

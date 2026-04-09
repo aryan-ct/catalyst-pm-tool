@@ -140,7 +140,10 @@ export default function ProjectModal({
       } else if (editIndex !== null) {
         // 🔥 EDIT
         if (editData && editData.id) {
-          await PROJECT_API.updateProject(editData.id, { ...form, milestones });
+          await PROJECT_API.updateProject(editData.id, {
+            ...form,
+            milestones,
+          });
           if (fetchProjects) await fetchProjects();
         } else {
           setProjects((prev: any[]) =>

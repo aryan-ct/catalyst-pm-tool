@@ -39,6 +39,10 @@ export class CreateProjectDto {
   @ValidateNested({ each: true })
   @Type(() => CreateMilestoneDto)
   milestones?: CreateMilestoneDto[];
+
+  @IsOptional()
+  @IsString()
+  leadId?: string;
 }
 
 export class UpdateProjectDto {

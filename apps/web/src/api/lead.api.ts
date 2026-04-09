@@ -22,6 +22,7 @@ const getAllLeads = async () => {
     status: l.leadStatus.charAt(0) + l.leadStatus.slice(1).toLowerCase(),
     createdAt: new Date(l.createdAt).toLocaleDateString(),
     convertedAt: l.leadStatus === 'CONVERTED' ? new Date(l.updatedAt).toLocaleDateString() : undefined,
+    projectId: l.projectId,
   }));
 };
 

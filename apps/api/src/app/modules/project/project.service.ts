@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 import { prisma } from '../../config/prima.config';
 import { ProjectStatus } from '@prisma/client';
@@ -6,7 +6,16 @@ import { ProjectStatus } from '@prisma/client';
 @Injectable()
 export class ProjectsService {
   async createProject(createProjectDto: CreateProjectDto) {
-    const { milestones, ...projectData } = createProjectDto;
+    const { milestones, leadId, ...projectData } = createProjectDto;
+
+    if (leadId) {
+      const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+      if (!lead) throw new NotFoundException('Lead not found');
+      if (lead.projectId) {
+        throw new BadRequestException('A project has already been created from this lead');
+      }
+    }
+
     const project = await prisma.project.create({
       data: {
         ...projectData,
@@ -21,6 +30,13 @@ export class ProjectsService {
         milestones: true,
       },
     });
+
+    if (leadId) {
+      await prisma.lead.update({
+        where: { id: leadId },
+        data: { projectId: project.id },
+      });
+    }
 
     return project;
   }

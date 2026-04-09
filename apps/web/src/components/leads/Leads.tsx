@@ -138,7 +138,7 @@ export default function Leads({ setProjects }: any) {
                 </div>
               )}
 
-              {l.status === "Converted" && me?.role === Roles.MANAGER && (
+              {l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId && (
                 <div className="flex gap-2 mt-4">
                   <Button
                     className="bg-blue-600 text-white"

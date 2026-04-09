@@ -4,6 +4,7 @@ model Lead {
   clientName  String
   links       String[]
   leadStatus  LeadStatus
+  projectId   String?    @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

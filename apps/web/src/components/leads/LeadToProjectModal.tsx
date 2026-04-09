@@ -11,8 +11,11 @@ export default function LeadToProjectModal({
     try {
       // Lead is already converted, no need to update status
 
+      // Inject leadId so the backend enforces 1:1 project creation constraint
+      const payload = { ...projectData, leadId: lead.id };
+
       // Create the new project in the backend
-      const createdProject = await PROJECT_API.createProject(projectData);
+      const createdProject = await PROJECT_API.createProject(payload);
 
       if (onSuccess) onSuccess();
 
