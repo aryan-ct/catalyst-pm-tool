@@ -7,6 +7,8 @@ import Projects from '../projects/Projects';
 import Resources from '../resources/Resources';
 import Leads from '../leads/Leads';
 import ResourceAllocation from '../resource-allocation/ResourceAllocation';
+import ProjectManagement from '../project-management/ProjectManagement';
+import AllocationTabs from '../resources/allocation/AllocationTabs';
 
 export default function Dashboard() {
   const { user, logout, loading } = useAuth();
@@ -69,9 +71,9 @@ export default function Dashboard() {
       case 'Projects':
         return <Projects />;
       case 'Resources':
-        return <Resources />;
+        return <AllocationTabs />;
       case 'Project Management':
-        return <p> This is Settings data</p>;
+        return <ProjectManagement/>;
       case 'Resource Allocation':
         return <ResourceAllocation />;
       case 'Leads':
