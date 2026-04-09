@@ -6,9 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import Projects from '../projects/Projects';
 import Resources from '../resources/Resources';
 import Leads from '../leads/Leads';
-import ResourceAllocation from '../resource-allocation/ResourceAllocation';
 import ProjectManagement from '../project-management/ProjectManagement';
-import AllocationTabs from '../resources/allocation/AllocationTabs';
+import AllocationTabs from '../resource-allocation/allocation/AllocationTabs';
 
 export default function Dashboard() {
   const { user, logout, loading } = useAuth();
@@ -71,11 +70,11 @@ export default function Dashboard() {
       case 'Projects':
         return <Projects />;
       case 'Resources':
-        return <AllocationTabs />;
+        return <Resources />;
       case 'Project Management':
-        return <ProjectManagement/>;
+        return <ProjectManagement />;
       case 'Resource Allocation':
-        return <ResourceAllocation />;
+        return <AllocationTabs />;
       case 'Leads':
         return <Leads />;
       default:
