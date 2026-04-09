@@ -27,6 +27,14 @@ export class ResourcesController {
 
   @Get("me")
   async findMe(@CurrentUser() user: client.Resource) {
+    if (user?.role === UserRole.HR) {
+      return {
+        email: process.env.HR_EMAIL_ID || 'hr@catalyst.sh',
+        role: Role.HR,
+        isActive: true,
+      };
+    }
+
     return this.resourcesService.findById(user.id);
   }
 

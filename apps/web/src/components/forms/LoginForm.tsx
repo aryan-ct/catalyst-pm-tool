@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,9 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import axiosInstance from "@/api/axios-instance";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginForm() {
-  const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -34,8 +34,7 @@ export default function LoginForm() {
     try {
       const response = await axiosInstance.post("/auth/login", form);
       const { token } = response.data;
-      localStorage.setItem("authToken", token);
-      navigate("/");
+      await login(token);
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {

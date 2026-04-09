@@ -85,7 +85,7 @@ export class ResourcesService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-      }
+      },
     });
 
     return resource;

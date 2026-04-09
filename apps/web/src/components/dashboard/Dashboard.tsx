@@ -1,28 +1,68 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
 import { Card, CardContent } from '@/components/ui/card';
 import Projects from '../projects/Projects';
 import Resources from '../resources/Resources';
 import Leads from '../leads/Leads';
 import ResourceAllocation from '../resource-allocation/ResourceAllocation';
 
-const menuItems = [
-  'Projects',
-  'Resources',
-  'Project Management',
-  'Resource Allocation',
-  'Leads'
-];
-
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('Projects');
-  const navigate = useNavigate();
+  const { user, logout, loading } = useAuth();
+
+  const getMenuItems = () => {
+    if (!user) return [];
+    switch (user.role) {
+      case Roles.MANAGER:
+        return ['Projects', 'Project Management', 'Leads'];
+      case Roles.HR:
+        return ['Resources', 'Resource Allocation'];
+      case Roles.BDE:
+        return ['Leads'];
+      default:
+        return [];
+    }
+  };
+
+  const getInitialActiveTab = () => {
+    if (!user) return '';
+    switch (user.role) {
+      case Roles.MANAGER:
+        return 'Projects';
+      case Roles.HR:
+        return 'Resources';
+      case Roles.BDE:
+        return 'Leads';
+      default:
+        return '';
+    }
+  };
+
+  const menuItems = getMenuItems();
+  const initialActiveTab = getInitialActiveTab();
+  const [activeTab, setActiveTab] = useState(initialActiveTab);
+
+  useEffect(() => {
+    if (
+      menuItems.length > 0 &&
+      (!activeTab || !menuItems.includes(activeTab))
+    ) {
+      setActiveTab(menuItems[0]);
+    }
+  }, [menuItems, activeTab]);
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/login');
+    logout();
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -51,8 +91,9 @@ export default function Dashboard() {
             <Button
               key={item}
               variant={activeTab === item ? 'default' : 'ghost'}
-              className={`w-full justify-start ${activeTab === item ? 'bg-blue-600 text-white' : ''
-                }`}
+              className={`w-full justify-start ${
+                activeTab === item ? 'bg-blue-600 text-white' : ''
+              }`}
               onClick={() => setActiveTab(item)}
             >
               {item}
