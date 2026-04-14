@@ -19,12 +19,16 @@ export default function KanbanColumn({
   onEdit,
   onDelete,
 }: Props) {
-  const { setNodeRef } = useDroppable({
-    id,
-  });
+ const { setNodeRef } = useDroppable({
+  id,
+  data: {
+    type: "column",
+    status: id,
+  },
+}); 
 
   return (
-    <Card className="bg-muted/30 flex flex-col min-h-[450px] h-auto">
+    <Card className="bg-muted/30 flex flex-col min-h-[450px] h-auto overflow-visible">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>

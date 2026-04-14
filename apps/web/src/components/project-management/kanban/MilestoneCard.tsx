@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Milestone } from "../types/types";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Milestone } from '../types/types';
 
 interface Props {
   milestone: Milestone;
@@ -11,11 +11,7 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-export default function MilestoneCard({
-  milestone,
-  onEdit,
-  onDelete,
-}: Props) {
+export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
   const {
     attributes,
     listeners,
@@ -26,7 +22,7 @@ export default function MilestoneCard({
   } = useSortable({
     id: milestone.id,
     data: {
-      type: "milestone",
+      type: 'milestone',
       milestone,
     },
   });
@@ -47,21 +43,28 @@ export default function MilestoneCard({
     >
       <Card className="bg-white shadow-sm hover:shadow-md transition-all">
         <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle className="text-base">
-            {milestone.milestoneName}
-          </CardTitle>
+          <CardTitle className="text-base">{milestone.milestoneName}</CardTitle>
           <div className="flex gap-2">
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => onEdit(milestone)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onEdit(milestone);
+              }}
             >
               <Pencil size={16} />
             </Button>
+
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => onDelete(milestone.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onDelete(milestone.id);
+              }}
             >
               <Trash size={16} />
             </Button>

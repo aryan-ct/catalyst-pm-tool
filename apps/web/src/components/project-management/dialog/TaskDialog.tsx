@@ -7,8 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PencilRuler } from "lucide-react";
+import { PencilRuler, X } from "lucide-react";
 import { Milestone, SubTask } from "../types/types";
+import { MilestoneErrors, validateMilestone } from "./validate";
 
 
 type Props = {
@@ -34,7 +35,7 @@ export default function TaskDialog({
     tasks: [],
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<MilestoneErrors>({});
 
   useEffect(() => {
     if (initialData) {
@@ -53,12 +54,14 @@ export default function TaskDialog({
     setErrors({});
   }, [initialData, open]);
 
+
   const addTask = () => {
     const newTask: SubTask = {
       id: crypto.randomUUID(),
       title: "",
       taskType: "feature",
     };
+
     setMilestone((prev) => ({
       ...prev,
       tasks: [...prev.tasks, newTask],
@@ -75,8 +78,13 @@ export default function TaskDialog({
       ...updatedTasks[index],
       [key]: value,
     };
-    setMilestone({ ...milestone, tasks: updatedTasks });
+
+    setMilestone({
+      ...milestone,
+      tasks: updatedTasks,
+    });
   };
+
 
   const removeTask = (index: number) => {
     setMilestone({
@@ -85,33 +93,12 @@ export default function TaskDialog({
     });
   };
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!milestone.milestoneName.trim()) {
-      newErrors.milestoneName = "Milestone name is required";
-    }
-
-    if (!milestone.milestoneDescription.trim()) {
-      newErrors.milestoneDescription = "Description is required";
-    }
-
-    if (milestone.estimatedHours <= 0) {
-      newErrors.estimatedHours = "Enter valid hours";
-    }
-
-    milestone.tasks.forEach((task, index) => {
-      if (!task.title.trim()) {
-        newErrors.tasks = `Task ${index + 1} title is required`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = () => {
-    if (!validate()) return;
+    const validationErrors = validateMilestone(milestone);
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) return;
+
     onSave(milestone);
     setOpen(false);
   };
@@ -168,6 +155,11 @@ export default function TaskDialog({
                   })
                 }
               />
+              {errors.milestoneDescription && (
+                <p className="text-red-500 text-xs">
+                  {errors.milestoneDescription}
+                </p>
+              )}
             </div>
 
             <div>
@@ -185,6 +177,11 @@ export default function TaskDialog({
                   })
                 }
               />
+              {errors.estimatedHours && (
+                <p className="text-red-500 text-xs">
+                  {errors.estimatedHours}
+                </p>
+              )}
             </div>
           </div>
 
@@ -205,7 +202,6 @@ export default function TaskDialog({
           </div>
         </div>
 
-        {/* Tasks */}
         <div className="mt-6">
           <div className="flex justify-between mb-2">
             <span className="font-semibold">Tasks</span>
@@ -213,6 +209,12 @@ export default function TaskDialog({
               + Add Task
             </Button>
           </div>
+
+          {errors.tasks && (
+            <p className="text-red-500 text-xs mb-2">
+              {errors.tasks}
+            </p>
+          )}
 
           <div className="flex flex-col gap-3">
             {milestone.tasks.map((task, index) => (
@@ -245,7 +247,7 @@ export default function TaskDialog({
                   variant="outline"
                   onClick={() => removeTask(index)}
                 >
-                  ✕
+                  <X/>
                 </Button>
               </div>
             ))}

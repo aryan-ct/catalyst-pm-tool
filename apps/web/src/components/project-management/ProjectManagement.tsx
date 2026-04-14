@@ -6,6 +6,7 @@ import ProjectSelector from "./kanban/ProjectSelector";
 import KanbanBoard from "./kanban/KanbanBoard";
 import TaskDialog from "./dialog/TaskDialog";
 import { DragEndEvent } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 
 
 export default function ProjectManagement() {
@@ -65,24 +66,95 @@ export default function ProjectManagement() {
     setOpen(true);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+const handleDragEnd = (event: DragEndEvent) => {
   const { active, over } = event;
 
   if (!over) return;
 
   const activeId = active.id as string;
-  const newStatus = over.id as Status;
+  const overId = over.id as string;
 
-  setProjects((prev) =>
-    prev.map((project) => {
+  const activeData = active.data.current;
+  const overData = over.data.current;
+
+  if (!activeData) return;
+
+  setProjects((prevProjects) =>
+    prevProjects.map((project) => {
       if (project.id !== selectedProjectId) return project;
+
+      const milestones = [...project.milestones];
+
+      const activeIndex = milestones.findIndex(
+        (m) => m.id === activeId
+      );
+      if (activeIndex === -1) return project;
+
+      const activeMilestone = milestones[activeIndex];
+      const sourceStatus = activeMilestone.status;
+
+      let destinationStatus: Status = sourceStatus;
+      let targetIndex = activeIndex;
+
+      // Case 1: Dropped over another milestone
+      if (overData?.type === "milestone") {
+        const overMilestone = overData.milestone;
+        destinationStatus = overMilestone.status;
+
+        const sameColumnMilestones = milestones.filter(
+          (m) => m.status === destinationStatus
+        );
+
+        const overIndexInColumn = sameColumnMilestones.findIndex(
+          (m) => m.id === overId
+        );
+
+        const globalIndices = milestones
+          .map((m, index) =>
+            m.status === destinationStatus ? index : -1
+          )
+          .filter((index) => index !== -1);
+
+        targetIndex = globalIndices[overIndexInColumn];
+      }
+
+      // Case 2: Dropped over a column
+      if (overData?.type === "column") {
+        destinationStatus = overData.status;
+
+        const indicesInColumn = milestones
+          .map((m, index) =>
+            m.status === destinationStatus ? index : -1
+          )
+          .filter((index) => index !== -1);
+
+        targetIndex =
+          indicesInColumn.length > 0
+            ? indicesInColumn[indicesInColumn.length - 1] + 1
+            : milestones.length;
+      }
+
+      // Reordering within the same column
+      if (sourceStatus === destinationStatus) {
+        return {
+          ...project,
+          milestones: arrayMove(milestones, activeIndex, targetIndex),
+        };
+      }
+
+      // Moving to a different column
+      const updatedMilestones = [...milestones];
+      updatedMilestones[activeIndex] = {
+        ...activeMilestone,
+        status: destinationStatus,
+      };
 
       return {
         ...project,
-        milestones: project.milestones.map((milestone) =>
-          milestone.id === activeId
-            ? { ...milestone, status: newStatus }
-            : milestone
+        milestones: arrayMove(
+          updatedMilestones,
+          activeIndex,
+          targetIndex
         ),
       };
     })
