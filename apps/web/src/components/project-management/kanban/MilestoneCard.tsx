@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash } from 'lucide-react';
+import { Clock, Pencil, Trash } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Milestone } from '../types/types';
@@ -75,7 +75,7 @@ export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
           <p className="text-muted-foreground">
             {milestone.milestoneDescription}
           </p>
-          <p>⏱ {milestone.estimatedHours} hrs</p>
+          <p className="flex gap-2"><Clock className='h-4 w-4'/> {milestone.estimatedHours} hrs</p>
 
           {milestone.tasks.map((task) => (
             <div
