@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { CreateSubtaskDto, UpdateSubtaskDto } from './dto/subtask.dto';
 import { SubtaskService } from './subtask.service';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
@@ -28,5 +28,11 @@ export class SubtaskController {
     @Body() updateSubtaskDto: UpdateSubtaskDto,
   ) {
     return this.subtaskService.update(subtask_id, updateSubtaskDto);
+  }
+
+  @Roles(UserRole.MANAGER)
+  @Delete('/:subtask_id')
+  async deleteSubtask(@Param('subtask_id') subtask_id: string) {
+    return this.subtaskService.delete(subtask_id);
   }
 }

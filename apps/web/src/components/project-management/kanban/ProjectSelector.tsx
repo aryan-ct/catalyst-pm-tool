@@ -6,13 +6,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Project } from "../types/types";
 
 interface Props {
-  projects: Project[];
+  projects: { id: string; name: string }[];
   selectedProjectId: string;
-//   onSelect: (projectId: string) => void;
- onSelect: any;
+  onSelect: (projectId: string) => void;
 }
 
 export default function ProjectSelector({
@@ -23,7 +21,7 @@ export default function ProjectSelector({
   return (
     <div className="flex items-center gap-4">
       <h1 className="text-xl font-semibold">Select Project:</h1>
-      <Select value={selectedProjectId} onValueChange={onSelect}>
+      <Select value={selectedProjectId} onValueChange={(val) => val && onSelect(val)}>
         <SelectTrigger className="w-[280px]">
           <SelectValue placeholder="Choose a project" />
         </SelectTrigger>

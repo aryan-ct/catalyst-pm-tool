@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 import { prisma } from '../../config/prima.config';
 import { ProjectStatus } from '@prisma/client';
@@ -12,7 +16,9 @@ export class ProjectsService {
       const lead = await prisma.lead.findUnique({ where: { id: leadId } });
       if (!lead) throw new NotFoundException('Lead not found');
       if (lead.projectId) {
-        throw new BadRequestException('A project has already been created from this lead');
+        throw new BadRequestException(
+          'A project has already been created from this lead',
+        );
       }
     }
 
@@ -22,8 +28,8 @@ export class ProjectsService {
 
         milestones: milestones
           ? {
-            create: milestones,
-          }
+              create: milestones,
+            }
           : undefined,
       },
       include: {
@@ -47,7 +53,13 @@ export class ProjectsService {
         projectStatus: project_status,
       },
       include: {
-        milestones: true,
+        milestones: {
+          include: {
+            tasks: {
+              include: { subTasks: true },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -56,7 +68,15 @@ export class ProjectsService {
   async findById(id: string) {
     const project = await prisma.project.findUnique({
       where: { id },
-      include: { milestones: true }
+      include: {
+        milestones: {
+          include: {
+            tasks: {
+              include: { subTasks: true },
+            },
+          },
+        },
+      },
     });
     if (!project) {
       throw new NotFoundException('Project not found');
@@ -65,7 +85,7 @@ export class ProjectsService {
   }
 
   async findMyProjectsByResourceAllocationId(
-    id: string,
+    _id: string,
     resource_allocation_id: string,
   ) {
     const resourceAllocation = await prisma.resourceAllocation.findUnique({
@@ -82,7 +102,7 @@ export class ProjectsService {
       where: {
         id: resourceAllocation.projectId,
       },
-      include: { milestones: true }
+      include: { milestones: true },
     });
 
     if (!projects || projects.length === 0) {
@@ -102,21 +122,17 @@ export class ProjectsService {
     const { milestones, ...updateData } = updateProjectDto;
 
     const updatedProject = await prisma.project.update({
-      where: {
-        id,
-      },
-      data: {
-        ...updateData,
-        ...(milestones && {
-          milestones: {
-            deleteMany: {},
-            create: milestones,
-          }
-        })
-      },
+      where: { id },
+      data: { ...updateData },
       include: {
-        milestones: true,
-      }
+        milestones: {
+          include: {
+            tasks: {
+              include: { subTasks: true },
+            },
+          },
+        },
+      },
     });
 
     return updatedProject;

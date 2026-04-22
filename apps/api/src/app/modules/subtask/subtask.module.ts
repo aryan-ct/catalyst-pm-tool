@@ -6,4 +6,4 @@ import { SubtaskService } from './subtask.service';
   controllers: [SubtaskController],
   providers: [SubtaskService],
 })
-export class Subtask {}
+export class SubtaskModule {}

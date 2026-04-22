@@ -10,6 +10,8 @@ import { LeadsModule } from './modules/leads/lead.module';
 import { ResourceAllocationsModule } from './modules/resource-allocations/resource-allocations.module';
 import { MilestoneModule } from './modules/milestone/milestone.module';
 import { JwtAuthGuard } from './guards/jwt.guard';
+import { TaskModule } from './modules/task/task.module';
+import { SubtaskModule } from './modules/subtask/subtask.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { JwtAuthGuard } from './guards/jwt.guard';
     LeadsModule,
     ResourceAllocationsModule,
     MilestoneModule,
+    TaskModule,
+    SubtaskModule,
   ],
   controllers: [AppController],
   providers: [

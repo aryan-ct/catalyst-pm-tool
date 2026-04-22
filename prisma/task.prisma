@@ -15,7 +15,7 @@ model Task {
   milestoneId String
 
   // Relation
-  milestone Milestone @relation(fields: [milestoneId], references: [id])
+  milestone   Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
   subTasks SubTask[]
 }
 

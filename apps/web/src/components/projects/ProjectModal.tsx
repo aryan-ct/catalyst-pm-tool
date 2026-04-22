@@ -317,82 +317,84 @@ export default function ProjectModal({
             )}
           </div>
 
-          {/* Milestones */}
-          <div className="space-y-3">
-            <Label>Milestones</Label>
+          {/* Milestones — only shown when creating, not when editing */}
+          {!editData && (
+            <div className="space-y-3">
+              <Label>Milestones</Label>
 
-            <Button
-              variant="outline"
-              onClick={() =>
-                setMilestones([
-                  ...milestones,
-                  {
-                    milestoneName: '',
-                    milestoneDescription: '',
-                    estimatedHours: 0,
-                  },
-                ])
-              }
-            >
-              + Add Milestone
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setMilestones([
+                    ...milestones,
+                    {
+                      milestoneName: '',
+                      milestoneDescription: '',
+                      estimatedHours: 0,
+                    },
+                  ])
+                }
+              >
+                + Add Milestone
+              </Button>
 
-            {milestones.map((m, i) => (
-              <div key={i} className="border p-4 rounded-md space-y-3">
-                <p className="text-sm font-medium">Milestone {i + 1}</p>
+              {milestones.map((m, i) => (
+                <div key={i} className="border p-4 rounded-md space-y-3">
+                  <p className="text-sm font-medium">Milestone {i + 1}</p>
 
-                {/* Name */}
-                <div className="space-y-1">
-                  <Label>Name</Label>
-                  <Input
-                    value={m.milestoneName}
-                    onChange={(e) => {
-                      const updated = [...milestones];
-                      updated[i].milestoneName = e.target.value;
-                      setMilestones(updated);
-                    }}
-                  />
-                  {errors.milestones?.[i]?.name && (
-                    <p className="text-xs text-red-500">
-                      {errors.milestones[i].milestoneName}
-                    </p>
-                  )}
+                  {/* Name */}
+                  <div className="space-y-1">
+                    <Label>Name</Label>
+                    <Input
+                      value={m.milestoneName}
+                      onChange={(e) => {
+                        const updated = [...milestones];
+                        updated[i].milestoneName = e.target.value;
+                        setMilestones(updated);
+                      }}
+                    />
+                    {errors.milestones?.[i]?.name && (
+                      <p className="text-xs text-red-500">
+                        {errors.milestones[i].milestoneName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1">
+                    <Label>Description</Label>
+                    <CustomRTE
+                      value={m.milestoneDescription}
+                      onChange={(val: string) => {
+                        const updated = [...milestones];
+                        updated[i].milestoneDescription = val;
+                        setMilestones(updated);
+                      }}
+                    />
+                  </div>
+
+                  {/* Hours */}
+                  <div className="space-y-1">
+                    <Label>Hours</Label>
+                    <Input
+                      type="number"
+                      value={m.estimatedHours}
+                      onChange={(e) => {
+                        const updated = [...milestones];
+                        updated[i].estimatedHours = Number(e.target.value);
+                        setMilestones(updated);
+                      }}
+                    />
+                    {errors.milestones?.[i]?.estimatedHours && (
+                      <p className="text-xs text-red-500">
+                        {errors.milestones[i].estimatedHours}
+                      </p>
+                    )}
+                  </div>
                 </div>
-
-                {/* Description */}
-                <div className="space-y-1">
-                  <Label>Description</Label>
-                  <CustomRTE
-                    value={m.milestoneDescription}
-                    onChange={(val: string) => {
-                      const updated = [...milestones];
-                      updated[i].milestoneDescription = val;
-                      setMilestones(updated);
-                    }}
-                  />
-                </div>
-
-                {/* Hours */}
-                <div className="space-y-1">
-                  <Label>Hours</Label>
-                  <Input
-                    type="number"
-                    value={m.estimatedHours}
-                    onChange={(e) => {
-                      const updated = [...milestones];
-                      updated[i].estimatedHours = Number(e.target.value);
-                      setMilestones(updated);
-                    }}
-                  />
-                  {errors.milestones?.[i]?.estimatedHours && (
-                    <p className="text-xs text-red-500">
-                      {errors.milestones[i].estimatedHours}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Submit */}
           <Button

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import ProjectModal from './ProjectModal';
+import ProjectDetails from './ProjectDetails';
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
 import { PROJECT_API } from '../../api/project.api';
@@ -19,6 +21,7 @@ export default function Projects() {
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [viewingProject, setViewingProject] = useState<any>(null);
 
   const fetchProjects = async () => {
     try {
@@ -36,6 +39,15 @@ export default function Projects() {
   const filtered = projects.filter((p) =>
     filter === 'All' ? true : p.status === filter,
   );
+
+  if (viewingProject) {
+    return (
+      <ProjectDetails
+        project={viewingProject}
+        onBack={() => setViewingProject(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,9 +80,10 @@ export default function Projects() {
         {filtered.map((p, i) => (
           <Card key={i} className="relative hover:shadow-md transition">
             <CardContent className="p-4 space-y-3">
-              {/* Edit */}
+              {/* Edit icon */}
               <button
                 className="absolute top-3 right-4 text-gray-400 hover:text-blue-500 cursor-pointer"
+                title="Edit project"
                 onClick={() => {
                   setEditData(p);
                   setEditIndex(i);
@@ -78,14 +91,6 @@ export default function Projects() {
               >
                 <Pencil className="h-4 w-4" />
               </button>
-
-              {/* Delete */}
-              {/* <button
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
-                onClick={() => setDeleteIndex(i)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button> */}
 
               {/* Project Info */}
               <div>
@@ -114,36 +119,30 @@ export default function Projects() {
                   href={p.docLink}
                   className="text-blue-600 text-sm underline"
                   target="_blank"
+                  rel="noreferrer"
                 >
                   Open Document
                 </a>
               </div>
 
-              {/* Milestones */}
+              {/* Milestone count */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Milestones:</p>
-
-                <div className="space-y-2">
-                  {p.milestones.map((m: any, idx: number) => (
-                    <div key={idx} className="border rounded-md p-2 text-sm">
-                      <p className="font-medium">
-                        {idx + 1}. {m.milestoneName}
-                      </p>
-
-                      <div
-                        className="text-gray-600"
-                        dangerouslySetInnerHTML={{
-                          __html: m.milestoneDescription,
-                        }}
-                      />
-
-                      <p className="text-xs text-gray-500">
-                        Estimated Hours: {m.estimatedHours}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-gray-500">
+                  Milestones:{' '}
+                  <span className="font-medium text-gray-700">
+                    {p.milestones?.length ?? 0}
+                  </span>
+                </p>
               </div>
+
+              {/* View Project button */}
+              <Button
+                variant="outline"
+                className="w-full mt-1"
+                onClick={() => setViewingProject(p)}
+              >
+                View Project
+              </Button>
             </CardContent>
           </Card>
         ))}

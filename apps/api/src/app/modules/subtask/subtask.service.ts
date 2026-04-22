@@ -1,11 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSubtaskDto, UpdateSubtaskDto } from './dto/subtask.dto';
 import { prisma } from '../../config/prima.config';
-import { TaskService } from '../task/task.service';
 
 @Injectable()
 export class SubtaskService {
-  constructor(private readonly taskService: TaskService) {}
 
   async getSubtasks(taskId: string) {
     const task = await prisma.task.findUnique({
@@ -45,12 +43,15 @@ export class SubtaskService {
 
   async update(subtaskId: string, updateSubtaskDto: UpdateSubtaskDto) {
     const subtask = await prisma.subTask.update({
-      where: {
-        id: subtaskId,
-      },
+      where: { id: subtaskId },
       data: { ...updateSubtaskDto },
     });
 
     return subtask;
+  }
+
+  async delete(subtaskId: string) {
+    await prisma.subTask.delete({ where: { id: subtaskId } });
+    return { message: 'Subtask deleted successfully' };
   }
 }

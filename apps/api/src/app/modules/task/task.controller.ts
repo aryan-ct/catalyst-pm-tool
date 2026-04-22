@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
@@ -29,5 +29,11 @@ export class TaskController {
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
     return this.taskService.update(task_id, updateTaskDto);
+  }
+
+  @Roles(UserRole.MANAGER)
+  @Delete('/:task_id')
+  async deleteTask(@Param('task_id') task_id: string) {
+    return this.taskService.delete(task_id);
   }
 }
