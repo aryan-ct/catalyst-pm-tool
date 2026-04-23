@@ -5,6 +5,8 @@ model Lead {
   links       String[]
   leadStatus  LeadStatus
   projectId   String?    @unique
+  createdById String?
+  createdBy   Resource?  @relation(fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

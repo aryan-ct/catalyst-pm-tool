@@ -23,6 +23,7 @@ const getAllLeads = async () => {
     createdAt: new Date(l.createdAt).toLocaleDateString(),
     convertedAt: l.leadStatus === 'CONVERTED' ? new Date(l.updatedAt).toLocaleDateString() : undefined,
     projectId: l.projectId,
+    createdById: l.createdById,
   }));
 };
 
@@ -35,8 +36,20 @@ const updateLeadStatus = async (id: string, status: string) => {
   return result.data;
 };
 
+const updateLeadDetails = async (id: string, data: any) => {
+  const payload = {
+    clientName: data.client,
+    projectName: data.projectName || undefined,
+    links: data.docs ? [data.docs] : undefined,
+  };
+
+  const result = await axiosInstance.patch(`/leads/${id}`, payload);
+  return result.data;
+};
+
 export const LEAD_API = {
   createLead,
   getAllLeads,
   updateLeadStatus,
+  updateLeadDetails,
 };

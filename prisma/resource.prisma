@@ -5,6 +5,7 @@ model Resource {
   password  String
   role      Role
   isActive  Boolean
+  leads     Lead[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

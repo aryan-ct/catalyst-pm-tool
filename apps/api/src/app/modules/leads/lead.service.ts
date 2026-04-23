@@ -5,8 +5,8 @@ import { LeadStatus } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {
-  async createLead(createLeadDto: CreateLeadDto) {
-    const createdLead = await prisma.lead.create({ data: createLeadDto });
+  async createLead(createLeadDto: CreateLeadDto, createdById?: string) {
+    const createdLead = await prisma.lead.create({ data: { ...createLeadDto, createdById } });
     return createdLead;
   }
 

@@ -1,57 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Roles } from '@/lib/enum';
 import { Card, CardContent } from '@/components/ui/card';
-import Projects from '../projects/Projects';
-import Resources from '../resources/Resources';
-import Leads from '../leads/Leads';
-import ProjectManagement from '../project-management/ProjectManagement';
-import AllocationTabs from '../resource-allocation/allocation/AllocationTabs';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Dashboard() {
   const { user, logout, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const getMenuItems = () => {
     if (!user) return [];
     switch (user.role) {
       case Roles.MANAGER:
-        return ['Projects', 'Project Management', 'Leads'];
+        return [
+          { name: 'Projects', path: '/projects' },
+          { name: 'Project Management', path: '/project-management' },
+          { name: 'Leads', path: '/leads' }
+        ];
       case Roles.HR:
-        return ['Resources', 'Resource Allocation'];
+        return [
+          { name: 'Resources', path: '/resources' },
+          { name: 'Resource Allocation', path: '/resource-allocation' }
+        ];
       case Roles.BDE:
-        return ['Leads'];
+        return [
+          { name: 'Leads', path: '/leads' }
+        ];
       default:
         return [];
     }
   };
 
-  const getInitialActiveTab = () => {
-    if (!user) return '';
-    switch (user.role) {
-      case Roles.MANAGER:
-        return 'Projects';
-      case Roles.HR:
-        return 'Resources';
-      case Roles.BDE:
-        return 'Leads';
-      default:
-        return '';
-    }
-  };
-
   const menuItems = getMenuItems();
-  const initialActiveTab = getInitialActiveTab();
-  const [activeTab, setActiveTab] = useState(initialActiveTab);
 
   useEffect(() => {
-    if (
-      menuItems.length > 0 &&
-      (!activeTab || !menuItems.includes(activeTab))
-    ) {
-      setActiveTab(menuItems[0]);
+    if (!loading && user && menuItems.length > 0) {
+      if (location.pathname === '/') {
+        navigate(menuItems[0].path, { replace: true });
+      }
     }
-  }, [menuItems, activeTab]);
+  }, [user, loading, location.pathname, menuItems, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -65,22 +55,7 @@ export default function Dashboard() {
     );
   }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'Projects':
-        return <Projects />;
-      case 'Resources':
-        return <Resources />;
-      case 'Project Management':
-        return <ProjectManagement />;
-      case 'Resource Allocation':
-        return <AllocationTabs />;
-      case 'Leads':
-        return <Leads />;
-      default:
-        return null;
-    }
-  };
+  const activeItem = menuItems.find(item => location.pathname.startsWith(item.path)) || menuItems[0];
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -90,14 +65,14 @@ export default function Dashboard() {
         <div className="space-y-3 flex-1">
           {menuItems.map((item) => (
             <Button
-              key={item}
-              variant={activeTab === item ? 'default' : 'ghost'}
+              key={item.name}
+              variant={location.pathname.startsWith(item.path) ? 'default' : 'ghost'}
               className={`w-full justify-start ${
-                activeTab === item ? 'bg-blue-600 text-white' : ''
+                location.pathname.startsWith(item.path) ? 'bg-blue-600 text-white' : ''
               }`}
-              onClick={() => setActiveTab(item)}
+              onClick={() => navigate(item.path)}
             >
-              {item}
+              {item.name}
             </Button>
           ))}
         </div>
@@ -116,9 +91,8 @@ export default function Dashboard() {
       <div className="flex-1 p-6">
         <Card className="h-full shadow-md">
           <CardContent className="p-6 h-full overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-4">{activeTab}</h2>
-
-            {renderContent()}
+            {activeItem && <h2 className="text-xl font-semibold mb-4">{activeItem.name}</h2>}
+            <Outlet />
           </CardContent>
         </Card>
       </div>

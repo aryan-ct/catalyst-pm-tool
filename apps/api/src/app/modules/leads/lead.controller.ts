@@ -39,7 +39,7 @@ export class LeadsController {
     if (user.role === UserRole.BDE && createLeadDto.leadStatus !== 'ACTIVE') {
       throw new ForbiddenException('BDEs can only add active leads');
     }
-    return this.leadsService.createLead(createLeadDto);
+    return this.leadsService.createLead(createLeadDto, user.id);
   }
 
   @Roles(UserRole.MANAGER, UserRole.BDE)
@@ -50,12 +50,15 @@ export class LeadsController {
     @CurrentUser() user: any,
   ) {
     if (user.role === UserRole.BDE) {
-      if (
-        updateLeadDto.clientName !== undefined ||
-        updateLeadDto.projectName !== undefined ||
-        updateLeadDto.links !== undefined
-      ) {
-        throw new ForbiddenException('BDEs can only update lead status');
+      const lead = await this.leadsService.findLeadById(id);
+      if (lead.createdById !== user.id) {
+        if (
+          updateLeadDto.clientName !== undefined ||
+          updateLeadDto.projectName !== undefined ||
+          updateLeadDto.links !== undefined
+        ) {
+          throw new ForbiddenException('BDEs can only update details of leads they created');
+        }
       }
     } else if (user.role === UserRole.MANAGER) {
       if (updateLeadDto.leadStatus !== undefined) {

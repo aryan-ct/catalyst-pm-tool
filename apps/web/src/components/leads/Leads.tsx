@@ -8,6 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
 } from "@/components/ui/dialog";
 import LeadModal from "./LeadModal";
+import EditLeadModal from "./EditLeadModal";
 import LeadToProjectModal from "./LeadToProjectModal";
 import { LEAD_API } from "../../api/lead.api";
 import { Resource, RESOURCE_API } from "@/api/resource.api";
@@ -42,6 +43,7 @@ export default function Leads({ setProjects }: any) {
   }, []);
   const [filter, setFilter] = useState("All");
   const [convertLead, setConvertLead] = useState<any>(null);
+  const [editLead, setEditLead] = useState<any>(null);
   const [lostLeadId, setLostLeadId] = useState<string | null>(null);
   const [convertConfirmLeadId, setConvertConfirmLeadId] = useState<string | null>(null);
 
@@ -121,33 +123,42 @@ export default function Leads({ setProjects }: any) {
                 </p>
               )}
 
-              {l.status === "Active" && me?.role === Roles.BDE && (
-                <div className="flex gap-2 mt-4">
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {(me?.role === Roles.MANAGER || (me?.role === Roles.BDE && l.createdById === me?.id)) && (
                   <Button
-                    className="bg-blue-600 text-white"
-                    onClick={() => setConvertConfirmLeadId(l.id)}
+                    variant="outline"
+                    onClick={() => setEditLead(l)}
                   >
-                    Mark as Converted
+                    Edit
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setLostLeadId(l.id)}
-                  >
-                    Mark as Lost
-                  </Button>
-                </div>
-              )}
+                )}
 
-              {l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId && (
-                <div className="flex gap-2 mt-4">
+                {l.status === "Active" && me?.role === Roles.BDE && (
+                  <>
+                    <Button
+                      className="bg-blue-600 text-white"
+                      onClick={() => setConvertConfirmLeadId(l.id)}
+                    >
+                      Mark as Converted
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setLostLeadId(l.id)}
+                    >
+                      Mark as Lost
+                    </Button>
+                  </>
+                )}
+
+                {l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId && (
                   <Button
                     className="bg-blue-600 text-white"
                     onClick={() => setConvertLead({ ...l, index: i })}
                   >
                     Create Project
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
 
             </CardContent>
           </Card>
@@ -162,6 +173,14 @@ export default function Leads({ setProjects }: any) {
           setProjects={setProjects}
           onClose={() => setConvertLead(null)}
 
+        />
+      )}
+
+      {editLead && (
+        <EditLeadModal
+          lead={editLead}
+          onSuccess={fetchLeads}
+          onClose={() => setEditLead(null)}
         />
       )}
 
