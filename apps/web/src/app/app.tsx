@@ -7,10 +7,12 @@ import Resources from '@/components/resources/Resources';
 import Leads from '@/components/leads/Leads';
 import ProjectManagement from '@/components/project-management/ProjectManagement';
 import AllocationTabs from '@/components/resource-allocation/allocation/AllocationTabs';
+import { Toaster } from 'react-hot-toast';
 
 export function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Dashboard />}>
           <Route path="projects" element={<Projects />} />
