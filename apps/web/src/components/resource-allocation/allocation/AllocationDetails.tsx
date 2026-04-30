@@ -57,7 +57,7 @@ const AllocationDetails = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const payload = rows.flatMap(row => 
+    const payload = rows.flatMap(row =>
       row.projects.map(p => {
         const project = projects.find(proj => proj.name === p.name);
         return {
@@ -122,8 +122,8 @@ const AllocationDetails = ({
         </Button>
 
         <div className="flex items-center gap-3">
-           <CalendarIcon className="h-5 w-5 text-primary" />
-           <span className="text-lg font-bold text-foreground">{date}</span>
+          <CalendarIcon className="h-5 w-5 text-primary" />
+          <span className="text-lg font-bold text-foreground">{date}</span>
         </div>
 
         {isEditable ? (
@@ -153,9 +153,9 @@ const AllocationDetails = ({
           </div>
         ) : (
           rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+            <div key={rowIndex} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4">
               {isEditable && (
-                <div className="grid grid-cols-12 gap-6 p-4 items-center">
+                <div className="grid grid-cols-12 gap-6 px-4 items-center mb-2">
                   <div className="col-span-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
@@ -195,17 +195,17 @@ const AllocationDetails = ({
               {row.projects.map((p, projectIndex) => (
                 <div
                   key={p.id}
-                  className="grid grid-cols-12 gap-6 p-4 pt-0 items-start"
+                  className="grid grid-cols-12 gap-6 px-4 pb-2 items-start"
                 >
                   <div className="col-span-3">
                     <div className="font-medium text-sm text-foreground pl-11">
                       {!isEditable && projectIndex === 0 ? (
-                         <div className="flex items-center gap-3">
-                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
-                             {row.resourceName.charAt(0)}
-                           </div>
-                           <span className="font-semibold">{row.resourceName}</span>
-                         </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
+                            {row.resourceName.charAt(0)}
+                          </div>
+                          <span className="font-semibold">{row.resourceName}</span>
+                        </div>
                       ) : ''}
                     </div>
                   </div>
@@ -221,7 +221,7 @@ const AllocationDetails = ({
                           }
                           className="text-primary hover:text-destructive transition-colors"
                         >
-                          <CircleX className='h-4 w-4'/>
+                          <CircleX className='h-4 w-4' />
                         </button>
                       )}
                     </div>

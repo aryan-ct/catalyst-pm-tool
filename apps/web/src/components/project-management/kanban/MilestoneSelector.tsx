@@ -3,7 +3,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { PMBackendMilestone } from "../types/types";
 
@@ -14,12 +13,18 @@ interface Props {
 }
 
 export default function MilestoneSelector({ milestones, selectedMilestoneId, onSelect }: Props) {
+  const selectedName = milestones.find((m) => m.id === selectedMilestoneId)?.milestoneName;
+
   return (
     <div className="flex items-center gap-4">
       <h1 className="text-xl font-semibold">Milestone:</h1>
       <Select value={selectedMilestoneId} onValueChange={(val) => val && onSelect(val)}>
         <SelectTrigger className="w-[280px]">
-          <SelectValue placeholder="Choose a milestone" />
+          <span className="flex flex-1 text-left text-sm truncate">
+            {selectedName ?? (
+              <span className="text-muted-foreground">Choose a milestone</span>
+            )}
+          </span>
         </SelectTrigger>
         <SelectContent>
           {milestones.map((m) => (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select, SelectContent, SelectItem, SelectTrigger,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +13,50 @@ import LeadToProjectModal from "./LeadToProjectModal";
 import { LEAD_API } from "../../api/lead.api";
 import { Resource, RESOURCE_API } from "@/api/resource.api";
 import { Roles } from "@/lib/enum";
-import { Edit2, CheckCircle, XCircle, Plus } from "lucide-react";
+import {
+  Edit2, CheckCircle, XCircle, Plus,
+  Target, CalendarDays, CheckCircle2, FolderOpen,
+} from "lucide-react";
+
+const STATUS_STYLES = {
+  Active: {
+    border: "border-l-primary",
+    dot: "bg-primary",
+    text: "text-primary",
+    badge: "bg-primary/10 text-primary",
+    avatar: "bg-primary/15 text-primary",
+  },
+  Converted: {
+    border: "border-l-emerald-500",
+    dot: "bg-emerald-500",
+    text: "text-emerald-600",
+    badge: "bg-emerald-50 text-emerald-600",
+    avatar: "bg-emerald-50 text-emerald-600",
+  },
+  Lost: {
+    border: "border-l-red-400",
+    dot: "bg-red-400",
+    text: "text-red-500",
+    badge: "bg-red-50 text-red-500",
+    avatar: "bg-red-50 text-red-500",
+  },
+} as const;
+
+const FILTER_LABELS: Record<string, string> = {
+  All: "All Status",
+  Active: "Active",
+  Converted: "Converted",
+  Lost: "Lost",
+};
+
+function formatDate(raw: string | null | undefined) {
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export default function Leads({ setProjects }: any) {
-
   const [leads, setLeads] = useState<any[]>([]);
   const [me, setMe] = useState<Resource | null>(null);
 
@@ -31,7 +71,7 @@ export default function Leads({ setProjects }: any) {
 
   const findMe = async () => {
     try {
-      const data = await RESOURCE_API.findMe()
+      const data = await RESOURCE_API.findMe();
       setMe(data);
     } catch (err) {
       console.error(err);
@@ -40,8 +80,9 @@ export default function Leads({ setProjects }: any) {
 
   useEffect(() => {
     fetchLeads();
-    findMe()
+    findMe();
   }, []);
+
   const [filter, setFilter] = useState("All");
   const [convertLead, setConvertLead] = useState<any>(null);
   const [editLead, setEditLead] = useState<any>(null);
@@ -72,111 +113,168 @@ export default function Leads({ setProjects }: any) {
     }
   };
 
-  const filtered = leads.filter(l =>
+  const filtered = leads.filter((l) =>
     filter === "All" ? true : l.status === filter
   );
 
   return (
     <div className="space-y-6">
+      {/* Header row */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Select
-          value={filter}
-          onValueChange={(v) => setFilter(v ?? "All")}
-        >
-          <SelectTrigger className="w-full sm:w-[200px] bg-white">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Target className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground leading-tight">Leads</h2>
+            <p className="text-sm text-muted-foreground">Track and manage your sales pipeline.</p>
+          </div>
+        </div>
 
-          <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Converted">Converted</SelectItem>
-            <SelectItem value="Lost">Lost</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Select value={filter} onValueChange={(v) => setFilter(v ?? "All")}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-card border-border h-9 text-sm">
+              <span className="flex flex-1 text-left text-sm">{FILTER_LABELS[filter]}</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Status</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Converted">Converted</SelectItem>
+              <SelectItem value="Lost">Lost</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <LeadModal onSuccess={fetchLeads} role={me?.role} />
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-primary/10 text-primary px-3 py-1.5 rounded-full whitespace-nowrap shrink-0">
+            <Target className="h-3.5 w-3.5" />
+            {filtered.length} {filtered.length === 1 ? "lead" : "leads"}
+          </div>
+
+          <LeadModal onSuccess={fetchLeads} role={me?.role} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((l, i) => (
-          <Card key={i} className="hover:shadow-md transition-all duration-200 border-border">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-lg text-foreground">{l.client}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Project: {l.projectName || "—"}
-                  </p>
-                </div>
-                {(me?.role === Roles.MANAGER || (me?.role === Roles.BDE && l.createdById === me?.id)) && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                    onClick={() => setEditLead(l)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+      {/* Cards grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.length === 0 ? (
+          <div className="col-span-full text-center py-20 bg-muted/30 rounded-xl border border-dashed border-border">
+            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mx-auto mb-4">
+              <Target className="h-7 w-7" />
+            </div>
+            <p className="text-base font-semibold text-foreground mb-1">No leads found</p>
+            <p className="text-sm text-muted-foreground">
+              {filter === "All"
+                ? "No leads have been added yet."
+                : `No ${filter.toLowerCase()} leads match.`}
+            </p>
+          </div>
+        ) : (
+          filtered.map((l, i) => {
+            const style = STATUS_STYLES[l.status as keyof typeof STATUS_STYLES] ?? STATUS_STYLES.Active;
+            const initials = (l.client ?? "?")[0].toUpperCase();
+            const canEdit =
+              me?.role === Roles.MANAGER || me?.role === Roles.BDE;
+            const showBDEActions = l.status === "Active" && me?.role === Roles.BDE;
+            const showManagerAction =
+              l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId;
 
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  l.status === 'Active' ? 'bg-primary/10 text-primary' : 
-                  l.status === 'Converted' ? 'bg-emerald-50 text-emerald-600' : 
-                  'bg-muted text-muted-foreground'
-                }`}>
-                  {l.status}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {l.createdAt}
-                </span>
-              </div>
+            return (
+              <Card
+                key={i}
+                className={`group relative hover:shadow-lg transition-all duration-200 border-border border-l-4 ${style.border} overflow-hidden hover:-translate-y-0.5`}
+              >
+                <CardContent className="p-5 space-y-4">
+                  {/* Header: avatar + name + edit */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${style.avatar}`}>
+                        {initials}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-base text-foreground leading-tight">
+                          {l.client}
+                        </h3>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <FolderOpen className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="text-xs text-muted-foreground truncate max-w-[140px]">
+                            {l.projectName || "No project"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-              {l.convertedAt && (
-                <div className="text-xs text-emerald-600 font-medium bg-emerald-50/50 px-3 py-2 rounded-lg border border-emerald-100">
-                  Converted on {l.convertedAt}
-                </div>
-              )}
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        onClick={() => setEditLead(l)}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
 
-              <div className="flex gap-2 pt-4 border-t border-border mt-4 flex-wrap">
-                {l.status === "Active" && me?.role === Roles.BDE && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setConvertConfirmLeadId(l.id)}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Convert
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="flex-1"
-                      onClick={() => setLostLeadId(l.id)}
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Lost
-                    </Button>
-                  </>
-                )}
+                  {/* Status + date */}
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${style.text}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${style.dot}`} />
+                      {l.status}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CalendarDays className="h-3 w-3 shrink-0" />
+                      {formatDate(l.createdAt) ?? "—"}
+                    </div>
+                  </div>
 
-                {l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId && (
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setConvertLead({ ...l, index: i })}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Project
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  {/* Converted date */}
+                  {l.convertedAt && (
+                    <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                      Converted on {formatDate(l.convertedAt)}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {(showBDEActions || showManagerAction) && (
+                    <div className="pt-3 border-t border-border flex gap-2 flex-wrap">
+                      {showBDEActions && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => setConvertConfirmLeadId(l.id)}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                            Convert
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1 h-8 text-xs"
+                            onClick={() => setLostLeadId(l.id)}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                            Mark Lost
+                          </Button>
+                        </>
+                      )}
+                      {showManagerAction && (
+                        <Button
+                          size="sm"
+                          className="w-full h-8 text-xs"
+                          onClick={() => setConvertLead({ ...l, index: i })}
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-1.5" />
+                          Create Project
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {convertLead && (
@@ -200,9 +298,9 @@ export default function Leads({ setProjects }: any) {
         <Dialog open={!!convertConfirmLeadId} onOpenChange={(open) => !open && setConvertConfirmLeadId(null)}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900">Mark Lead as Converted</DialogTitle>
-              <DialogDescription className="text-slate-500 pt-2">
-                Are you sure you want to mark this lead as converted? This action will update the lead status and allow project creation.
+              <DialogTitle className="text-xl font-bold text-foreground">Mark Lead as Converted</DialogTitle>
+              <DialogDescription className="text-muted-foreground pt-2">
+                Are you sure you want to mark this lead as converted? This will allow project creation.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-6 flex gap-2">
@@ -222,8 +320,8 @@ export default function Leads({ setProjects }: any) {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-red-600">Mark Lead as Lost</DialogTitle>
-              <DialogDescription className="text-slate-500 pt-2">
-                Are you sure you want to mark this lead as lost? This action will update the lead status and may notify other team members.
+              <DialogDescription className="text-muted-foreground pt-2">
+                Are you sure you want to mark this lead as lost? This action will update the lead status.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="mt-6 flex gap-2">

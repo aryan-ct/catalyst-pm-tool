@@ -1,10 +1,8 @@
-
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 interface Props {
@@ -18,12 +16,18 @@ export default function ProjectSelector({
   selectedProjectId,
   onSelect,
 }: Props) {
+  const selectedName = projects.find((p) => p.id === selectedProjectId)?.name;
+
   return (
     <div className="flex items-center gap-4">
       <h1 className="text-xl font-semibold">Select Project:</h1>
       <Select value={selectedProjectId} onValueChange={(val) => val && onSelect(val)}>
         <SelectTrigger className="w-[280px]">
-          <SelectValue placeholder="Choose a project" />
+          <span className="flex flex-1 text-left text-sm truncate">
+            {selectedName ?? (
+              <span className="text-muted-foreground">Choose a project</span>
+            )}
+          </span>
         </SelectTrigger>
         <SelectContent>
           {projects.map((project) => (

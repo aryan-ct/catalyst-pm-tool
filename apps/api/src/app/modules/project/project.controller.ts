@@ -16,7 +16,7 @@ import { Roles, UserRole } from '../../decorators/roles.decorator';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectService: ProjectsService) {}
+  constructor(private readonly projectService: ProjectsService) { }
 
   // Create Project
   @Roles(UserRole.MANAGER, UserRole.HR)
@@ -26,7 +26,7 @@ export class ProjectsController {
   }
 
   // Get all Project
-  @Roles(UserRole.MANAGER, UserRole.HR)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV)
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,
