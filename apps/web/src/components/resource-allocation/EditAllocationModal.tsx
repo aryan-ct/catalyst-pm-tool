@@ -65,7 +65,8 @@ export default function EditAllocationModal({
           ))}
 
           <Button
-            className="w-full bg-blue-600 text-white"
+            size="lg"
+            className="w-full"
             onClick={handleSave}
           >
             Save Allocation

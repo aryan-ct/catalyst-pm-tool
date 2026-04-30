@@ -90,7 +90,7 @@ export default function ResourceModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
         <Button
-          className="bg-blue-600 text-white"
+          className=""
           onClick={() => {
             setForm({ name: '', role: null, email: '', isActive: true });
             setErrors({ name: '', role: '', email: '' });
@@ -197,7 +197,8 @@ export default function ResourceModal({
           </div>
 
           <Button
-            className="w-full bg-blue-600 text-white"
+            size="lg"
+            className="w-full"
             onClick={handleSubmit}
           >
             {editIndex !== null ? 'Update Resource' : 'Add Resource'}

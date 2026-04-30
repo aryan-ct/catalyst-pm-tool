@@ -10,14 +10,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, Eye, ExternalLink, Clock, Milestone } from 'lucide-react';
 import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
 import { PROJECT_API } from '../../api/project.api';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [filter, setFilter] = useState('All');
-
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -52,14 +51,13 @@ export default function Projects() {
   return (
     <div className="space-y-6">
       {/* Top Bar */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Select value={filter} onValueChange={(v) => setFilter(v ?? 'All')}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter" />
+          <SelectTrigger className="w-full sm:w-[200px] bg-white">
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
-
           <SelectContent>
-            <SelectItem value="All">All</SelectItem>
+            <SelectItem value="All">All Projects</SelectItem>
             <SelectItem value="Active">Active</SelectItem>
             <SelectItem value="Archived">Archived</SelectItem>
           </SelectContent>
@@ -75,72 +73,70 @@ export default function Projects() {
         />
       </div>
 
-      {/* List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((p, i) => (
-          <Card key={i} className="relative hover:shadow-md transition">
-            <CardContent className="p-4 space-y-3">
-              {/* Edit icon */}
-              <button
-                className="absolute top-3 right-4 text-gray-400 hover:text-blue-500 cursor-pointer"
-                title="Edit project"
-                onClick={() => {
-                  setEditData(p);
-                  setEditIndex(i);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-
-              {/* Project Info */}
-              <div>
-                <p className="text-xs text-gray-500">Project Name:</p>
-                <h3 className="font-semibold">{p.name}</h3>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">Client:</p>
-                <p className="text-sm">{p.client}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">Status:</p>
-                <p className="text-sm">{p.status}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">Estimated Hours:</p>
-                <p className="text-sm">{p.hours}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500">Document:</p>
-                <a
-                  href={p.docLink}
-                  className="text-blue-600 text-sm underline"
-                  target="_blank"
-                  rel="noreferrer"
+          <Card key={i} className="hover:shadow-md transition-all duration-200 border-border group">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">{p.client}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  onClick={() => {
+                    setEditData(p);
+                    setEditIndex(i);
+                  }}
                 >
-                  Open Document
-                </a>
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </div>
 
-              {/* Milestone count */}
-              <div>
-                <p className="text-xs text-gray-500">
-                  Milestones:{' '}
-                  <span className="font-medium text-gray-700">
-                    {p.milestones?.length ?? 0}
-                  </span>
-                </p>
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  p.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {p.status}
+                </span>
+                {p.docLink && (
+                  <a
+                    href={p.docLink}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Docs
+                  </a>
+                )}
               </div>
 
-              {/* View Project button */}
+              <div className="grid grid-cols-2 gap-4 py-3 border-y border-border">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="text-[11px] uppercase tracking-wider font-semibold">Est. Hours</span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground">{p.hours}h</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Milestone className="h-3.5 w-3.5" />
+                    <span className="text-[11px] uppercase tracking-wider font-semibold">Milestones</span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground">{p.milestones?.length ?? 0}</p>
+                </div>
+              </div>
+
               <Button
-                variant="outline"
-                className="w-full mt-1"
+                className="w-full shadow-sm"
                 onClick={() => setViewingProject(p)}
               >
+                <Eye className="h-4 w-4 mr-2" />
                 View Project
               </Button>
             </CardContent>

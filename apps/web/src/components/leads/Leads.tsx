@@ -13,6 +13,7 @@ import LeadToProjectModal from "./LeadToProjectModal";
 import { LEAD_API } from "../../api/lead.api";
 import { Resource, RESOURCE_API } from "@/api/resource.api";
 import { Roles } from "@/lib/enum";
+import { Edit2, CheckCircle, XCircle, Plus } from "lucide-react";
 
 export default function Leads({ setProjects }: any) {
 
@@ -77,19 +78,17 @@ export default function Leads({ setProjects }: any) {
 
   return (
     <div className="space-y-6">
-
-      <div className="flex justify-between">
-
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Select
           value={filter}
           onValueChange={(v) => setFilter(v ?? "All")}
         >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter" />
+          <SelectTrigger className="w-full sm:w-[200px] bg-white">
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="All">All</SelectItem>
+            <SelectItem value="All">All Status</SelectItem>
             <SelectItem value="Active">Active</SelectItem>
             <SelectItem value="Converted">Converted</SelectItem>
             <SelectItem value="Lost">Lost</SelectItem>
@@ -99,71 +98,85 @@ export default function Leads({ setProjects }: any) {
         <LeadModal onSuccess={fetchLeads} role={me?.role} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((l, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 space-y-2">
-
-              <p className="font-semibold">{l.client}</p>
-
-              <p className="text-sm text-gray-500">
-                Project: {l.projectName || "—"}
-              </p>
-
-              <p className="text-sm">{l.status}</p>
-
-              <p className="text-xs text-gray-400">
-                Created: {l.createdAt}
-              </p>
-
-              {l.convertedAt && (
-                <p className="text-xs text-green-500">
-                  Converted: {l.convertedAt}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-4 flex-wrap">
+          <Card key={i} className="hover:shadow-md transition-all duration-200 border-border">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-lg text-foreground">{l.client}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Project: {l.projectName || "—"}
+                  </p>
+                </div>
                 {(me?.role === Roles.MANAGER || (me?.role === Roles.BDE && l.createdById === me?.id)) && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                     onClick={() => setEditLead(l)}
                   >
-                    Edit
+                    <Edit2 className="h-4 w-4" />
                   </Button>
                 )}
+              </div>
 
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  l.status === 'Active' ? 'bg-primary/10 text-primary' : 
+                  l.status === 'Converted' ? 'bg-emerald-50 text-emerald-600' : 
+                  'bg-muted text-muted-foreground'
+                }`}>
+                  {l.status}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {l.createdAt}
+                </span>
+              </div>
+
+              {l.convertedAt && (
+                <div className="text-xs text-emerald-600 font-medium bg-emerald-50/50 px-3 py-2 rounded-lg border border-emerald-100">
+                  Converted on {l.convertedAt}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4 border-t border-border mt-4 flex-wrap">
                 {l.status === "Active" && me?.role === Roles.BDE && (
                   <>
                     <Button
-                      className="bg-blue-600 text-white"
+                      size="sm"
+                      className="flex-1"
                       onClick={() => setConvertConfirmLeadId(l.id)}
                     >
-                      Mark as Converted
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Convert
                     </Button>
                     <Button
+                      size="sm"
                       variant="destructive"
+                      className="flex-1"
                       onClick={() => setLostLeadId(l.id)}
                     >
-                      Mark as Lost
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Lost
                     </Button>
                   </>
                 )}
 
                 {l.status === "Converted" && me?.role === Roles.MANAGER && !l.projectId && (
                   <Button
-                    className="bg-blue-600 text-white"
+                    size="sm"
+                    className="w-full"
                     onClick={() => setConvertLead({ ...l, index: i })}
                   >
+                    <Plus className="w-4 h-4 mr-2" />
                     Create Project
                   </Button>
                 )}
               </div>
-
             </CardContent>
           </Card>
         ))}
-
       </div>
 
       {convertLead && (
@@ -172,7 +185,6 @@ export default function Leads({ setProjects }: any) {
           onSuccess={fetchLeads}
           setProjects={setProjects}
           onClose={() => setConvertLead(null)}
-
         />
       )}
 
@@ -186,19 +198,19 @@ export default function Leads({ setProjects }: any) {
 
       {convertConfirmLeadId && (
         <Dialog open={!!convertConfirmLeadId} onOpenChange={(open) => !open && setConvertConfirmLeadId(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Mark Lead as Converted</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl font-bold text-slate-900">Mark Lead as Converted</DialogTitle>
+              <DialogDescription className="text-slate-500 pt-2">
                 Are you sure you want to mark this lead as converted? This action will update the lead status and allow project creation.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setConvertConfirmLeadId(null)}>
+            <DialogFooter className="mt-6 flex gap-2">
+              <Button variant="ghost" onClick={() => setConvertConfirmLeadId(null)} className="flex-1">
                 Cancel
               </Button>
-              <Button className="bg-blue-600 text-white" onClick={handleMarkConverted}>
-                Confirm
+              <Button onClick={handleMarkConverted} className="flex-1">
+                Confirm Conversion
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -207,25 +219,24 @@ export default function Leads({ setProjects }: any) {
 
       {lostLeadId && (
         <Dialog open={!!lostLeadId} onOpenChange={(open) => !open && setLostLeadId(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Mark Lead as Lost</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xl font-bold text-red-600">Mark Lead as Lost</DialogTitle>
+              <DialogDescription className="text-slate-500 pt-2">
                 Are you sure you want to mark this lead as lost? This action will update the lead status and may notify other team members.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setLostLeadId(null)}>
+            <DialogFooter className="mt-6 flex gap-2">
+              <Button variant="ghost" onClick={() => setLostLeadId(null)} className="flex-1">
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleMarkLost}>
-                Confirm
+              <Button variant="destructive" onClick={handleMarkLost} className="flex-1">
+                Confirm Lost
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
-
     </div>
   );
 }

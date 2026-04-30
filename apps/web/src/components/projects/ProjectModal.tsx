@@ -186,7 +186,6 @@ export default function ProjectModal({
       {/* Open Button */}
       {!isControlled && (
         <Button
-          className="bg-blue-600 text-white"
           onClick={() => {
             setForm({
               name: '',
@@ -399,7 +398,8 @@ export default function ProjectModal({
           {/* Submit */}
           <Button
             onClick={handleSubmit}
-            className="w-full bg-blue-600 text-white"
+            size="lg"
+            className="w-full"
           >
             {editIndex !== null ? 'Update Project' : 'Add Project'}
           </Button>

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CircleX } from 'lucide-react';
+import { CircleX, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
 
 const AllocationDetails = ({
   date,
@@ -114,28 +114,37 @@ const AllocationDetails = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
-          ← Back
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-card p-4 rounded-xl border border-border shadow-sm">
+        <Button variant="ghost" onClick={onBack} disabled={isSubmitting} className="text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
         </Button>
 
-        <span className="font-semibold">{date}</span>
+        <div className="flex items-center gap-3">
+           <CalendarIcon className="h-5 w-5 text-primary" />
+           <span className="text-lg font-bold text-foreground">{date}</span>
+        </div>
 
         {isEditable ? (
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-blue-600 text-white">
-            {isSubmitting ? 'Saving...' : 'Submit'}
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="shadow-lg shadow-primary/20 min-w-[100px]">
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving
+              </div>
+            ) : 'Submit Changes'}
           </Button>
         ) : (
-          <div className="w-20"></div> /* Spacer for alignment */
+          <div className="w-20"></div>
         )}
       </div>
 
-      <div className="border rounded-xl p-4">
-        <div className="grid grid-cols-3 font-semibold border-b pb-2">
-          <span>Resource</span>
-          <span>Projects</span>
-          <span>Description</span>
+      <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden">
+        <div className="grid grid-cols-12 bg-muted/50 p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+          <div className="col-span-3">Resource</div>
+          <div className="col-span-4">Assigned Projects</div>
+          <div className="col-span-5 text-right">Activity / Description</div>
         </div>
 
         {rows.length === 0 ? (
@@ -144,20 +153,27 @@ const AllocationDetails = ({
           </div>
         ) : (
           rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="border-b py-4">
+            <div key={rowIndex} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
               {isEditable && (
-                <div className="grid grid-cols-3 gap-4 mb-3 items-center">
-                  <div className="font-medium">{row.resourceName}</div>
+                <div className="grid grid-cols-12 gap-6 p-4 items-center">
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                        {row.resourceName.charAt(0)}
+                      </div>
+                      <span className="font-semibold text-foreground">{row.resourceName}</span>
+                    </div>
+                  </div>
 
-                  <div>
+                  <div className="col-span-4">
                     <Select<string>
                       onValueChange={(value) => {
                         if (!value) return;
                         handleAddProject(rowIndex, value);
                       }}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Project" />
+                      <SelectTrigger className="w-full bg-card border-border shadow-sm">
+                        <SelectValue placeholder="+ Add Project" />
                       </SelectTrigger>
 
                       <SelectContent>
@@ -172,38 +188,49 @@ const AllocationDetails = ({
                     </Select>
                   </div>
 
-                  <div></div>
+                  <div className="col-span-5"></div>
                 </div>
               )}
 
               {row.projects.map((p, projectIndex) => (
                 <div
                   key={p.id}
-                  className="grid grid-cols-3 gap-4 mb-3 items-start"
+                  className="grid grid-cols-12 gap-6 p-4 pt-0 items-start"
                 >
-                  <div className="font-medium">
-                    {!isEditable && projectIndex === 0 ? row.resourceName : ''}
+                  <div className="col-span-3">
+                    <div className="font-medium text-sm text-foreground pl-11">
+                      {!isEditable && projectIndex === 0 ? (
+                         <div className="flex items-center gap-3">
+                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
+                             {row.resourceName.charAt(0)}
+                           </div>
+                           <span className="font-semibold">{row.resourceName}</span>
+                         </div>
+                      ) : ''}
+                    </div>
                   </div>
 
-                  <div className="flex justify-between border rounded px-3 py-2">
-                    <span>{p.name}</span>
+                  <div className="col-span-4">
+                    <div className="flex justify-between items-center border border-primary/20 bg-primary/5 rounded-lg px-3 py-2 text-sm text-primary font-medium">
+                      <span>{p.name}</span>
 
-                    {isEditable && (
-                      <button
-                        onClick={() =>
-                          handleRemoveProject(rowIndex, projectIndex)
-                        }
-                        className="text-red-500 hover:cursor-pointer"
-                      >
-                        <CircleX className='h-4 w-4'/>
-                      </button>
-                    )}
+                      {isEditable && (
+                        <button
+                          onClick={() =>
+                            handleRemoveProject(rowIndex, projectIndex)
+                          }
+                          className="text-primary hover:text-destructive transition-colors"
+                        >
+                          <CircleX className='h-4 w-4'/>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="col-span-5">
                     {isEditable ? (
                       <Input
-                        placeholder="Description"
+                        placeholder="What are they working on?"
                         value={p.description || ''}
                         onChange={(e) =>
                           handleDescChange(
@@ -212,11 +239,11 @@ const AllocationDetails = ({
                             e.target.value,
                           )
                         }
-                        className="min-h-[40px]"
+                        className="h-10 bg-card border-border shadow-sm focus:ring-1 focus:ring-primary"
                       />
                     ) : (
-                      <div className="border rounded px-3 py-2 break-words whitespace-pre-wrap">
-                        {p.description || '-'}
+                      <div className="border border-border/50 bg-muted/20 rounded-lg px-4 py-2 text-sm text-muted-foreground italic break-words whitespace-pre-wrap min-h-[40px] flex items-center justify-end">
+                        {p.description || 'No description provided'}
                       </div>
                     )}
                   </div>

@@ -9,6 +9,7 @@ import KanbanBoard from "./kanban/KanbanBoard";
 import TaskDialog from "./dialog/TaskDialog";
 import { DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
+import { Plus, LayoutGrid, Layers } from "lucide-react";
 
 const statusToBackend: Record<Status, string> = {
   "todo": "TODO",
@@ -195,57 +196,79 @@ export default function ProjectManagement() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center h-64 text-muted-foreground">
-        Loading projects...
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (projects.length === 0) {
     return (
-      <div className="p-6 flex items-center justify-center h-64 text-muted-foreground">
-        No projects found. Create a project first.
+      <div className="py-20 text-center bg-card rounded-xl border border-dashed border-border">
+        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground mx-auto mb-4">
+           <LayoutGrid className="h-8 w-8" />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground">No projects found</h3>
+        <p className="text-muted-foreground mt-1 max-w-xs mx-auto">Create a project first to start managing tasks and milestones.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <ProjectSelector
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            onSelect={handleProjectChange}
-          />
+    <div className="space-y-8 h-full flex flex-col">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+             <div className="p-2 rounded-lg bg-primary/10 text-primary hidden sm:block">
+                <LayoutGrid className="h-4 w-4" />
+             </div>
+             <ProjectSelector
+               projects={projects}
+               selectedProjectId={selectedProjectId}
+               onSelect={handleProjectChange}
+             />
+          </div>
+          
           {selectedProject && selectedProject.milestones.length > 0 && (
-            <MilestoneSelector
-              milestones={selectedProject.milestones}
-              selectedMilestoneId={selectedMilestoneId}
-              onSelect={handleMilestoneChange}
-            />
+            <div className="flex items-center gap-2 w-full sm:w-auto border-l border-border sm:pl-4">
+               <div className="p-2 rounded-lg bg-muted text-muted-foreground hidden sm:block">
+                  <Layers className="h-4 w-4" />
+               </div>
+               <MilestoneSelector
+                 milestones={selectedProject.milestones}
+                 selectedMilestoneId={selectedMilestoneId}
+                 onSelect={handleMilestoneChange}
+               />
+            </div>
           )}
         </div>
+        
         <Button
           onClick={handleAdd}
           disabled={!selectedMilestoneId}
+          className="w-full md:w-auto shadow-sm"
         >
-          + Add Task
+          <Plus className="w-4 h-4 mr-2" />
+          Add Task
         </Button>
       </div>
 
-      {selectedProject && selectedProject.milestones.length === 0 ? (
-        <div className="flex items-center justify-center h-64 text-muted-foreground">
-          No milestones in this project. Add milestones from the Projects tab.
-        </div>
-      ) : (
-        <KanbanBoard
-          milestones={kanbanItems}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onDragEnd={handleDragEnd}
-        />
-      )}
+      <div className="flex-1 overflow-hidden">
+        {selectedProject && selectedProject.milestones.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center py-20">
+            <Layers className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-semibold text-foreground">No milestones found</h3>
+            <p className="text-muted-foreground mt-1">Add milestones to this project from the Projects tab to start tracking tasks.</p>
+          </div>
+        ) : (
+          <KanbanBoard
+            milestones={kanbanItems}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDragEnd={handleDragEnd}
+          />
+        )}
+      </div>
 
       <TaskDialog
         open={open}

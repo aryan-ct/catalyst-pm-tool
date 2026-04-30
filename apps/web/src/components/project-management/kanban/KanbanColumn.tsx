@@ -1,7 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import MilestoneCard from "./MilestoneCard";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Milestone, Status } from "../types/types";
 
 interface Props {
@@ -28,14 +27,19 @@ export default function KanbanColumn({
 }); 
 
   return (
-    <Card className="bg-muted/30 flex flex-col min-h-[450px] h-auto overflow-visible">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
+    <div className="flex flex-col h-full bg-slate-50/50 rounded-xl border border-slate-200">
+      <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-white/50 rounded-t-xl">
+        <h3 className="font-bold text-slate-900 flex items-center gap-2">
+          {title}
+          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold tracking-wider">
+            {milestones.length}
+          </span>
+        </h3>
+      </div>
 
-      <CardContent
+      <div
         ref={setNodeRef}
-        className="flex flex-col gap-3 p-3 flex-grow min-h-[200px] h-auto overflow-visible"
+        className="flex flex-col gap-4 p-4 flex-grow min-h-[500px] transition-colors"
       >
         <SortableContext
           items={milestones.map((m) => m.id)}
@@ -50,7 +54,7 @@ export default function KanbanColumn({
             />
           ))}
         </SortableContext>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

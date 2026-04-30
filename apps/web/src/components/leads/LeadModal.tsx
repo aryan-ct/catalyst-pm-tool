@@ -55,7 +55,7 @@ export default function LeadModal({ onSuccess, role }: any) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
 
-      <Button onClick={() => setOpen(true)} className="bg-blue-600 text-white">
+      <Button onClick={() => setOpen(true)}>
         + Create Lead
       </Button>
 
@@ -97,7 +97,7 @@ export default function LeadModal({ onSuccess, role }: any) {
 
           {errors.status && <p className="text-red-500 text-xs">{errors.status}</p>}
 
-          <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white">
+          <Button onClick={handleSubmit} size="lg" className="w-full">
             Add Lead
           </Button>
 

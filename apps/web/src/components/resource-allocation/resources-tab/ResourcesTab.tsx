@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Search } from 'lucide-react';
 
 const ResourcesTab = () => {
   const { resources } = useResourceAllocation();
@@ -53,9 +54,9 @@ const ResourcesTab = () => {
   // }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <div className="flex gap-3 items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-muted/50 p-4 rounded-xl border border-border/50">
+        <div className="flex flex-col sm:flex-row gap-3 items-center w-full md:w-auto">
           <Select<string>
             value={roleFilter}
             onValueChange={(value) => {
@@ -63,7 +64,7 @@ const ResourcesTab = () => {
               setRoleFilter(value);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] bg-card border-border">
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
 
@@ -76,43 +77,47 @@ const ResourcesTab = () => {
             </SelectContent>
           </Select>
 
-          <Input
-            placeholder="Search by name or role..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64"
-          />
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search resource..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card border-border"
+            />
+          </div>
         </div>
-
-        {/* <Button
-          onClick={() => setOpenAllocation(true)}
-          className="bg-blue-600 text-white"
-        >
-          Add Allocation for today
-        </Button> */}
+        
+        <div className="text-xs font-medium text-muted-foreground px-2">
+           {filteredResources.length} resources found
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 overflow-x-auto">
+      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
         {filteredResources.map((r) => (
-          <div
+          <button
             key={r.id}
             onClick={() => setSelected(r.id)}
-            className={`px-3 py-1 rounded-full border cursor-pointer whitespace-nowrap
-              ${selected === r.id ? 'bg-primary text-white' : 'bg-muted'}`}
+            className={`px-4 py-2 rounded-full border text-sm font-medium transition-all duration-200 whitespace-nowrap shadow-sm
+              ${selected === r.id 
+                ? 'bg-primary text-primary-foreground border-primary' 
+                : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:bg-accent'}`}
           >
             {r.name}
-          </div>
+          </button>
         ))}
       </div>
 
-      {filteredResources.length === 0 && (
-        <div className="text-center text-muted-foreground py-6">
-          No resources found
+      {filteredResources.length === 0 ? (
+        <div className="text-center py-20 bg-muted/30 rounded-xl border border-dashed border-border">
+          <p className="text-muted-foreground font-medium text-sm">No resources match your search or filter.</p>
         </div>
-      )}
-
-      {selected && filteredResources.length > 0 && (
-        <ResourceTable resourceId={selected} />
+      ) : (
+        selected && (
+          <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+             <ResourceTable resourceId={selected} />
+          </div>
+        )
       )}
     </div>
   );

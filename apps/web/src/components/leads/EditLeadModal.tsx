@@ -74,7 +74,7 @@ export default function EditLeadModal({ lead, onSuccess, onClose }: any) {
             onChange={(e) => setForm({ ...form, docs: e.target.value })}
           />
 
-          <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white mt-4">
+          <Button onClick={handleSubmit} size="lg" className="w-full mt-4">
             Save Changes
           </Button>
         </div>
