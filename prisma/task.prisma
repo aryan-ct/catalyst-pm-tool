@@ -5,6 +5,7 @@ model Task {
   estimatedHours Float
   actualHours Float
   taskStatus TaskStatus
+  bugSheet   String?
   asignedTo String[]
  
 

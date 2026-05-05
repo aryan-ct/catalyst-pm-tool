@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import ResourceModal from './ResourceModal';
+import ResetPasswordModal from './ResetPasswordModal';
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Pencil, Mail, Shield, UserCircle, Search } from 'lucide-react';
+import { Pencil, Mail, Shield, UserCircle, Search, KeyRound } from 'lucide-react';
 import { Roles } from '@/lib/enum';
 import { RESOURCE_API } from '@/api/resource.api';
 
@@ -31,6 +32,7 @@ export default function Resources() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('active');
   const [editData, setEditData] = useState<Resource | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [resetTarget, setResetTarget] = useState<{ id: string; name: string } | null>(null);
 
   const fetchResources = async () => {
     try {
@@ -169,18 +171,35 @@ export default function Resources() {
                 </div>
               </div>
 
-              <div className="pt-2">
-                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => {
+              <div className="pt-2 flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => {
                    setEditData(r);
                    setEditIndex(i);
                 }}>
                   View Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1"
+                  onClick={() => setResetTarget({ id: r.id!, name: r.name })}
+                >
+                  <KeyRound className="size-3" />
+                  Reset
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+      {resetTarget && (
+        <ResetPasswordModal
+          resourceId={resetTarget.id}
+          resourceName={resetTarget.name}
+          open={!!resetTarget}
+          onClose={() => setResetTarget(null)}
+        />
+      )}
     </div>
   );
 }

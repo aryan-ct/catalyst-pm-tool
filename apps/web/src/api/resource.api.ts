@@ -44,9 +44,15 @@ const findAllResources = async () => {
   return response.data;
 };
 
+const resetPassword = async (id: string, newPassword: string) => {
+  const result = await axiosInstance.patch(`/resources/reset-password/${id}`, { newPassword });
+  return result.data;
+};
+
 export const RESOURCE_API = {
   createResource,
   updateResource,
   findAllResources,
-  findMe
+  findMe,
+  resetPassword,
 };

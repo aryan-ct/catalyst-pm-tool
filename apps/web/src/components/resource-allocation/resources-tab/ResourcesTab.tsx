@@ -103,7 +103,7 @@ const ResourcesTab = () => {
       </div>
 
       {/* Resource selector pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-1">
         {filteredResources.map((r) => {
           const isSelected = selected === r.id;
           const initials = r.name
@@ -118,25 +118,22 @@ const ResourcesTab = () => {
               key={r.id}
               onClick={() => setSelected(r.id)}
               className={`group flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-xl border text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0
-                ${
-                  isSelected
-                    ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
-                    : 'bg-card text-foreground border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5'
+                ${isSelected
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
+                  : 'bg-card text-foreground border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5'
                 }`}
             >
               <div
-                className={`h-7 w-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${
-                  isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'
-                }`}
+                className={`h-7 w-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'
+                  }`}
               >
                 {initials}
               </div>
               <div className="flex flex-col items-start leading-tight">
-                <span>{r.name}</span>
+                <span className="capitalize">{r.name}</span>
                 <span
-                  className={`text-[10px] font-normal ${
-                    isSelected ? 'text-white/70' : 'text-muted-foreground'
-                  }`}
+                  className={`text-[10px] font-normal ${isSelected ? 'text-white/70' : 'text-muted-foreground'
+                    }`}
                 >
                   {r.role}
                 </span>

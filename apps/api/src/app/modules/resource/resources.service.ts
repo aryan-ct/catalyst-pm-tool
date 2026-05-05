@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
+import { CreateResourceDto, ResetPasswordDto, UpdateResourceDto } from './dto/resources.dto';
 import { prisma } from '../../config/prima.config';
 import { bcryptHashing } from '../../../utils/utils';
 import { Role } from '@prisma/client';
@@ -70,6 +70,22 @@ export class ResourcesService {
     });
 
     return resources;
+  }
+
+  async resetPassword(id: string, dto: ResetPasswordDto) {
+    const resource = await prisma.resource.findUnique({ where: { id } });
+
+    if (!resource) {
+      throw new NotFoundException('Resource does not exist.');
+    }
+
+    const hashedPassword = await bcryptHashing.generatePasswordHash(dto.newPassword);
+    await prisma.resource.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Password reset successfully.' };
   }
 
   async findById(id: string) {

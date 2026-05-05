@@ -7,7 +7,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CreateResourceDto, UpdateResourceDto } from './dto/resources.dto';
+import { CreateResourceDto, ResetPasswordDto, UpdateResourceDto } from './dto/resources.dto';
 import { ResourcesService } from './resources.service';
 import { Role } from '@prisma/client';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
@@ -59,5 +59,14 @@ export class ResourcesController {
     @Body() updateResourceDto: UpdateResourceDto,
   ) {
     return this.resourcesService.update(id, updateResourceDto);
+  }
+
+  @Patch('reset-password/:id')
+  @Roles(UserRole.HR)
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    return this.resourcesService.resetPassword(id, resetPasswordDto);
   }
 }

@@ -32,6 +32,10 @@ export class CreateTaskDto {
   assignTo?: string[];
 
   @IsOptional()
+  @IsString()
+  bugSheet?: string;
+
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateSubtaskDto)
   subtasks?: CreateSubtaskDto[];
@@ -63,6 +67,10 @@ export class UpdateTaskDto {
   @ValidateNested({ each: true })
   @Type(() => CreateSubtaskDto)
   subtasks?: CreateSubtaskDto[];
+
+  @IsOptional()
+  @IsString()
+  bugSheet?: string;
 
   @IsString()
   milestoneId!: string;

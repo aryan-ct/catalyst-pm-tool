@@ -65,6 +65,7 @@ export default function Dashboard() {
   const menuItems = getMenuItems();
 
   const settingsItem = { name: 'Change Password', path: '/settings', icon: KeyRound };
+  const navItems = user?.role === Roles.HR ? menuItems : [...menuItems, settingsItem];
 
   useEffect(() => {
     if (!loading && user && menuItems.length > 0) {
@@ -87,7 +88,7 @@ export default function Dashboard() {
   }
 
   const activeItem =
-    [...menuItems, settingsItem].find((item) =>
+    navItems.find((item) =>
       location.pathname.startsWith(item.path),
     ) || menuItems[0];
 
@@ -125,7 +126,7 @@ export default function Dashboard() {
 
           {/* Nav */}
           <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-            {[...menuItems, settingsItem].map((item) => {
+            {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               const Icon = item.icon;
               return (

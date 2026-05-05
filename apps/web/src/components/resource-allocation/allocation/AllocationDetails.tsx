@@ -32,18 +32,33 @@ const AllocationDetails = ({
     const dayAllocations = allocations.filter((a) => a.date === date);
     if (!isEditable) return dayAllocations;
 
-    const resourceMap = new Map<string, AllocationRow>();
-    dayAllocations.forEach((a) => resourceMap.set(a.resourceId, a));
+    const seedMap = new Map<string, AllocationRow>();
+
+    if (dayAllocations.length > 0) {
+      dayAllocations.forEach((a) => seedMap.set(a.resourceId, a));
+    } else {
+      // Pre-fill from the most recent past day that has allocation data
+      const pastTimes = allocations
+        .filter((a) => a.date !== date)
+        .map((a) => new Date(a.date).getTime());
+
+      if (pastTimes.length > 0) {
+        const lastDate = new Date(Math.max(...pastTimes)).toDateString();
+        allocations
+          .filter((a) => a.date === lastDate)
+          .forEach((a) => seedMap.set(a.resourceId, a));
+      }
+    }
 
     return resources.map((r) => {
-      if (resourceMap.has(r.id)) {
-        return resourceMap.get(r.id)!;
-      }
+      const seed = seedMap.get(r.id);
       return {
         resourceId: r.id,
         resourceName: r.name,
         date: date,
-        projects: [],
+        projects: seed
+          ? seed.projects.map((p) => ({ ...p, id: `${Date.now()}-${Math.random()}` }))
+          : [],
       };
     });
   });

@@ -11,12 +11,14 @@ const createTask = async (milestoneId: string, data: {
   title: string;
   description: string;
   estimatedHours: number;
+  bugSheet?: string;
   taskStatus?: string;
 }) => {
   const result = await axiosInstance.post(`/task/${milestoneId}`, {
     title: data.title,
     description: data.description,
     estimatedHours: data.estimatedHours,
+    bugSheet: data.bugSheet || undefined,
     actualHours: 0,
     taskStatus: data.taskStatus ? statusToBackend[data.taskStatus] ?? data.taskStatus : 'TODO',
   });
@@ -27,6 +29,7 @@ const updateTask = async (taskId: string, data: {
   title?: string;
   description?: string;
   estimatedHours?: number;
+  bugSheet?: string;
   taskStatus?: string;
   milestoneId: string;
 }) => {
@@ -34,6 +37,7 @@ const updateTask = async (taskId: string, data: {
   if (data.title !== undefined) payload['title'] = data.title;
   if (data.description !== undefined) payload['description'] = data.description;
   if (data.estimatedHours !== undefined) payload['estimatedHours'] = data.estimatedHours;
+  if (data.bugSheet !== undefined) payload['bugSheet'] = data.bugSheet || null;
   if (data.taskStatus !== undefined) {
     payload['taskStatus'] = statusToBackend[data.taskStatus] ?? data.taskStatus;
   }

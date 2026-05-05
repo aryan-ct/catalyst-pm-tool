@@ -31,6 +31,13 @@ export class CreateResourceDto {
   isActive!: boolean;
 }
 
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty({ message: 'New password is required' })
+  @MinLength(6, { message: 'New password must be at least 6 characters long' })
+  newPassword!: string;
+}
+
 export class UpdateResourceDto {
   @IsOptional()
   @IsString()

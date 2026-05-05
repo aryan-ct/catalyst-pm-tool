@@ -102,6 +102,7 @@ export default function TaskDialog({
           title: milestone.milestoneName,
           description: milestone.milestoneDescription,
           estimatedHours: milestone.estimatedHours,
+          bugSheet: milestone.bugSheet,
           milestoneId: initialData.milestoneId ?? targetMilestoneId,
         });
 
@@ -139,6 +140,7 @@ export default function TaskDialog({
           title: milestone.milestoneName,
           description: milestone.milestoneDescription,
           estimatedHours: milestone.estimatedHours,
+          bugSheet: milestone.bugSheet,
         });
 
         const createdSubtasks: SubTask[] = [];
@@ -159,7 +161,7 @@ export default function TaskDialog({
           milestoneName: created.title,
           milestoneDescription: created.description,
           estimatedHours: created.estimatedHours,
-          bugSheet: "",
+          bugSheet: created.bugSheet ?? milestone.bugSheet ?? "",
           status: "todo",
           milestoneId: targetMilestoneId,
           tasks: createdSubtasks,
