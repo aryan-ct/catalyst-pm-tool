@@ -67,6 +67,7 @@ const getProjectsForPM = async () => {
     id: p.id,
     name: p.name,
     description: p.description || '',
+    status: p.projectStatus.charAt(0) + p.projectStatus.slice(1).toLowerCase(),
     milestones: (p.milestones || []).map((m: any) => ({
       id: m.id,
       milestoneName: m.milestoneName,

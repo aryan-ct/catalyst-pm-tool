@@ -1,5 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserRole } from '../../decorators/roles.decorator';
 import { JwtService } from '@nestjs/jwt';
 import { prisma } from '../../config/prima.config';
@@ -56,5 +61,42 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
 
     return { token: `Bearer ${token}` };
+  }
+
+  async changePassword(
+    userId: string,
+    userRole: string,
+    dto: ChangePasswordDto,
+  ) {
+    if (userRole === UserRole.HR) {
+      throw new BadRequestException(
+        'Password change is not available for this account.',
+      );
+    }
+
+    const resource = await prisma.resource.findUnique({
+      where: { id: userId },
+    });
+
+    if (!resource) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const isValid = await bcryptHashing.verifyPassword(
+      dto.currentPassword,
+      resource.password,
+    );
+
+    if (!isValid) {
+      throw new UnauthorizedException('Current password is incorrect.');
+    }
+
+    const newHash = await bcryptHashing.generatePasswordHash(dto.newPassword);
+    await prisma.resource.update({
+      where: { id: userId },
+      data: { password: newHash },
+    });
+
+    return { message: 'Password updated successfully.' };
   }
 }

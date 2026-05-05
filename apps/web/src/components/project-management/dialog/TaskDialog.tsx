@@ -186,7 +186,7 @@ export default function TaskDialog({
             {initialData ? "Edit Task" : "New Task"}
           </DialogTitle>
           <DialogDescription>
-            Create a task and add subtasks
+            {initialData ? "Edit your task" : "Create a task and add subtasks"}
           </DialogDescription>
         </DialogHeader>
 
@@ -208,7 +208,7 @@ export default function TaskDialog({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-6 mt-4">
+        <div className="">
           <div className="flex flex-col gap-3">
             <div>
               <label className="text-sm font-medium">Task Name</label>
@@ -252,21 +252,23 @@ export default function TaskDialog({
                 <p className="text-red-500 text-xs">{errors.estimatedHours}</p>
               )}
             </div>
+
+            <div>
+              <label className="text-sm font-medium">Bug Sheet Link</label>
+              <input
+                className="border p-2 rounded w-full"
+                value={milestone.bugSheet ?? ""}
+                onChange={(e) =>
+                  setMilestone({ ...milestone, bugSheet: e.target.value })
+                }
+                placeholder="https://bugsheetlink.com"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Bug Sheet Link</label>
-            <input
-              className="border p-2 rounded w-full"
-              value={milestone.bugSheet ?? ""}
-              onChange={(e) =>
-                setMilestone({ ...milestone, bugSheet: e.target.value })
-              }
-            />
-          </div>
         </div>
 
-        <div className="mt-6">
+        <div className="">
           <div className="flex justify-between mb-2">
             <span className="font-semibold">Subtasks</span>
             <Button size="sm" onClick={addTask}>
@@ -303,7 +305,7 @@ export default function TaskDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex justify-end gap-2 mt-3">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
             Close
           </Button>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Roles } from '@/lib/enum';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import ConfirmDeleteDialog from '@/components/confirmDeleteDialog/ConfirmDeleteDialog';
 import {
   Briefcase,
   LayoutGrid,
@@ -11,14 +12,17 @@ import {
   Calendar,
   LogOut,
   Menu,
-  X
+  X,
+  KeyRound,
 } from 'lucide-react';
+import catalystLogo from '@/assets/catalyst-logo.svg';
 
 export default function Dashboard() {
   const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const getMenuItems = () => {
     if (!user) return [];
@@ -26,21 +30,32 @@ export default function Dashboard() {
       case Roles.MANAGER:
         return [
           { name: 'Projects', path: '/projects', icon: Briefcase },
-          { name: 'Project Management', path: '/project-management', icon: LayoutGrid },
-          { name: 'Leads', path: '/leads', icon: Zap }
+          {
+            name: 'Task Management',
+            path: '/task-management',
+            icon: LayoutGrid,
+          },
+          { name: 'Leads', path: '/leads', icon: Zap },
         ];
       case Roles.HR:
         return [
           { name: 'Resources', path: '/resources', icon: Users },
-          { name: 'Resource Allocation', path: '/resource-allocation', icon: Calendar }
+          {
+            name: 'Resource Allocation',
+            path: '/resource-allocation',
+            icon: Calendar,
+          },
         ];
       case Roles.BDE:
-        return [
-          { name: 'Leads', path: '/leads', icon: Zap }
-        ];
+        return [{ name: 'Leads', path: '/leads', icon: Zap }];
       case Roles.DEV:
+      case Roles.TESTER:
         return [
-          { name: 'Project Management', path: '/project-management', icon: LayoutGrid }
+          {
+            name: 'Task Management',
+            path: '/task-management',
+            icon: LayoutGrid,
+          },
         ];
       default:
         return [];
@@ -48,6 +63,8 @@ export default function Dashboard() {
   };
 
   const menuItems = getMenuItems();
+
+  const settingsItem = { name: 'Change Password', path: '/settings', icon: KeyRound };
 
   useEffect(() => {
     if (!loading && user && menuItems.length > 0) {
@@ -69,33 +86,46 @@ export default function Dashboard() {
     );
   }
 
-  const activeItem = menuItems.find(item => location.pathname.startsWith(item.path)) || menuItems[0];
+  const activeItem =
+    [...menuItems, settingsItem].find((item) =>
+      location.pathname.startsWith(item.path),
+    ) || menuItems[0];
 
   return (
     <div className="dashboard-layout">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-12 bg-background border-b border-border flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-2">
-          <div className="size-2 rounded-full bg-primary" />
+          <img src={catalystLogo} alt="Catalyst" className="h-6 w-6" />
           <span className="text-sm font-semibold text-foreground">Catalyst</span>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          {isSidebarOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? (
+            <X className="size-4" />
+          ) : (
+            <Menu className="size-4" />
+          )}
         </Button>
       </div>
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside
+        className={`sidebar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+      >
         <div className="flex flex-col h-full">
           {/* Brand */}
           <div className="flex items-center gap-2 px-3 h-12 border-b border-border shrink-0">
-            <div className="size-2 rounded-full bg-primary" />
+            <img src={catalystLogo} alt="Catalyst" className="h-6 w-6" />
             <span className="text-sm font-semibold text-foreground">Catalyst</span>
           </div>
 
           {/* Nav */}
           <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-            {menuItems.map((item) => {
+            {[...menuItems, settingsItem].map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               const Icon = item.icon;
               return (
@@ -108,7 +138,9 @@ export default function Dashboard() {
                   }}
                 >
                   {Icon && (
-                    <Icon className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <Icon
+                      className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                    />
                   )}
                   <span className="flex-1 truncate">{item.name}</span>
                 </div>
@@ -116,26 +148,56 @@ export default function Dashboard() {
             })}
           </nav>
 
-          {/* Logout */}
-          <div className="shrink-0 px-2 py-3 border-t border-border">
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-8 px-3 gap-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              onClick={handleLogout}
-            >
-              <LogOut className="size-4" />
-              Logout
-            </Button>
-          </div>
+          {/* User Profile & Logout */}
+          {user && (
+            <div className="px-4 py-4 border-t border-border">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0 border border-primary/20">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'HR'}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {user.name}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/60 truncate">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                  onClick={() => setIsLogoutDialogOpen(true)}
+                >
+                  <LogOut className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteDialog
+        open={isLogoutDialogOpen}
+        onClose={() => setIsLogoutDialogOpen(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        description="Are you sure you want to log out of your account?"
+        confirmText="Logout"
+      />
 
       {/* Main Content */}
       <main className="main-content pt-12 lg:pt-0">
         <div className="page-container">
           <header className="flex items-center justify-between border-b border-border pb-4 mb-6">
             {activeItem && (
-              <h1 className="text-lg font-semibold text-foreground">{activeItem.name}</h1>
+              <h1 className="text-lg font-semibold text-foreground">
+                {activeItem.name}
+              </h1>
             )}
           </header>
 

@@ -3,13 +3,15 @@ import { Button } from '@/components/ui/button';
 import AllocationSheets from './AllocationSheets';
 import ResourcesTab from '../resources-tab/ResourcesTab';
 import AllocationDetails from '../allocation/AllocationDetails';
-import { ResourceAllocationProvider } from '../ResourceAllocationContext';
+import { ResourceAllocationProvider, useResourceAllocation } from '../ResourceAllocationContext';
 
 const AllocationTabsContent = () => {
   const [activeTab, setActiveTab] = useState<'allocation' | 'resources'>('allocation');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { allocations } = useResourceAllocation();
 
   const today = new Date().toDateString();
+  const hasTodayAllocation = allocations.some((a) => a.date === today);
 
   if (selectedDate) {
     return (
@@ -53,7 +55,7 @@ const AllocationTabsContent = () => {
           onClick={() => setSelectedDate(today)}
           className="w-full sm:w-auto shadow-sm"
         >
-          Add Allocation for today
+          {hasTodayAllocation ? 'Update Allocation for today' : 'Add Allocation for today'}
         </Button>
       </div>
 

@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import ProjectModal from './ProjectModal';
 import ProjectDetails from './ProjectDetails';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Pencil, Eye, ExternalLink, Clock, Milestone } from 'lucide-react';
 import ConfirmDeleteDialog from '../confirmDeleteDialog/ConfirmDeleteDialog';
@@ -16,7 +9,7 @@ import { PROJECT_API } from '../../api/project.api';
 
 export default function Projects() {
   const [projects, setProjects] = useState<any[]>([]);
-  const [filter, setFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState<'Active' | 'Archived'>('Active');
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -35,9 +28,7 @@ export default function Projects() {
     fetchProjects();
   }, []);
 
-  const filtered = projects.filter((p) =>
-    filter === 'All' ? true : p.status === filter,
-  );
+  const filtered = projects.filter((p) => p.status === activeTab);
 
   if (viewingProject) {
     return (
@@ -52,16 +43,28 @@ export default function Projects() {
     <div className="space-y-6">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Select value={filter} onValueChange={(v) => setFilter(v ?? 'All')}>
-          <SelectTrigger className="w-full sm:w-[200px] bg-white">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Projects</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex p-1 bg-muted rounded-lg w-full sm:w-auto">
+          <button
+            className={`flex-1 sm:flex-none px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              activeTab === 'Active'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            onClick={() => setActiveTab('Active')}
+          >
+            Active Projects
+          </button>
+          <button
+            className={`flex-1 sm:flex-none px-6 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              activeTab === 'Archived'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            onClick={() => setActiveTab('Archived')}
+          >
+            Archived Projects
+          </button>
+        </div>
 
         <ProjectModal
           setProjects={setProjects}
@@ -76,7 +79,11 @@ export default function Projects() {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((p, i) => (
-          <Card key={i} className="hover:shadow-md transition-all duration-200 border-border group">
+          <Card key={i} className={`hover:shadow-md transition-all duration-200 group ${
+            p.status === 'Archived' 
+              ? 'bg-muted/40 border-dashed border-border opacity-90' 
+              : 'border-border'
+          }`}>
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div>

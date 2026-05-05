@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { Roles } from "@/lib/enum";
 import { Milestone, PMProject, Status } from "./types/types";
 import { PROJECT_API } from "@/api/project.api";
 import { TASK_API } from "@/api/task.api";
@@ -19,6 +21,7 @@ const statusToBackend: Record<Status, string> = {
 };
 
 export default function ProjectManagement() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<PMProject[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>("");
@@ -34,7 +37,12 @@ export default function ProjectManagement() {
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const data = await PROJECT_API.getProjectsForPM();
+      let data = await PROJECT_API.getProjectsForPM();
+
+      if (user?.role === Roles.DEV || user?.role === Roles.TESTER) {
+        data = data.filter((p: PMProject) => p.status === 'Active');
+      }
+
       setProjects(data);
       if (data.length > 0) {
         const firstProject = data[0];

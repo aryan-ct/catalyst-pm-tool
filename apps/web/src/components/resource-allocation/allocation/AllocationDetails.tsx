@@ -20,8 +20,10 @@ const AllocationDetails = ({
   date: string;
   onBack: () => void;
 }) => {
-  const { allocations, projects, resources, refreshData } = useResourceAllocation();
-  const PROJECT_OPTIONS = projects.map(p => p.name);
+  const { allocations, projects, resources, refreshData } =
+    useResourceAllocation();
+
+  const PROJECT_OPTIONS = projects.map((p) => p.name);
 
   const today = new Date().toDateString();
   const isEditable = date === today;
@@ -31,7 +33,7 @@ const AllocationDetails = ({
     if (!isEditable) return dayAllocations;
 
     const resourceMap = new Map<string, AllocationRow>();
-    dayAllocations.forEach(a => resourceMap.set(a.resourceId, a));
+    dayAllocations.forEach((a) => resourceMap.set(a.resourceId, a));
 
     return resources.map((r) => {
       if (resourceMap.has(r.id)) {
@@ -57,15 +59,17 @@ const AllocationDetails = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const payload = rows.flatMap(row =>
-      row.projects.map(p => {
-        const project = projects.find(proj => proj.name === p.name);
-        return {
-          resourceId: row.resourceId,
-          projectId: project?.id,
-          desc: p.description || ''
-        };
-      }).filter(item => item.projectId)
+    const payload = rows.flatMap((row) =>
+      row.projects
+        .map((p) => {
+          const project = projects.find((proj) => proj.name === p.name);
+          return {
+            resourceId: row.resourceId,
+            projectId: project?.id,
+            desc: p.description || '',
+          };
+        })
+        .filter((item) => item.projectId),
     );
 
     if (payload.length === 0) {
@@ -116,7 +120,12 @@ const AllocationDetails = ({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-card p-4 rounded-xl border border-border shadow-sm">
-        <Button variant="ghost" onClick={onBack} disabled={isSubmitting} className="text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          disabled={isSubmitting}
+          className="text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -127,13 +136,19 @@ const AllocationDetails = ({
         </div>
 
         {isEditable ? (
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="shadow-lg shadow-primary/20 min-w-[100px]">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="shadow-lg shadow-primary/20 min-w-[100px]"
+          >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Saving
               </div>
-            ) : 'Submit Changes'}
+            ) : (
+              'Submit Changes'
+            )}
           </Button>
         ) : (
           <div className="w-20"></div>
@@ -153,7 +168,10 @@ const AllocationDetails = ({
           </div>
         ) : (
           rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4">
+            <div
+              key={rowIndex}
+              className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4"
+            >
               {isEditable && (
                 <div className="grid grid-cols-12 gap-6 px-4 items-center mb-2">
                   <div className="col-span-3">
@@ -161,7 +179,9 @@ const AllocationDetails = ({
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
                         {row.resourceName.charAt(0)}
                       </div>
-                      <span className="font-semibold text-foreground">{row.resourceName}</span>
+                      <span className="font-semibold text-foreground">
+                        {row.resourceName}
+                      </span>
                     </div>
                   </div>
 
@@ -204,9 +224,13 @@ const AllocationDetails = ({
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
                             {row.resourceName.charAt(0)}
                           </div>
-                          <span className="font-semibold">{row.resourceName}</span>
+                          <span className="font-semibold">
+                            {row.resourceName}
+                          </span>
                         </div>
-                      ) : ''}
+                      ) : (
+                        ''
+                      )}
                     </div>
                   </div>
 
@@ -221,7 +245,7 @@ const AllocationDetails = ({
                           }
                           className="text-primary hover:text-destructive transition-colors"
                         >
-                          <CircleX className='h-4 w-4' />
+                          <CircleX className="h-4 w-4" />
                         </button>
                       )}
                     </div>

@@ -26,7 +26,7 @@ export class ProjectsController {
   }
 
   // Get all Project
-  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV, UserRole.TESTER)
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,

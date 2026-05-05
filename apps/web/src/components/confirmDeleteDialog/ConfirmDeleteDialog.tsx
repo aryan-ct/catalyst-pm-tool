@@ -12,6 +12,7 @@ type Props = {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  confirmText?: string;
 };
 
 export default function ConfirmDeleteDialog({
@@ -20,6 +21,7 @@ export default function ConfirmDeleteDialog({
   onConfirm,
   title = "Delete Item?",
   description = "Are you sure you want to delete this item?",
+  confirmText = "Delete",
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -38,10 +40,10 @@ export default function ConfirmDeleteDialog({
           </Button>
 
           <Button
-            className="bg-red-600 text-white"
+            className={`${confirmText === 'Logout' ? 'bg-primary' : 'bg-red-600'} text-white`}
             onClick={onConfirm}
           >
-            Delete
+            {confirmText}
           </Button>
         </div>
       </DialogContent>

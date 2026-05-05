@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import axiosInstance from "@/api/axios-instance";
 import { useAuth } from "@/context/AuthContext";
-import { LogIn, ShieldCheck, Mail, Lock, AlertCircle } from "lucide-react";
+import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+import catalystLogo from "@/assets/catalyst-logo.svg";
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -43,10 +44,8 @@ export default function LoginForm() {
       <div className="w-full max-w-[400px] px-4">
         {/* Brand mark */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <ShieldCheck className="text-primary-foreground h-4 w-4" />
-          </div>
-          <span className="text-base font-semibold text-foreground">Catalyst</span>
+          <img src={catalystLogo} alt="Catalyst" className="h-10 w-10" />
+          <span className="text-lg font-semibold text-foreground">Catalyst</span>
         </div>
 
         {/* Login card */}

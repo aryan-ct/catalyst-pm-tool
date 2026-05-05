@@ -207,7 +207,6 @@ export default function TaskDialog({ open, setOpen }: Props) {
   const handleSubmit = () => {
     if (!validate()) return;
 
-    console.log("Milestone Data:", milestone);
     setOpen(false);
   };
 

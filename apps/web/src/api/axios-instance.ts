@@ -55,6 +55,14 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    const status = error.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+
     toast.error(getErrorMessage(error));
     return Promise.reject(error);
   }

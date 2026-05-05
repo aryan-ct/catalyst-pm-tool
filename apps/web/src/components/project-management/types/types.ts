@@ -35,6 +35,7 @@ export interface PMProject {
   id: string;
   name: string;
   description: string;
+  status?: string;
   milestones: PMBackendMilestone[];
 }
 

@@ -9,7 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '../ui/button';
-import { Pencil, Mail, Shield, UserCircle } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Pencil, Mail, Shield, UserCircle, Search } from 'lucide-react';
 import { Roles } from '@/lib/enum';
 import { RESOURCE_API } from '@/api/resource.api';
 
@@ -21,9 +22,13 @@ type Resource = {
   isActive: boolean;
 };
 
+type ActiveTab = 'active' | 'inactive';
+
 export default function Resources() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [filter, setFilter] = useState('All');
+  const [nameSearch, setNameSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('active');
   const [editData, setEditData] = useState<Resource | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
@@ -40,31 +45,73 @@ export default function Resources() {
     fetchResources();
   }, []);
 
-  const filteredResources = resources.filter((r) =>
-    filter === 'All' ? true : r.role === filter,
-  );
+  const filteredResources = resources.filter((r) => {
+    const matchesTab = activeTab === 'active' ? r.isActive : !r.isActive;
+    const matchesRole = filter === 'All' || r.role === filter;
+    const matchesName = r.name.toLowerCase().includes(nameSearch.toLowerCase());
+    return matchesTab && matchesRole && matchesName;
+  });
+
+  const activeCount = resources.filter((r) => r.isActive).length;
+  const inactiveCount = resources.filter((r) => !r.isActive).length;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Select
-          value={filter}
-          onValueChange={(value) => setFilter(value ?? 'All')}
-        >
-          <SelectTrigger className="w-full sm:w-[200px] bg-white">
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
+      {/* Tabs */}
+      <div className="flex border-b border-border">
+        {(['active', 'inactive'] as ActiveTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+              activeTab === tab
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab === 'active' ? 'Active' : 'Inactive'}
+            <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+              activeTab === tab ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+            }`}>
+              {tab === 'active' ? activeCount : inactiveCount}
+            </span>
+          </button>
+        ))}
+      </div>
 
-          <SelectContent>
-            <SelectItem value="All">All Roles</SelectItem>
-            <SelectItem value={Roles.MANAGER}>MANAGER</SelectItem>
-            <SelectItem value={Roles.DEV}>DEV</SelectItem>
-            <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
-            <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
-            <SelectItem value={Roles.HR}>HR</SelectItem>
-            <SelectItem value={Roles.BDE}>BDE</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* Name search */}
+          <div className="relative w-full sm:w-[220px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search by name..."
+              value={nameSearch}
+              onChange={(e) => setNameSearch(e.target.value)}
+              className="pl-8 bg-white"
+            />
+          </div>
+
+          {/* Role filter */}
+          <Select
+            value={filter}
+            onValueChange={(value) => setFilter(value ?? 'All')}
+          >
+            <SelectTrigger className="w-full sm:w-[200px] bg-white">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="All">All Roles</SelectItem>
+              <SelectItem value={Roles.MANAGER}>MANAGER</SelectItem>
+              <SelectItem value={Roles.DEV}>DEV</SelectItem>
+              <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
+              <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
+              <SelectItem value={Roles.HR}>HR</SelectItem>
+              <SelectItem value={Roles.BDE}>BDE</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <ResourceModal
           setResources={setResources}
@@ -77,7 +124,11 @@ export default function Resources() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredResources.map((r, i) => (
+        {filteredResources.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            No {activeTab} resources found.
+          </div>
+        ) : filteredResources.map((r, i) => (
           <Card key={i} className="hover:shadow-md transition-all duration-200 border-border group">
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
@@ -133,3 +184,4 @@ export default function Resources() {
     </div>
   );
 }
+

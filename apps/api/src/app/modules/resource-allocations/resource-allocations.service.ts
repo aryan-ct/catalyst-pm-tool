@@ -9,6 +9,20 @@ import { Role } from '@prisma/client';
 @Injectable()
 export class ResourceAllocationsService {
   async create(createDto: CreateResourceAllocationDto[]) {
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Delete existing allocations for today to replace them
+    const deletePromise = prisma.resourceAllocation.deleteMany({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+          lt: endOfDay,
+        },
+      },
+    });
+
     const resourceIds = [...new Set(createDto.map((dto) => dto.resourceId))];
     const projectIds = [...new Set(createDto.map((dto) => dto.projectId))];
 
@@ -25,12 +39,16 @@ export class ResourceAllocationsService {
 
     const missingResources = resourceIds.filter((id) => !resourceMap.has(id));
     if (missingResources.length > 0) {
-      throw new NotFoundException(`Resources not found: ${missingResources.join(', ')}`);
+      throw new NotFoundException(
+        `Resources not found: ${missingResources.join(', ')}`,
+      );
     }
 
     const missingProjects = projectIds.filter((id) => !projectMap.has(id));
     if (missingProjects.length > 0) {
-      throw new NotFoundException(`Projects not found: ${missingProjects.join(', ')}`);
+      throw new NotFoundException(
+        `Projects not found: ${missingProjects.join(', ')}`,
+      );
     }
 
     // Creating via transaction to ensure all or nothing
@@ -47,7 +65,7 @@ export class ResourceAllocationsService {
       });
     });
 
-    return prisma.$transaction(createPromises);
+    return prisma.$transaction([deletePromise, ...createPromises]);
   }
 
   async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role }) {

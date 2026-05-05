@@ -182,7 +182,26 @@ export default function ProjectModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          if (setEditData) setEditData(null);
+          if (setEditIndex) setEditIndex(null);
+          setForm({
+            name: '',
+            client: '',
+            date: '',
+            hours: 0,
+            status: '',
+            docLink: '',
+          });
+          setMilestones([]);
+          setErrors({});
+        }
+      }}
+    >
       {/* Open Button */}
       {!isControlled && (
         <Button

@@ -6,21 +6,27 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, UserRole } from '../decorators/roles.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorators';
 import { prisma } from '../config/prima.config';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-
-    if (!requiredRoles) {
-      return true;
-    }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
@@ -29,19 +35,24 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User authentication required');
     }
 
-    const resource = await prisma.resource.findUnique({
-      where: {
-        email: user.email,
-      },
-    });
+    // HR is a hardcoded account with no DB record — skip isActive check
+    if (user.role !== UserRole.HR) {
+      const resource = await prisma.resource.findUnique({
+        where: { email: user.email },
+        select: { isActive: true },
+      });
 
-    if (user.role !== UserRole.HR && !resource?.isActive) {
-      throw new ForbiddenException(
-        'This account or resource is currently inactive',
-      );
+      if (!resource?.isActive) {
+        throw new ForbiddenException(
+          'Your account is inactive. Please contact your administrator.',
+        );
+      }
     }
 
-    // 4. Check roles
+    if (!requiredRoles) {
+      return true;
+    }
+
     const hasRole = requiredRoles.some((role) => user?.role === role);
 
     if (!hasRole) {

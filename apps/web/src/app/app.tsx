@@ -7,6 +7,7 @@ import Resources from '@/components/resources/Resources';
 import Leads from '@/components/leads/Leads';
 import ProjectManagement from '@/components/project-management/ProjectManagement';
 import AllocationTabs from '@/components/resource-allocation/allocation/AllocationTabs';
+import ChangePassword from '@/components/settings/ChangePassword';
 import { Toaster } from 'react-hot-toast';
 
 export function App() {
@@ -16,10 +17,11 @@ export function App() {
       <Routes>
         <Route path="/" element={<Dashboard />}>
           <Route path="projects" element={<Projects />} />
-          <Route path="project-management" element={<ProjectManagement />} />
+          <Route path="task-management" element={<ProjectManagement />} />
           <Route path="leads" element={<Leads />} />
           <Route path="resources" element={<Resources />} />
           <Route path="resource-allocation" element={<AllocationTabs />} />
+          <Route path="settings" element={<ChangePassword />} />
         </Route>
         <Route path="/login" element={<LoginForm />} />
       </Routes>

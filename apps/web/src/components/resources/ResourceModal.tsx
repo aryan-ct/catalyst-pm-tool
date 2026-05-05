@@ -87,7 +87,18 @@ export default function ResourceModal({
   }, [editData]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          setEditData(null);
+          setEditIndex(null);
+          setForm({ name: '', role: null, email: '', isActive: true });
+          setErrors({ name: '', role: '', email: '' });
+        }
+      }}
+    >
       <DialogTrigger>
         <Button
           className=""

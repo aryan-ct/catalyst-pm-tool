@@ -27,7 +27,6 @@ export default function RegisterForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(form);
   };
 
   return (
@@ -140,7 +139,7 @@ export default function RegisterForm() {
             </form>
           </CardContent>
         </Card>
-        
+
         <p className="text-center text-slate-400 text-xs mt-8">
           By signing up, you agree to our <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
         </p>
