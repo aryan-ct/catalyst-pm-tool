@@ -7,7 +7,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PencilRuler, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { PencilRuler, Plus, X, Bug, Sparkles, ListTodo } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Milestone, PMBackendMilestone, SubTask, TaskType } from "../types/types";
 import { MilestoneErrors, validateMilestone } from "./validate";
 import { TASK_API } from "@/api/task.api";
@@ -97,7 +107,6 @@ export default function TaskDialog({
     setSaving(true);
     try {
       if (initialData) {
-        // Update existing task
         await TASK_API.updateTask(initialData.id, {
           title: milestone.milestoneName,
           description: milestone.milestoneDescription,
@@ -106,12 +115,10 @@ export default function TaskDialog({
           milestoneId: initialData.milestoneId ?? targetMilestoneId,
         });
 
-        // Delete removed subtasks
         for (const id of deletedSubtaskIds) {
           await SUBTASK_API.deleteSubtask(id);
         }
 
-        // Create new subtasks
         const newSubtasks: SubTask[] = [];
         for (const st of milestone.tasks.filter((t) => t._isNew)) {
           const created = await SUBTASK_API.createSubtask(initialData.id, {
@@ -135,7 +142,6 @@ export default function TaskDialog({
         };
         onSave(updatedTask);
       } else {
-        // Create new task
         const created = await TASK_API.createTask(targetMilestoneId, {
           title: milestone.milestoneName,
           description: milestone.milestoneDescription,
@@ -177,142 +183,241 @@ export default function TaskDialog({
     }
   };
 
+  const selectedMilestoneName = projectMilestones.find(
+    (m) => m.id === pickedMilestoneId
+  )?.milestoneName;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <div className="size-10 bg-gray-200 rounded-full flex items-center justify-center">
-            <PencilRuler />
-          </div>
-          <DialogTitle>
-            {initialData ? "Edit Task" : "New Task"}
-          </DialogTitle>
-          <DialogDescription>
-            {initialData ? "Edit your task" : "Create a task and add subtasks"}
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Milestone picker (only when creating) */}
-        {!initialData && projectMilestones.length > 0 && (
-          <div>
-            <label className="text-sm font-medium">Milestone</label>
-            <select
-              className="border p-2 rounded w-full mt-1"
-              value={pickedMilestoneId}
-              onChange={(e) => setPickedMilestoneId(e.target.value)}
-            >
-              {projectMilestones.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.milestoneName}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="">
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="text-sm font-medium">Task Name</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={milestone.milestoneName}
-                onChange={(e) =>
-                  setMilestone({ ...milestone, milestoneName: e.target.value })
-                }
-              />
-              {errors.milestoneName && (
-                <p className="text-red-500 text-xs">{errors.milestoneName}</p>
-              )}
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border bg-muted/30">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="size-9 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                <PencilRuler className="size-4 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base">
+                  {initialData ? "Edit Task" : "Create New Task"}
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-0.5">
+                  {initialData
+                    ? "Update task details and subtasks"
+                    : "Fill in the details below to create a new task"}
+                </DialogDescription>
+              </div>
             </div>
+          </DialogHeader>
+        </div>
 
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <textarea
-                className="border p-2 rounded w-full"
-                value={milestone.milestoneDescription}
-                onChange={(e) =>
-                  setMilestone({ ...milestone, milestoneDescription: e.target.value })
-                }
-              />
-              {errors.milestoneDescription && (
-                <p className="text-red-500 text-xs">{errors.milestoneDescription}</p>
-              )}
+        {/* Scrollable body */}
+        <div className="px-6 py-5 space-y-5 overflow-y-auto max-h-[65vh]">
+          {/* Milestone picker */}
+          {!initialData && projectMilestones.length > 0 && (
+            <div className="space-y-1.5">
+              <Label htmlFor="milestone-select">Milestone</Label>
+              <Select
+                value={pickedMilestoneId}
+                onValueChange={(val) => val && setPickedMilestoneId(val)}
+              >
+                <SelectTrigger id="milestone-select" className="w-full h-9">
+                  <span className="flex flex-1 text-left text-sm truncate">
+                    {selectedMilestoneName ?? (
+                      <span className="text-muted-foreground">Choose a milestone…</span>
+                    )}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {projectMilestones.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.milestoneName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          )}
 
-            <div>
-              <label className="text-sm font-medium">Estimated Hours</label>
-              <input
+          {/* Task name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="task-name">Task Name</Label>
+            <Input
+              id="task-name"
+              className="h-9"
+              placeholder="Enter a clear, descriptive task name"
+              value={milestone.milestoneName}
+              onChange={(e) =>
+                setMilestone({ ...milestone, milestoneName: e.target.value })
+              }
+              aria-invalid={!!errors.milestoneName}
+            />
+            {errors.milestoneName && (
+              <p className="text-destructive text-xs">{errors.milestoneName}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label htmlFor="task-desc">Description</Label>
+            <Textarea
+              id="task-desc"
+              placeholder="Describe what needs to be done…"
+              className="min-h-[80px] resize-none"
+              value={milestone.milestoneDescription}
+              onChange={(e) =>
+                setMilestone({ ...milestone, milestoneDescription: e.target.value })
+              }
+              aria-invalid={!!errors.milestoneDescription}
+            />
+            {errors.milestoneDescription && (
+              <p className="text-destructive text-xs">{errors.milestoneDescription}</p>
+            )}
+          </div>
+
+          {/* Estimated hours + Bug sheet side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="est-hours">Estimated Hours</Label>
+              <Input
+                id="est-hours"
                 type="number"
-                className="border p-2 rounded w-full"
-                value={milestone.estimatedHours}
+                className="h-9"
+                min={0}
+                placeholder="0"
+                value={milestone.estimatedHours || ""}
                 onChange={(e) =>
                   setMilestone({ ...milestone, estimatedHours: Number(e.target.value) })
                 }
+                aria-invalid={!!errors.estimatedHours}
               />
               {errors.estimatedHours && (
-                <p className="text-red-500 text-xs">{errors.estimatedHours}</p>
+                <p className="text-destructive text-xs">{errors.estimatedHours}</p>
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Bug Sheet Link</label>
-              <input
-                className="border p-2 rounded w-full"
+            <div className="space-y-1.5">
+              <Label htmlFor="bug-sheet">Bug Sheet Link</Label>
+              <Input
+                id="bug-sheet"
+                className="h-9"
+                placeholder="https://…"
                 value={milestone.bugSheet ?? ""}
                 onChange={(e) =>
                   setMilestone({ ...milestone, bugSheet: e.target.value })
                 }
-                placeholder="https://bugsheetlink.com"
               />
             </div>
           </div>
 
-        </div>
-
-        <div className="">
-          <div className="flex justify-between mb-2">
-            <span className="font-semibold">Subtasks</span>
-            <Button size="sm" onClick={addTask}>
-              + Add Subtask
-            </Button>
-          </div>
-
-          {errors.tasks && (
-            <p className="text-red-500 text-xs mb-2">{errors.tasks}</p>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {milestone.tasks.map((task, index) => (
-              <div key={task.id} className="flex gap-2">
-                <input
-                  className="border p-2 rounded w-full"
-                  placeholder="Subtask title"
-                  value={task.title}
-                  onChange={(e) => updateTask(index, "title", e.target.value)}
-                />
-                <select
-                  className="border p-2 rounded"
-                  value={task.taskType}
-                  onChange={(e) => updateTask(index, "taskType", e.target.value)}
-                >
-                  <option value="feature">Feature</option>
-                  <option value="bug">Bug</option>
-                </select>
-                <Button variant="outline" onClick={() => removeTask(index)}>
-                  <X />
-                </Button>
+          {/* Subtasks */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label className="mb-0">Subtasks</Label>
+                {milestone.tasks.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                    {milestone.tasks.length}
+                  </span>
+                )}
               </div>
-            ))}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs gap-1 px-2.5"
+                onClick={addTask}
+              >
+                <Plus className="size-3" />
+                Add Subtask
+              </Button>
+            </div>
+
+            {errors.tasks && (
+              <p className="text-destructive text-xs">{errors.tasks}</p>
+            )}
+
+            {milestone.tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 rounded-lg border border-dashed border-border text-muted-foreground gap-2">
+                <ListTodo className="size-5 opacity-40" />
+                <p className="text-xs">No subtasks yet. Add one to break down the work.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {milestone.tasks.map((task, index) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/50"
+                  >
+                    {/* Type toggle */}
+                    <div className="flex rounded-md border border-border overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => updateTask(index, "taskType", "feature")}
+                        className={cn(
+                          "flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                          task.taskType === "feature"
+                            ? "bg-blue-500 text-white"
+                            : "bg-transparent text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        <Sparkles className="size-2.5" />
+                        Feat
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateTask(index, "taskType", "bug")}
+                        className={cn(
+                          "flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors border-l border-border",
+                          task.taskType === "bug"
+                            ? "bg-red-500 text-white"
+                            : "bg-transparent text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        <Bug className="size-2.5" />
+                        Bug
+                      </button>
+                    </div>
+
+                    <Input
+                      className="h-7 text-xs flex-1 bg-background"
+                      placeholder="Subtask title…"
+                      value={task.title}
+                      onChange={(e) => updateTask(index, "title", e.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeTask(index)}
+                      className="shrink-0 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-3">
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
-            Close
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border flex justify-end gap-2 bg-muted/20">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpen(false)}
+            disabled={saving}
+          >
+            Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving..." : "Save Task"}
+          <Button size="sm" onClick={handleSubmit} disabled={saving} className="min-w-[90px]">
+            {saving ? (
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                Saving…
+              </span>
+            ) : (
+              initialData ? "Save Changes" : "Create Task"
+            )}
           </Button>
         </div>
       </DialogContent>
