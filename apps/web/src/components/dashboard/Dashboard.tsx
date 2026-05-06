@@ -158,8 +158,8 @@ export default function Dashboard() {
                     {user?.name?.charAt(0)?.toUpperCase() || 'HR'}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {user.name}
+                    <span className="text-sm font-medium text-foreground truncate capitalize">
+                      {user.name || "HR"}
                     </span>
                     <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/60 truncate">
                       {user.role}
