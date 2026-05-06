@@ -14,6 +14,7 @@ import { Input } from '../ui/input';
 import { Pencil, Mail, Shield, UserCircle, Search, KeyRound } from 'lucide-react';
 import { Roles } from '@/lib/enum';
 import { RESOURCE_API } from '@/api/resource.api';
+import { useAuth } from '@/context/AuthContext';
 
 type Resource = {
   id?: string;
@@ -26,6 +27,8 @@ type Resource = {
 type ActiveTab = 'active' | 'inactive';
 
 export default function Resources() {
+  const { user } = useAuth();
+  const isHR = user?.role === Roles.HR;
   const [resources, setResources] = useState<Resource[]>([]);
   const [filter, setFilter] = useState('All');
   const [nameSearch, setNameSearch] = useState('');
@@ -115,14 +118,16 @@ export default function Resources() {
           </Select>
         </div>
 
-        <ResourceModal
-          setResources={setResources}
-          editData={editData}
-          editIndex={editIndex}
-          setEditData={setEditData}
-          setEditIndex={setEditIndex}
-          onRefresh={fetchResources}
-        />
+        {isHR && (
+          <ResourceModal
+            setResources={setResources}
+            editData={editData}
+            editIndex={editIndex}
+            setEditData={setEditData}
+            setEditIndex={setEditIndex}
+            onRefresh={fetchResources}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -147,17 +152,19 @@ export default function Resources() {
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                  onClick={() => {
-                    setEditData(r);
-                    setEditIndex(i);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                {isHR && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setEditData(r);
+                      setEditIndex(i);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
               <div className="space-y-3 pt-2">
@@ -172,21 +179,29 @@ export default function Resources() {
               </div>
 
               <div className="pt-2 flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => {
-                   setEditData(r);
-                   setEditIndex(i);
-                }}>
-                  View Profile
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1"
-                  onClick={() => setResetTarget({ id: r.id!, name: r.name })}
-                >
-                  <KeyRound className="size-3" />
-                  Reset
-                </Button>
+                {isHR ? (
+                  <>
+                    <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => {
+                       setEditData(r);
+                       setEditIndex(i);
+                    }}>
+                      View / Edit Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1"
+                      onClick={() => setResetTarget({ id: r.id!, name: r.name })}
+                    >
+                      <KeyRound className="size-3" />
+                      Reset
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" size="sm" className="flex-1 text-xs" disabled>
+                    View Profile
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

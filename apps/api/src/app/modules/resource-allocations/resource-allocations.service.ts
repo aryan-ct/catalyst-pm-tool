@@ -74,8 +74,12 @@ export class ResourceAllocationsService {
     return prisma.resourceAllocation.findMany({
       where: {
         ...(role && { role }),
-        ...(start_date && { gte: new Date(start_date) }),
-        ...(end_date && { lte: new Date(end_date) }),
+        ...( (start_date || end_date) && {
+          createdAt: {
+            ...(start_date && { gte: new Date(start_date) }),
+            ...(end_date && { lte: new Date(end_date) }),
+          }
+        }),
       },
     });
   }

@@ -251,14 +251,16 @@ export default function ProjectManagement() {
           )}
         </div>
         
-        <Button
-          onClick={handleAdd}
-          disabled={!selectedMilestoneId}
-          className="w-full md:w-auto shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Task
-        </Button>
+        {user?.role === Roles.MANAGER && (
+          <Button
+            onClick={handleAdd}
+            disabled={!selectedMilestoneId}
+            className="w-full md:w-auto shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Task
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">

@@ -4,6 +4,8 @@ import { Clock, Pencil, Trash, Link as LinkIcon, CheckCircle2, Circle, Clock4, A
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Milestone, Status } from '../types/types';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
 
 interface Props {
   milestone: Milestone;
@@ -19,6 +21,7 @@ const statusConfig: Record<Status, { icon: React.ElementType; color: string; bg:
 };
 
 export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
+  const { user } = useAuth();
   const {
     attributes,
     listeners,
@@ -70,14 +73,16 @@ export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
               >
                 <Pencil className="h-3 w-3" />
               </Button>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(milestone.id); }}
-              >
-                <Trash className="h-3 w-3" />
-              </Button>
+              {user?.role === Roles.MANAGER && (
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(milestone.id); }}
+                >
+                  <Trash className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           </div>
 

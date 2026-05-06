@@ -25,8 +25,7 @@ export class ProjectsController {
     return this.projectService.createProject(createProjectDto);
   }
 
-  // Get all Project
-  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV, UserRole.TESTER)
+  // Get all Project - accessible by all roles
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,

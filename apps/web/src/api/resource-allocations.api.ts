@@ -1,7 +1,7 @@
 import axiosInstance from './axios-instance';
 
-const getAllResourceAllocations = async () => {
-  const result = await axiosInstance.get('resource-allocations');
+const getAllResourceAllocations = async (params?: any) => {
+  const result = await axiosInstance.get('resource-allocations', { params });
   return result.data;
 };
 
@@ -10,7 +10,13 @@ const createResourceAllocations = async (data: any[]) => {
   return result.data;
 };
 
+const getMyAllocations = async () => {
+  const result = await axiosInstance.get('resource-allocations/me');
+  return result.data;
+};
+
 export const RESOURCE_ALLOCATIONS_API = {
   getAllResourceAllocations,
   createResourceAllocations,
+  getMyAllocations,
 };

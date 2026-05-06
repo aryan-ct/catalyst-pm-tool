@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { useResourceAllocation } from '../ResourceAllocationContext';
 import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
 import { AllocationRow } from '../types';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
 import {
   Select,
   SelectContent,
@@ -22,11 +24,13 @@ const AllocationDetails = ({
 }) => {
   const { allocations, projects, resources, refreshData } =
     useResourceAllocation();
+  const { user } = useAuth();
+  const isHR = user?.role === Roles.HR;
 
   const PROJECT_OPTIONS = projects.map((p) => p.name);
 
   const today = new Date().toDateString();
-  const isEditable = date === today;
+  const isEditable = date === today && isHR;
 
   const [rows, setRows] = useState<AllocationRow[]>(() => {
     const dayAllocations = allocations.filter((a) => a.date === date);

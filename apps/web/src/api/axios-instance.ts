@@ -63,7 +63,13 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    toast.error(getErrorMessage(error));
+    // Skip error toast for resource-allocation GET requests (e.g. 404 when no allocation exists)
+    const isAllocationGet = error.config?.url?.includes('resource-allocations') && error.config?.method?.toUpperCase() === 'GET';
+
+    if (!isAllocationGet) {
+      toast.error(getErrorMessage(error));
+    }
+    
     return Promise.reject(error);
   }
 );
