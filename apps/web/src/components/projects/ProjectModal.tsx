@@ -182,8 +182,8 @@ export default function ProjectModal({
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (!isOpen) {
@@ -297,7 +297,7 @@ export default function ProjectModal({
 
           {/* Doc Link */}
           <div className="space-y-1">
-            <Label>Document Link (optional)</Label>
+            <Label>Project scope document Link (optional)</Label>
             <Input
               value={form.docLink}
               onChange={(e) => {

@@ -4,7 +4,6 @@ const createLead = async (data: any) => {
   const payload = {
     clientName: data.client,
     projectName: data.projectName || undefined,
-    links: data.docs ? [data.docs] : undefined,
     leadStatus: data.status.toUpperCase(),
   };
 
@@ -18,7 +17,7 @@ const getAllLeads = async () => {
     id: l.id,
     client: l.clientName,
     projectName: l.projectName,
-    docs: l.links?.join(', ') || '',
+    links: (l.links ?? []) as string[],
     status: l.leadStatus.charAt(0) + l.leadStatus.slice(1).toLowerCase(),
     createdAt: new Date(l.createdAt).toLocaleDateString(),
     convertedAt: l.leadStatus === 'CONVERTED' ? new Date(l.updatedAt).toLocaleDateString() : undefined,
@@ -40,7 +39,7 @@ const updateLeadDetails = async (id: string, data: any) => {
   const payload = {
     clientName: data.client,
     projectName: data.projectName || undefined,
-    links: data.docs ? [data.docs] : undefined,
+    links: (data.links as string[])?.filter(Boolean) ?? [],
   };
 
   const result = await axiosInstance.patch(`/leads/${id}`, payload);

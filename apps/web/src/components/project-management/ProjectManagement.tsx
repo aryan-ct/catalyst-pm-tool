@@ -37,9 +37,16 @@ export default function ProjectManagement() {
   const loadProjects = async () => {
     setLoading(true);
     try {
-      let data = await PROJECT_API.getProjectsForPM();
+      const isAssignedRole =
+        user?.role === Roles.DEV ||
+        user?.role === Roles.TESTER ||
+        user?.role === Roles.DESIGNER;
 
-      if (user?.role === Roles.DEV || user?.role === Roles.TESTER) {
+      let data = isAssignedRole
+        ? await PROJECT_API.getMyProjectsForPM()
+        : await PROJECT_API.getProjectsForPM();
+
+      if (isAssignedRole) {
         data = data.filter((p: PMProject) => p.status === 'Active');
       }
 

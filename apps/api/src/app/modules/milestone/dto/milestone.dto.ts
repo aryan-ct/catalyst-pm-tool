@@ -37,5 +37,5 @@ export class UpdateMilestoneDto {
 
   @IsOptional()
   @IsDateString()
-  completionDate?: Date;
+  completionDate?: string;
 }
