@@ -4,10 +4,14 @@ import AllocationSheets from './AllocationSheets';
 import ResourcesTab from '../resources-tab/ResourcesTab';
 import AllocationDetails from '../allocation/AllocationDetails';
 import { ResourceAllocationProvider, useResourceAllocation } from '../ResourceAllocationContext';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
 
 const AllocationTabsContent = () => {
   const [activeTab, setActiveTab] = useState<'allocation' | 'resources'>('allocation');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { user } = useAuth();
+  const isHR = user?.role === Roles.HR;
   const { allocations } = useResourceAllocation();
 
   const today = new Date().toDateString();
@@ -51,12 +55,14 @@ const AllocationTabsContent = () => {
           </button>
         </div>
 
-        <Button
-          onClick={() => setSelectedDate(today)}
-          className="w-full sm:w-auto shadow-sm"
-        >
-          {hasTodayAllocation ? 'Update Allocation for today' : 'Add Allocation for today'}
-        </Button>
+        {isHR && (
+          <Button
+            onClick={() => setSelectedDate(today)}
+            className="w-full sm:w-auto shadow-sm"
+          >
+            {hasTodayAllocation ? 'Update Allocation for today' : 'Add Allocation for today'}
+          </Button>
+        )}
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm p-6 min-h-[400px]">

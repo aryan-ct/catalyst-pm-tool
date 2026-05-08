@@ -20,7 +20,7 @@ export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) { }
 
   @Get('all')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV, UserRole.TESTER, UserRole.BDE, UserRole.DESIGNER)
   async findAll(@Query('role') role?: Role) {
     return this.resourcesService.findAll(role);
   }

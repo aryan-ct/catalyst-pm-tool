@@ -30,7 +30,7 @@ export class CreateProjectDto {
 
   @IsDateString()
   @IsNotEmpty()
-  commencementDate!: Date;
+  commencementDate!: string;
 
   @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;
@@ -64,7 +64,7 @@ export class UpdateProjectDto {
 
   @IsDateString()
   @IsNotEmpty()
-  commencementDate!: Date;
+  commencementDate!: string;
 
   @IsEnum(ProjectStatus)
   projectStatus!: ProjectStatus;

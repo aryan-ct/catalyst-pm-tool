@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Clock, ExternalLink, FileText, Pencil } from 'lucide-react';
 import MilestoneFormDialog from './MilestoneFormDialog';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
 
 interface Props {
   project: any;
@@ -10,6 +12,8 @@ interface Props {
 }
 
 export default function ProjectDetails({ project, onBack }: Props) {
+  const { user } = useAuth();
+  const isManager = user?.role === Roles.MANAGER;
   const [milestones, setMilestones] = useState<any[]>(project.milestones || []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<any>(null);
@@ -105,9 +109,11 @@ export default function ProjectDetails({ project, onBack }: Props) {
               ({milestones.length})
             </span>
           </h3>
-          <Button onClick={openAdd} className="bg-blue-600 text-white">
-            + Add Milestone
-          </Button>
+          {isManager && (
+            <Button onClick={openAdd} className="bg-blue-600 text-white">
+              + Add Milestone
+            </Button>
+          )}
         </div>
 
         {milestones.length === 0 ? (
@@ -120,14 +126,16 @@ export default function ProjectDetails({ project, onBack }: Props) {
             {milestones.map((m, idx) => (
               <Card key={m.id ?? idx} className="relative hover:shadow-md transition">
                 <CardContent className="p-4 space-y-3">
-                  {/* Edit pencil */}
-                  <button
-                    className="absolute top-3 right-3 text-gray-400 hover:text-blue-500 cursor-pointer"
-                    title="Edit milestone"
-                    onClick={() => openEdit(m)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
+                  {/* Edit pencil — Manager only */}
+                  {isManager && (
+                    <button
+                      className="absolute top-3 right-3 text-gray-400 hover:text-blue-500 cursor-pointer"
+                      title="Edit milestone"
+                      onClick={() => openEdit(m)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
 
                   <div className="pr-6">
                     <p className="text-xs text-gray-400 mb-0.5">Milestone {idx + 1}</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -11,55 +11,73 @@ import { Button } from "@/components/ui/button";
 import EditAllocationModal from "./EditAllocationModal";
 import { DatePickerWithRange } from "@/components/common/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
-import { UserCircle, Briefcase, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
+import { UserCircle, Briefcase, Calendar as CalendarIcon, RotateCcw, Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Roles } from "@/lib/enum";
+import { RESOURCE_ALLOCATIONS_API } from "@/api/resource-allocations.api";
+import { PROJECT_API } from "@/api/project.api";
 
 export default function ResourceAllocation() {
-
-  const [data, setData] = useState([
-    {
-      id: "1",
-      resourceName: "Kishan",
-      resourceId: "r1",
-      role: "Dev",
-      projectIds: ["Project A", "Project B"],
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      resourceName: "Yuvika",
-      resourceId: "r2",
-      role: "Designer",
-      projectIds: ["Project C"],
-      createdAt: new Date().toISOString(),
-    },
-    
-  ]);
-
-  const [projects] = useState<string[]>([
-    "Project A",
-    "Project B",
-    "Project C",
-    "Project D",
-  ]);
-
+  const { user } = useAuth();
+  const [data, setData] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState("All");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [editItem, setEditItem] = useState<any>(null);
 
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
-  const filtered = data.filter((item) => {
+  useEffect(() => {
+    fetchAllocations();
+  }, [roleFilter, dateRange]);
 
-    const roleMatch =
-      roleFilter === "All" ? true : item.role === roleFilter;
+  const fetchProjects = async () => {
+    try {
+      const res = await PROJECT_API.getAllProjects();
+      setProjects(res);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
-    const dateMatch =
-      (!dateRange?.from ||
-        new Date(item.createdAt) >= dateRange.from) &&
-      (!dateRange?.to ||
-        new Date(item.createdAt) <= dateRange.to);
+  const fetchAllocations = async () => {
+    setLoading(true);
+    try {
+      const params: any = {};
+      if (roleFilter !== "All") params.role = roleFilter.toUpperCase();
+      if (dateRange?.from) params.start_date = dateRange.from.toISOString();
+      if (dateRange?.to) params.end_date = dateRange.to.toISOString();
 
-    return roleMatch && dateMatch;
-  });
+      const res = await RESOURCE_ALLOCATIONS_API.getAllResourceAllocations(params);
+      
+      // Group allocations by resourceId
+      const grouped = res.reduce((acc: any, curr: any) => {
+        if (!acc[curr.resourceId]) {
+          acc[curr.resourceId] = {
+            ...curr,
+            projectIds: [curr.projectId]
+          };
+        } else {
+          acc[curr.resourceId].projectIds.push(curr.projectId);
+        }
+        return acc;
+      }, {});
+
+      setData(Object.values(grouped));
+    } catch (error) {
+      console.error("Error fetching allocations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProjectName = (id: string) => {
+    return projects.find(p => p.id === id)?.projectName || id;
+  };
+
 
   return (
     <div className="space-y-6">
@@ -102,8 +120,13 @@ export default function ResourceAllocation() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.length > 0 ? (
-          filtered.map((item, i) => (
+        {loading ? (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <p className="text-muted-foreground animate-pulse">Loading allocations...</p>
+          </div>
+        ) : data.length > 0 ? (
+          data.map((item, i) => (
             <Card
               key={item.id}
               className="hover:shadow-md transition-all duration-200 border-slate-200 group"
@@ -115,7 +138,7 @@ export default function ResourceAllocation() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900">{item.resourceName}</h3>
-                    <p className="text-xs text-slate-500">{item.role}</p>
+                    <p className="text-xs text-slate-500 capitalize">{item.role.toLowerCase()}</p>
                   </div>
                 </div>
 
@@ -127,12 +150,12 @@ export default function ResourceAllocation() {
 
                   <div className="flex flex-wrap gap-2">
                     {item.projectIds.length > 0 ? (
-                      item.projectIds.map((p, idx) => (
+                      item.projectIds.map((p: string, idx: number) => (
                         <span
                           key={idx}
                           className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
                         >
-                          {p}
+                          {getProjectName(p)}
                         </span>
                       ))
                     ) : (
@@ -148,16 +171,18 @@ export default function ResourceAllocation() {
                    <span>Allocated on {new Date(item.createdAt).toLocaleDateString()}</span>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2"
-                  onClick={() =>
-                    setEditItem({ ...item, index: i })
-                  }
-                >
-                  Edit Allocation
-                </Button>
+                {user?.role === Roles.HR && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() =>
+                      setEditItem({ ...item, index: i })
+                    }
+                  >
+                    Edit Allocation
+                  </Button>
+                )}
 
               </CardContent>
             </Card>

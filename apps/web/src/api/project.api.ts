@@ -61,35 +61,42 @@ const statusToFrontend = (s: string): string => {
   return map[s] ?? 'todo';
 };
 
-const getProjectsForPM = async () => {
-  const result = await axiosInstance.get('/projects/all');
-  return result.data.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description || '',
-    status: p.projectStatus.charAt(0) + p.projectStatus.slice(1).toLowerCase(),
-    milestones: (p.milestones || []).map((m: any) => ({
-      id: m.id,
-      milestoneName: m.milestoneName,
-      milestoneDescription: m.milestoneDescription,
-      estimatedHours: m.estimatedHours,
-      bugSheet: m.bugSheet || '',
-      tasks: (m.tasks || []).map((t: any) => ({
-        id: t.id,
-        milestoneName: t.title,
-        milestoneDescription: t.description,
-        estimatedHours: t.estimatedHours,
-        bugSheet: '',
-        status: statusToFrontend(t.taskStatus),
-        milestoneId: m.id,
-        tasks: (t.subTasks || []).map((st: any) => ({
-          id: st.id,
-          title: st.title,
-          taskType: (st.taskType as string).toLowerCase(),
-        })),
+const mapProjectForPM = (p: any) => ({
+  id: p.id,
+  name: p.name,
+  description: p.description || '',
+  status: p.projectStatus.charAt(0) + p.projectStatus.slice(1).toLowerCase(),
+  milestones: (p.milestones || []).map((m: any) => ({
+    id: m.id,
+    milestoneName: m.milestoneName,
+    milestoneDescription: m.milestoneDescription,
+    estimatedHours: m.estimatedHours,
+    bugSheet: m.bugSheet || '',
+    tasks: (m.tasks || []).map((t: any) => ({
+      id: t.id,
+      milestoneName: t.title,
+      milestoneDescription: t.description,
+      estimatedHours: t.estimatedHours,
+      bugSheet: '',
+      status: statusToFrontend(t.taskStatus),
+      milestoneId: m.id,
+      tasks: (t.subTasks || []).map((st: any) => ({
+        id: st.id,
+        title: st.title,
+        taskType: (st.taskType as string).toLowerCase(),
       })),
     })),
-  }));
+  })),
+});
+
+const getProjectsForPM = async () => {
+  const result = await axiosInstance.get('/projects/all');
+  return result.data.map(mapProjectForPM);
+};
+
+const getMyProjectsForPM = async () => {
+  const result = await axiosInstance.get('/projects/mine');
+  return result.data.map(mapProjectForPM);
 };
 
 export const PROJECT_API = {
@@ -97,4 +104,5 @@ export const PROJECT_API = {
   getAllProjects,
   updateProject,
   getProjectsForPM,
+  getMyProjectsForPM,
 };

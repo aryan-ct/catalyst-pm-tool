@@ -51,16 +51,16 @@ export default function EditAllocationModal({
 
         <div className="space-y-4">
 
-          {projects.map((p: string) => (
+          {projects.map((p: any) => (
             <div
-              key={p}
+              key={p.id}
               className="flex items-center space-x-2"
             >
               <Checkbox
-                checked={selected.includes(p)}
-                onCheckedChange={() => toggleProject(p)}
+                checked={selected.includes(p.id)}
+                onCheckedChange={() => toggleProject(p.id)}
               />
-              <label className="text-sm">{p}</label>
+              <label className="text-sm">{p.projectName}</label>
             </div>
           ))}
 

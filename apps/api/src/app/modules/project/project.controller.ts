@@ -25,8 +25,7 @@ export class ProjectsController {
     return this.projectService.createProject(createProjectDto);
   }
 
-  // Get all Project
-  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV, UserRole.TESTER)
+  // Get all Project - accessible by all roles
   @Get('all')
   async getAllProjects(
     @Query('project_status') project_status?: ProjectStatus,
@@ -34,23 +33,17 @@ export class ProjectsController {
     return this.projectService.findAll(project_status);
   }
 
+  // Get projects assigned to the current user via resource allocations
+  @Get('mine')
+  async getMyProjects(@CurrentUser() user: client.Resource) {
+    return this.projectService.findMyProjects(user.id);
+  }
+
   // Get Project by ID
   @Roles(UserRole.MANAGER, UserRole.HR)
   @Get(':id')
   async getProjectById(@Param('id') id: string) {
     return this.projectService.findById(id);
-  }
-
-  // Get my projects by resource allocation id
-  @Get('my/:resource-allocation-id')
-  async getMyProjects(
-    @CurrentUser() user: client.Resource,
-    @Param('resource-allocation-id') resource_allocation_id: string,
-  ) {
-    this.projectService.findMyProjectsByResourceAllocationId(
-      user.id,
-      resource_allocation_id,
-    );
   }
 
   // Updated project by Id

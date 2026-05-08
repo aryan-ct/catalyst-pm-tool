@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Roles } from "@/lib/enum";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,6 +53,8 @@ export default function TaskDialog({
   projectMilestones,
   defaultMilestoneId,
 }: Props) {
+  const { user } = useAuth();
+  const isManager = user?.role === Roles.MANAGER;
   const [milestone, setMilestone] = useState<Milestone>(emptyMilestone());
   const [pickedMilestoneId, setPickedMilestoneId] = useState<string>("");
   const [deletedSubtaskIds, setDeletedSubtaskIds] = useState<string[]>([]);
@@ -247,6 +251,7 @@ export default function TaskDialog({
               className="h-9"
               placeholder="Enter a clear, descriptive task name"
               value={milestone.milestoneName}
+              disabled={!isManager}
               onChange={(e) =>
                 setMilestone({ ...milestone, milestoneName: e.target.value })
               }
@@ -265,6 +270,7 @@ export default function TaskDialog({
               placeholder="Describe what needs to be done…"
               className="min-h-[80px] resize-none"
               value={milestone.milestoneDescription}
+              disabled={!isManager}
               onChange={(e) =>
                 setMilestone({ ...milestone, milestoneDescription: e.target.value })
               }
@@ -286,6 +292,7 @@ export default function TaskDialog({
                 min={0}
                 placeholder="0"
                 value={milestone.estimatedHours || ""}
+                disabled={!isManager}
                 onChange={(e) =>
                   setMilestone({ ...milestone, estimatedHours: Number(e.target.value) })
                 }
@@ -303,6 +310,7 @@ export default function TaskDialog({
                 className="h-9"
                 placeholder="https://…"
                 value={milestone.bugSheet ?? ""}
+                disabled={!isManager}
                 onChange={(e) =>
                   setMilestone({ ...milestone, bugSheet: e.target.value })
                 }

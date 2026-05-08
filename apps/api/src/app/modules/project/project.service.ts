@@ -84,6 +84,39 @@ export class ProjectsService {
     return project;
   }
 
+  async findMyProjects(userId: string) {
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const allocations = await prisma.resourceAllocation.findMany({
+      where: {
+        resourceId: userId,
+        createdAt: { gte: startOfDay, lte: endOfDay },
+      },
+      select: { projectId: true },
+    });
+
+    const projectIds = [...new Set(allocations.map((a) => a.projectId))];
+    if (projectIds.length === 0) return [];
+
+    return prisma.project.findMany({
+      where: { id: { in: projectIds } },
+      include: {
+        milestones: {
+          include: {
+            tasks: {
+              include: { subTasks: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findMyProjectsByResourceAllocationId(
     _id: string,
     resource_allocation_id: string,

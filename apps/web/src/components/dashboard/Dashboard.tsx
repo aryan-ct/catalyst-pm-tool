@@ -26,10 +26,11 @@ export default function Dashboard() {
 
   const getMenuItems = () => {
     if (!user) return [];
+    
+    let items: any[] = [];
     switch (user.role) {
       case Roles.MANAGER:
-        return [
-          { name: 'Projects', path: '/projects', icon: Briefcase },
+        items = [
           {
             name: 'Task Management',
             path: '/task-management',
@@ -37,29 +38,40 @@ export default function Dashboard() {
           },
           { name: 'Leads', path: '/leads', icon: Zap },
         ];
+        break;
       case Roles.HR:
-        return [
+        items = [
           { name: 'Resources', path: '/resources', icon: Users },
-          {
-            name: 'Resource Allocation',
-            path: '/resource-allocation',
-            icon: Calendar,
-          },
         ];
+        break;
       case Roles.BDE:
-        return [{ name: 'Leads', path: '/leads', icon: Zap }];
+        items = [
+          { name: 'Leads', path: '/leads', icon: Zap },
+        ];
+        break;
       case Roles.DEV:
       case Roles.TESTER:
-        return [
+      case Roles.DESIGNER:
+        items = [
           {
             name: 'Task Management',
             path: '/task-management',
             icon: LayoutGrid,
           },
         ];
-      default:
-        return [];
+        break;
     }
+    
+    // Items accessible by everyone
+    items.unshift({ name: 'Projects', path: '/projects', icon: Briefcase });
+
+    items.push({
+      name: 'Resource Allocation',
+      path: '/resource-allocation',
+      icon: Calendar,
+    });
+
+    return items;
   };
 
   const menuItems = getMenuItems();

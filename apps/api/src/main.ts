@@ -15,7 +15,11 @@ async function bootstrap() {
     credentials: true,
   });
   app.setGlobalPrefix(globalPrefix);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ 
+    whitelist: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true }
+  }));
   const port = process.env.PORT || 3000;
   await app.listen(port);
   Logger.log(
