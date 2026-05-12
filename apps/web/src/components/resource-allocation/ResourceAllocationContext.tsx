@@ -74,12 +74,22 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
           map.set(key, row);
       }
 
-      const project = projectsRaw.find(p => p.id === ra.projectId);
-      row.projects.push({
+      if (!ra.projectId) {
+        row.projects.push({
+          id: ra.id,
+          name: ra.desc || '',
+          description: '',
+          isNote: true,
+        });
+      } else {
+        const project = projectsRaw.find(p => p.id === ra.projectId);
+        row.projects.push({
           id: ra.projectId,
           name: project ? project.name : 'Unknown Project',
-          description: ra.desc
-      });
+          description: ra.desc,
+          isNote: false,
+        });
+      }
     });
 
     return {

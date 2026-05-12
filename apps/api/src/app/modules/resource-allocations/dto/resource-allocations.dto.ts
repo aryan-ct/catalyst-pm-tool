@@ -4,8 +4,9 @@ export class CreateResourceAllocationDto {
   @IsString()
   resourceId!: string;
 
+  @IsOptional()
   @IsString()
-  projectId!: string;
+  projectId?: string;
 
   @IsOptional()
   @IsString()

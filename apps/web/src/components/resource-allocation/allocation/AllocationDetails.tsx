@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CircleX, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { CircleX, ArrowLeft, Calendar as CalendarIcon, Plus, StickyNote } from 'lucide-react';
 
 const AllocationDetails = ({
   date,
@@ -41,7 +41,6 @@ const AllocationDetails = ({
     if (dayAllocations.length > 0) {
       dayAllocations.forEach((a) => seedMap.set(a.resourceId, a));
     } else {
-      // Pre-fill from the most recent past day that has allocation data
       const pastTimes = allocations
         .filter((a) => a.date !== date)
         .map((a) => new Date(a.date).getTime());
@@ -67,9 +66,10 @@ const AllocationDetails = ({
     });
   });
 
+  // Per-resource note input values keyed by resourceId
+  const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
+
   useEffect(() => {
-    // Only reset rows on un-editable dates when allocations change
-    // If it's editable, we let the user edit the state freely
     if (!isEditable) {
       setRows(allocations.filter((a) => a.date === date));
     }
@@ -81,14 +81,14 @@ const AllocationDetails = ({
     const payload = rows.flatMap((row) =>
       row.projects
         .map((p) => {
+          if (p.isNote) {
+            return { resourceId: row.resourceId, desc: p.name };
+          }
           const project = projects.find((proj) => proj.name === p.name);
-          return {
-            resourceId: row.resourceId,
-            projectId: project?.id,
-            desc: p.description || '',
-          };
+          if (!project) return null;
+          return { resourceId: row.resourceId, projectId: project.id, desc: p.description || '' };
         })
-        .filter((item) => item.projectId),
+        .filter(Boolean),
     );
 
     if (payload.length === 0) {
@@ -110,29 +110,40 @@ const AllocationDetails = ({
 
   const handleAddProject = (rowIndex: number, projectName: string) => {
     const updated = [...rows];
-
     updated[rowIndex].projects.push({
       id: Date.now().toString(),
       name: projectName,
       description: '',
+      isNote: false,
     });
-
     setRows(updated);
   };
 
-  const handleRemoveProject = (rowIndex: number, projectIndex: number) => {
+  const handleAddNote = (rowIndex: number) => {
+    const resourceId = rows[rowIndex].resourceId;
+    const text = (noteInputs[resourceId] || '').trim();
+    if (!text) return;
+
     const updated = [...rows];
-    updated[rowIndex].projects.splice(projectIndex, 1);
+    updated[rowIndex].projects.push({
+      id: `note-${Date.now()}`,
+      name: text,
+      description: '',
+      isNote: true,
+    });
+    setRows(updated);
+    setNoteInputs((prev) => ({ ...prev, [resourceId]: '' }));
+  };
+
+  const handleRemoveEntry = (rowIndex: number, entryIndex: number) => {
+    const updated = [...rows];
+    updated[rowIndex].projects.splice(entryIndex, 1);
     setRows(updated);
   };
 
-  const handleDescChange = (
-    rowIndex: number,
-    projectIndex: number,
-    value: string,
-  ) => {
+  const handleDescChange = (rowIndex: number, entryIndex: number, value: string) => {
     const updated = [...rows];
-    updated[rowIndex].projects[projectIndex].description = value;
+    updated[rowIndex].projects[entryIndex].description = value;
     setRows(updated);
   };
 
@@ -170,14 +181,14 @@ const AllocationDetails = ({
             )}
           </Button>
         ) : (
-          <div className="w-20"></div>
+          <div className="w-20" />
         )}
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden">
         <div className="grid grid-cols-12 bg-muted/50 p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
           <div className="col-span-3">Resource</div>
-          <div className="col-span-4">Assigned Projects</div>
+          <div className="col-span-4">Assigned Projects / Notes</div>
           <div className="col-span-5 text-right">Activity / Description</div>
         </div>
 
@@ -191,19 +202,22 @@ const AllocationDetails = ({
               key={rowIndex}
               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4"
             >
+              {/* Edit mode: header row with Add Project dropdown + Add Note input */}
               {isEditable && (
-                <div className="grid grid-cols-12 gap-6 px-4 items-center mb-2">
+                <div className="grid grid-cols-12 gap-4 px-4 items-center mb-2">
+                  {/* Resource name */}
                   <div className="col-span-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                         {row.resourceName.charAt(0)}
                       </div>
-                      <span className="font-semibold text-foreground">
+                      <span className="font-semibold text-foreground truncate">
                         {row.resourceName}
                       </span>
                     </div>
                   </div>
 
+                  {/* Add project dropdown */}
                   <div className="col-span-4">
                     <Select<string>
                       onValueChange={(value) => {
@@ -214,10 +228,9 @@ const AllocationDetails = ({
                       <SelectTrigger className="w-full bg-card border-border shadow-sm">
                         <SelectValue placeholder="+ Add Project" />
                       </SelectTrigger>
-
                       <SelectContent>
                         {PROJECT_OPTIONS.filter(
-                          (p) => !row.projects.some((proj) => proj.name === p),
+                          (p) => !row.projects.some((proj) => !proj.isNote && proj.name === p),
                         ).map((p) => (
                           <SelectItem key={p} value={p}>
                             {p}
@@ -227,61 +240,104 @@ const AllocationDetails = ({
                     </Select>
                   </div>
 
-                  <div className="col-span-5"></div>
+                  {/* Add note input */}
+                  <div className="col-span-5 flex gap-2">
+                    <Input
+                      placeholder="Add a note (e.g. Sick leave, Lead generation)"
+                      value={noteInputs[row.resourceId] || ''}
+                      onChange={(e) =>
+                        setNoteInputs((prev) => ({
+                          ...prev,
+                          [row.resourceId]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddNote(rowIndex);
+                      }}
+                      className="h-10 bg-card border-border shadow-sm focus:ring-1 focus:ring-primary text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 shrink-0 border-amber-300 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                      onClick={() => handleAddNote(rowIndex)}
+                      title="Add note"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              {row.projects.map((p, projectIndex) => (
+              {/* Entries: project badges and note badges */}
+              {row.projects.length === 0 && !isEditable && (
+                <div className="px-4 py-2 text-sm text-muted-foreground italic">
+                  No allocation for this date
+                </div>
+              )}
+
+              {row.projects.map((p, entryIndex) => (
                 <div
                   key={p.id}
                   className="grid grid-cols-12 gap-6 px-4 pb-2 items-start"
                 >
+                  {/* Resource name — only shown on first entry in read-only mode */}
                   <div className="col-span-3">
                     <div className="font-medium text-sm text-foreground pl-11">
-                      {!isEditable && projectIndex === 0 ? (
+                      {!isEditable && entryIndex === 0 ? (
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
                             {row.resourceName.charAt(0)}
                           </div>
-                          <span className="font-semibold">
-                            {row.resourceName}
-                          </span>
+                          <span className="font-semibold">{row.resourceName}</span>
                         </div>
-                      ) : (
-                        ''
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
+                  {/* Project badge (blue) or Note badge (amber) */}
                   <div className="col-span-4">
-                    <div className="flex justify-between items-center border border-primary/20 bg-primary/5 rounded-lg px-3 py-2 text-sm text-primary font-medium">
-                      <span>{p.name}</span>
-
-                      {isEditable && (
-                        <button
-                          onClick={() =>
-                            handleRemoveProject(rowIndex, projectIndex)
-                          }
-                          className="text-primary hover:text-destructive transition-colors"
-                        >
-                          <CircleX className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+                    {p.isNote ? (
+                      <div className="flex justify-between items-center border border-amber-300 bg-amber-50 rounded-lg px-3 py-2 text-sm text-amber-700 font-medium gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <StickyNote className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{p.name}</span>
+                        </div>
+                        {isEditable && (
+                          <button
+                            onClick={() => handleRemoveEntry(rowIndex, entryIndex)}
+                            className="text-amber-500 hover:text-destructive transition-colors shrink-0"
+                          >
+                            <CircleX className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center border border-primary/20 bg-primary/5 rounded-lg px-3 py-2 text-sm text-primary font-medium">
+                        <span className="truncate">{p.name}</span>
+                        {isEditable && (
+                          <button
+                            onClick={() => handleRemoveEntry(rowIndex, entryIndex)}
+                            className="text-primary hover:text-destructive transition-colors shrink-0"
+                          >
+                            <CircleX className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
+                  {/* Activity description — only for project entries */}
                   <div className="col-span-5">
-                    {isEditable ? (
+                    {p.isNote ? (
+                      <div className="px-4 py-2 text-sm text-muted-foreground/50 italic select-none">
+                        —
+                      </div>
+                    ) : isEditable ? (
                       <Input
                         placeholder="What are they working on?"
                         value={p.description || ''}
-                        onChange={(e) =>
-                          handleDescChange(
-                            rowIndex,
-                            projectIndex,
-                            e.target.value,
-                          )
-                        }
+                        onChange={(e) => handleDescChange(rowIndex, entryIndex, e.target.value)}
                         className="h-10 bg-card border-border shadow-sm focus:ring-1 focus:ring-primary"
                       />
                     ) : (

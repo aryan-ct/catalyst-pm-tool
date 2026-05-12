@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { CreateResourceDto, ResetPasswordDto, UpdateResourceDto } from './dto/resources.dto';
 import { prisma } from '../../config/prima.config';
@@ -9,7 +10,32 @@ import { bcryptHashing } from '../../../utils/utils';
 import { Role } from '@prisma/client';
 
 @Injectable()
-export class ResourcesService {
+export class ResourcesService implements OnModuleInit {
+  async onModuleInit() {
+    const hrExists = await prisma.resource.findFirst({
+      where: { role: Role.HR },
+    });
+
+    if (!hrExists) {
+      const email = process.env.HR_EMAIL_ID || 'hr@catalyst.sh';
+      const password = process.env.HR_PASSWORD || 'hr@12345';
+      const name = process.env.HR_NAME || 'hr';
+
+      const hashedPassword = await bcryptHashing.generatePasswordHash(password);
+
+      await prisma.resource.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          role: Role.HR,
+          isActive: true,
+        },
+      });
+      console.log('HR resource created automatically from environment variables.');
+    }
+  }
+
   async create(createResourceDto: CreateResourceDto) {
     const resourceInDb = await prisma.resource.findUnique({
       where: {

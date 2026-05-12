@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useResourceAllocation } from '../ResourceAllocationContext';
-import { ChevronLeft, ChevronRight, CalendarDays, FolderKanban, FileText, ClipboardX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, FolderKanban, FileText, ClipboardX, StickyNote } from 'lucide-react';
 
 const PAGE_SIZE = 5;
 
@@ -67,17 +67,27 @@ const ResourceTable = ({ resourceId }: { resourceId: string }) => {
                     ) : null}
                   </div>
 
-                  {/* Project badge */}
+                  {/* Project or note badge */}
                   <div className="col-span-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/15 max-w-full truncate">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      {p.name}
-                    </span>
+                    {p.isNote ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 max-w-full truncate">
+                        <StickyNote className="h-3 w-3 shrink-0" />
+                        {p.name}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/15 max-w-full truncate">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                        {p.name}
+                      </span>
+                    )}
                   </div>
 
                   {/* Activity */}
                   <div className="col-span-5 text-sm text-muted-foreground break-words whitespace-pre-wrap leading-relaxed">
-                    {p.description || <span className="opacity-30 select-none">—</span>}
+                    {p.isNote
+                      ? <span className="opacity-30 select-none">—</span>
+                      : (p.description || <span className="opacity-30 select-none">—</span>)
+                    }
                   </div>
                 </div>
               ))}

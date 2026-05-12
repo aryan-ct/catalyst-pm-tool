@@ -138,7 +138,7 @@
   }
 
   .main-content {
-    @apply flex-1 ml-60 overflow-y-auto;
+    @apply flex-1 ml-60 min-h-0 overflow-y-auto;
   }
 
   .page-container {

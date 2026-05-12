@@ -24,15 +24,16 @@ export class ResourceAllocationsService {
     });
 
     const resourceIds = [...new Set(createDto.map((dto) => dto.resourceId))];
-    const projectIds = [...new Set(createDto.map((dto) => dto.projectId))];
+    // Only validate projectIds that are actually set (note entries have no projectId)
+    const projectIds = [...new Set(createDto.map((dto) => dto.projectId).filter((id): id is string => !!id))];
 
     const resources = await prisma.resource.findMany({
       where: { id: { in: resourceIds } },
     });
 
-    const projects = await prisma.project.findMany({
-      where: { id: { in: projectIds } },
-    });
+    const projects = projectIds.length
+      ? await prisma.project.findMany({ where: { id: { in: projectIds } } })
+      : [];
 
     const resourceMap = new Map(resources.map((r) => [r.id, r]));
     const projectMap = new Map(projects.map((p) => [p.id, p]));
@@ -57,7 +58,7 @@ export class ResourceAllocationsService {
       return prisma.resourceAllocation.create({
         data: {
           resourceId: dto.resourceId,
-          projectId: dto.projectId,
+          ...(dto.projectId && { projectId: dto.projectId }),
           desc: dto.desc,
           resourceName: resource!.name,
           role: resource!.role,

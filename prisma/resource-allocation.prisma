@@ -3,7 +3,7 @@ model ResourceAllocation {
   resourceName String
   resourceId   String
   role         Role
-  projectId    String
+  projectId    String?
   desc         String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
