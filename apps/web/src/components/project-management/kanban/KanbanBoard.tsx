@@ -8,18 +8,18 @@ import {
   DragEndEvent,
   DragStartEvent,
   MeasuringStrategy,
-} from "@dnd-kit/core";
-import { useState } from "react";
-import KanbanColumn from "./KanbanColumn";
-import MilestoneCard from "./MilestoneCard";
-import { Milestone, Status } from "../types/types";
-import ConfirmDeleteDialog from "@/components/confirmDeleteDialog/ConfirmDeleteDialog";
+} from '@dnd-kit/core';
+import { useState } from 'react';
+import KanbanColumn from './KanbanColumn';
+import MilestoneCard from './MilestoneCard';
+import { Milestone, Status } from '../types/types';
+import ConfirmDeleteDialog from '@/components/confirmDeleteDialog/ConfirmDeleteDialog';
 
 const columns: { id: Status; title: string }[] = [
-  { id: "todo", title: "To Do" },
-  { id: "in-progress", title: "In Progress" },
-  { id: "in-review", title: "In Review" },
-  { id: "done", title: "Done" },
+  { id: 'todo', title: 'To Do' },
+  { id: 'in-progress', title: 'In Progress' },
+  { id: 'in-review', title: 'In Review' },
+  { id: 'done', title: 'Done' },
 ];
 
 interface Props {
@@ -35,23 +35,23 @@ export default function KanbanBoard({
   onDelete,
   onDragEnd,
 }: Props) {
-  const [activeMilestone, setActiveMilestone] =
-    useState<Milestone | null>(null);
+  const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(
+    null,
+  );
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedMilestoneId, setSelectedMilestoneId] =
-    useState<string | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
+    null,
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    const milestone = milestones.find(
-      (m) => m.id === event.active.id
-    );
+    const milestone = milestones.find((m) => m.id === event.active.id);
     if (milestone) setActiveMilestone(milestone);
   };
 
@@ -92,11 +92,9 @@ export default function KanbanBoard({
               key={column.id}
               id={column.id}
               title={column.title}
-              milestones={milestones.filter(
-                (m) => m.status === column.id
-              )}
+              milestones={milestones.filter((m) => m.status === column.id)}
               onEdit={onEdit}
-              onDelete={handleDeleteClick} 
+              onDelete={handleDeleteClick}
             />
           ))}
         </div>
@@ -106,15 +104,14 @@ export default function KanbanBoard({
             <div className="w-[320px] rotate-2 shadow-2xl z-[999]">
               <MilestoneCard
                 milestone={activeMilestone}
-                onEdit={() => {}}
-                onDelete={() => {}}
+                onEdit={() => null}
+                onDelete={() => null}
               />
             </div>
           ) : null}
         </DragOverlay>
       </DndContext>
 
-      
       <ConfirmDeleteDialog
         open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}

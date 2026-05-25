@@ -1,13 +1,13 @@
 model Task {
-  id     String @id @default(uuid())
-  title  String
-  description String
+  id             String     @id @default(uuid())
+  title          String
+  description    String
   estimatedHours Float
-  actualHours Float
-  taskStatus TaskStatus
-  bugSheet   String?
-  asignedTo String[]
- 
+  actualHours    Float
+  taskStatus     TaskStatus
+  taskType       TaskType   @default(FEATURE)
+  bugSheet       String?
+  assignedTo     Resource[] @relation("TaskToResource")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -16,14 +16,21 @@ model Task {
   milestoneId String
 
   // Relation
-  milestone   Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  subTasks SubTask[]
-}
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
 
+  parentTaskId String?
+  parentTask   Task?   @relation("TaskToSubTask", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subTasks     Task[]  @relation("TaskToSubTask")
+}
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
   IN_REVIEW
   DONE
+}
+
+enum TaskType {
+  FEATURE
+  BUG
 }

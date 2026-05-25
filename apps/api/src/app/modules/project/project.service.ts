@@ -56,7 +56,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -72,7 +72,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -108,7 +108,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -161,7 +161,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },

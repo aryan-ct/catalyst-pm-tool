@@ -1,29 +1,34 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Roles } from "@/lib/enum";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@/components/ui/select";
-import { PencilRuler, Plus, X, Bug, Sparkles, ListTodo } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Milestone, PMBackendMilestone, SubTask, TaskType } from "../types/types";
-import { MilestoneErrors, validateMilestone } from "./validate";
-import { TASK_API } from "@/api/task.api";
-import { SUBTASK_API } from "@/api/subtask.api";
+} from '@/components/ui/select';
+import { PencilRuler } from 'lucide-react';
+import { Milestone, PMBackendMilestone, TaskType } from '../types/types';
+import { MilestoneErrors, validateMilestone } from './validate';
+import { TASK_API } from '@/api/task.api';
+import { RESOURCE_API } from '@/api/resource.api';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type Props = {
   open: boolean;
@@ -35,13 +40,16 @@ type Props = {
 };
 
 const emptyMilestone = (): Milestone => ({
-  id: "",
-  milestoneName: "",
-  milestoneDescription: "",
+  id: '',
+  milestoneName: '',
+  milestoneDescription: '',
   estimatedHours: 0,
-  bugSheet: "",
-  status: "todo",
-  milestoneId: "",
+  bugSheet: '',
+  status: 'todo',
+  milestoneId: '',
+  parentTaskId: undefined,
+  taskType: 'feature',
+  assignedTo: [],
   tasks: [],
 });
 
@@ -56,10 +64,18 @@ export default function TaskDialog({
   const { user } = useAuth();
   const isManager = user?.role === Roles.MANAGER;
   const [milestone, setMilestone] = useState<Milestone>(emptyMilestone());
-  const [pickedMilestoneId, setPickedMilestoneId] = useState<string>("");
-  const [deletedSubtaskIds, setDeletedSubtaskIds] = useState<string[]>([]);
+  const [pickedMilestoneId, setPickedMilestoneId] = useState<string>('');
   const [errors, setErrors] = useState<MilestoneErrors>({});
   const [saving, setSaving] = useState(false);
+  const [availableResources, setAvailableResources] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      RESOURCE_API.findAllResources()
+        .then((res) => setAvailableResources(res))
+        .catch((err) => console.error('Failed to load resources', err));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (initialData) {
@@ -69,33 +85,8 @@ export default function TaskDialog({
       setMilestone(emptyMilestone());
       setPickedMilestoneId(defaultMilestoneId);
     }
-    setDeletedSubtaskIds([]);
     setErrors({});
   }, [initialData, open, defaultMilestoneId]);
-
-  const addTask = () => {
-    const newTask: SubTask = {
-      id: `_new_${crypto.randomUUID()}`,
-      title: "",
-      taskType: "feature",
-      _isNew: true,
-    };
-    setMilestone((prev) => ({ ...prev, tasks: [...prev.tasks, newTask] }));
-  };
-
-  const updateTask = (index: number, key: keyof SubTask, value: string) => {
-    const updated = [...milestone.tasks];
-    updated[index] = { ...updated[index], [key]: value };
-    setMilestone({ ...milestone, tasks: updated });
-  };
-
-  const removeTask = (index: number) => {
-    const task = milestone.tasks[index];
-    if (!task._isNew) {
-      setDeletedSubtaskIds((prev) => [...prev, task.id]);
-    }
-    setMilestone({ ...milestone, tasks: milestone.tasks.filter((_, i) => i !== index) });
-  };
 
   const handleSubmit = async () => {
     const validationErrors = validateMilestone(milestone);
@@ -104,7 +95,7 @@ export default function TaskDialog({
 
     const targetMilestoneId = pickedMilestoneId || defaultMilestoneId;
     if (!targetMilestoneId) {
-      setErrors({ milestoneName: "Please select a milestone first." });
+      setErrors({ milestoneName: 'Please select a milestone first.' });
       return;
     }
 
@@ -117,32 +108,13 @@ export default function TaskDialog({
           estimatedHours: milestone.estimatedHours,
           bugSheet: milestone.bugSheet,
           milestoneId: initialData.milestoneId ?? targetMilestoneId,
+          parentTaskId: milestone.parentTaskId,
+          taskType: milestone.taskType?.toUpperCase(),
+          assignedTo: milestone.assignedTo?.map((r) => r.id),
         });
-
-        for (const id of deletedSubtaskIds) {
-          await SUBTASK_API.deleteSubtask(id);
-        }
-
-        const newSubtasks: SubTask[] = [];
-        for (const st of milestone.tasks.filter((t) => t._isNew)) {
-          const created = await SUBTASK_API.createSubtask(initialData.id, {
-            title: st.title,
-            taskType: st.taskType,
-          });
-          newSubtasks.push({
-            id: created.id,
-            title: created.title,
-            taskType: (created.taskType as string).toLowerCase() as TaskType,
-          });
-        }
-
-        const persistedSubtasks = milestone.tasks
-          .filter((t) => !t._isNew)
-          .map(({ _isNew: _, ...rest }) => rest);
 
         const updatedTask: Milestone = {
           ...milestone,
-          tasks: [...persistedSubtasks, ...newSubtasks],
         };
         onSave(updatedTask);
       } else {
@@ -151,49 +123,41 @@ export default function TaskDialog({
           description: milestone.milestoneDescription,
           estimatedHours: milestone.estimatedHours,
           bugSheet: milestone.bugSheet,
+          parentTaskId: milestone.parentTaskId,
+          taskType: milestone.taskType?.toUpperCase(),
+          assignedTo: milestone.assignedTo?.map((r) => r.id),
         });
-
-        const createdSubtasks: SubTask[] = [];
-        for (const st of milestone.tasks) {
-          const createdSt = await SUBTASK_API.createSubtask(created.id, {
-            title: st.title,
-            taskType: st.taskType,
-          });
-          createdSubtasks.push({
-            id: createdSt.id,
-            title: createdSt.title,
-            taskType: (createdSt.taskType as string).toLowerCase() as TaskType,
-          });
-        }
 
         const newKanbanItem: Milestone = {
           id: created.id,
           milestoneName: created.title,
           milestoneDescription: created.description,
           estimatedHours: created.estimatedHours,
-          bugSheet: created.bugSheet ?? milestone.bugSheet ?? "",
-          status: "todo",
+          bugSheet: created.bugSheet ?? milestone.bugSheet ?? '',
+          status: 'todo',
           milestoneId: targetMilestoneId,
-          tasks: createdSubtasks,
+          parentTaskId: milestone.parentTaskId,
+          taskType: milestone.taskType,
+          tasks: [],
         };
         onSave(newKanbanItem);
       }
 
       setOpen(false);
     } catch (err) {
-      console.error("Save failed", err);
+      console.error('Save failed', err);
     } finally {
       setSaving(false);
     }
   };
 
   const selectedMilestoneName = projectMilestones.find(
-    (m) => m.id === pickedMilestoneId
+    (m) => m.id === pickedMilestoneId,
   )?.milestoneName;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="!min-w-[600px] p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-border bg-muted/30">
           <DialogHeader>
@@ -203,12 +167,12 @@ export default function TaskDialog({
               </div>
               <div>
                 <DialogTitle className="text-base">
-                  {initialData ? "Edit Task" : "Create New Task"}
+                  {initialData ? 'Edit Task' : 'Create New Task'}
                 </DialogTitle>
                 <DialogDescription className="text-xs mt-0.5">
                   {initialData
-                    ? "Update task details and subtasks"
-                    : "Fill in the details below to create a new task"}
+                    ? 'Update task details and subtasks'
+                    : 'Fill in the details below to create a new task'}
                 </DialogDescription>
               </div>
             </div>
@@ -228,7 +192,9 @@ export default function TaskDialog({
                 <SelectTrigger id="milestone-select" className="w-full h-9">
                   <span className="flex flex-1 text-left text-sm truncate">
                     {selectedMilestoneName ?? (
-                      <span className="text-muted-foreground">Choose a milestone…</span>
+                      <span className="text-muted-foreground">
+                        Choose a milestone…
+                      </span>
                     )}
                   </span>
                 </SelectTrigger>
@@ -272,12 +238,17 @@ export default function TaskDialog({
               value={milestone.milestoneDescription}
               disabled={!isManager}
               onChange={(e) =>
-                setMilestone({ ...milestone, milestoneDescription: e.target.value })
+                setMilestone({
+                  ...milestone,
+                  milestoneDescription: e.target.value,
+                })
               }
               aria-invalid={!!errors.milestoneDescription}
             />
             {errors.milestoneDescription && (
-              <p className="text-destructive text-xs">{errors.milestoneDescription}</p>
+              <p className="text-destructive text-xs">
+                {errors.milestoneDescription}
+              </p>
             )}
           </div>
 
@@ -291,15 +262,20 @@ export default function TaskDialog({
                 className="h-9"
                 min={0}
                 placeholder="0"
-                value={milestone.estimatedHours || ""}
+                value={milestone.estimatedHours || ''}
                 disabled={!isManager}
                 onChange={(e) =>
-                  setMilestone({ ...milestone, estimatedHours: Number(e.target.value) })
+                  setMilestone({
+                    ...milestone,
+                    estimatedHours: Number(e.target.value),
+                  })
                 }
                 aria-invalid={!!errors.estimatedHours}
               />
               {errors.estimatedHours && (
-                <p className="text-destructive text-xs">{errors.estimatedHours}</p>
+                <p className="text-destructive text-xs">
+                  {errors.estimatedHours}
+                </p>
               )}
             </div>
 
@@ -309,7 +285,7 @@ export default function TaskDialog({
                 id="bug-sheet"
                 className="h-9"
                 placeholder="https://…"
-                value={milestone.bugSheet ?? ""}
+                value={milestone.bugSheet ?? ''}
                 disabled={!isManager}
                 onChange={(e) =>
                   setMilestone({ ...milestone, bugSheet: e.target.value })
@@ -318,92 +294,147 @@ export default function TaskDialog({
             </div>
           </div>
 
-          {/* Subtasks */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label className="mb-0">Subtasks</Label>
-                {milestone.tasks.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
-                    {milestone.tasks.length}
-                  </span>
+          {/* Assigned Resources */}
+          <div className="space-y-1.5">
+            <Label>Assign Resources</Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-9 px-3 font-normal text-sm"
+                  disabled={!isManager}
+                >
+                  {milestone.assignedTo && milestone.assignedTo.length > 0
+                    ? `${milestone.assignedTo.length} resource(s) selected`
+                    : 'Select resources...'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[300px] max-h-[300px] overflow-y-auto">
+                {availableResources.length > 0 ? (
+                  availableResources.map((resource) => {
+                    const isChecked = !!milestone.assignedTo?.find(
+                      (r) => r.id === resource.id,
+                    );
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={resource.id}
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          const current = milestone.assignedTo || [];
+                          if (checked) {
+                            setMilestone({
+                              ...milestone,
+                              assignedTo: [...current, resource],
+                            });
+                          } else {
+                            setMilestone({
+                              ...milestone,
+                              assignedTo: current.filter((r) => r.id !== resource.id),
+                            });
+                          }
+                        }}
+                      >
+                        {resource.name}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })
+                ) : (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No resources found.
+                  </div>
                 )}
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs gap-1 px-2.5"
-                onClick={addTask}
-              >
-                <Plus className="size-3" />
-                Add Subtask
-              </Button>
-            </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            {errors.tasks && (
-              <p className="text-destructive text-xs">{errors.tasks}</p>
-            )}
-
-            {milestone.tasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 rounded-lg border border-dashed border-border text-muted-foreground gap-2">
-                <ListTodo className="size-5 opacity-40" />
-                <p className="text-xs">No subtasks yet. Add one to break down the work.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {milestone.tasks.map((task, index) => (
+            {/* Display assigned pills */}
+            {milestone.assignedTo && milestone.assignedTo.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {milestone.assignedTo.map((res) => (
                   <div
-                    key={task.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border/50"
+                    key={res.id}
+                    className="flex items-center gap-1.5 bg-secondary px-2.5 py-1 rounded-full text-xs font-medium"
                   >
-                    {/* Type toggle */}
-                    <div className="flex rounded-md border border-border overflow-hidden shrink-0">
+                    {res.name}
+                    {isManager && (
                       <button
-                        type="button"
-                        onClick={() => updateTask(index, "taskType", "feature")}
-                        className={cn(
-                          "flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors",
-                          task.taskType === "feature"
-                            ? "bg-blue-500 text-white"
-                            : "bg-transparent text-muted-foreground hover:bg-muted"
-                        )}
+                        onClick={() =>
+                          setMilestone({
+                            ...milestone,
+                            assignedTo: milestone.assignedTo?.filter(
+                              (r) => r.id !== res.id,
+                            ),
+                          })
+                        }
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-full p-0.5 transition-colors"
                       >
-                        <Sparkles className="size-2.5" />
-                        Feat
+                        ✕
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => updateTask(index, "taskType", "bug")}
-                        className={cn(
-                          "flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors border-l border-border",
-                          task.taskType === "bug"
-                            ? "bg-red-500 text-white"
-                            : "bg-transparent text-muted-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Bug className="size-2.5" />
-                        Bug
-                      </button>
-                    </div>
-
-                    <Input
-                      className="h-7 text-xs flex-1 bg-background"
-                      placeholder="Subtask title…"
-                      value={task.title}
-                      onChange={(e) => updateTask(index, "title", e.target.value)}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => removeTask(index)}
-                      className="shrink-0 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <X className="size-3.5" />
-                    </button>
+                    )}
                   </div>
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Parent Task & Task Type */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="parent-task-select">Parent Task</Label>
+              <Select
+                value={milestone.parentTaskId ?? 'none'}
+                onValueChange={(val) =>
+                  setMilestone({
+                    ...milestone,
+                    parentTaskId: val === 'none' ? undefined : val,
+                  })
+                }
+              >
+                <SelectTrigger id="parent-task-select" className="w-full h-9">
+                  <span className="flex flex-1 text-left text-sm truncate">
+                    {milestone.parentTaskId && pickedMilestoneId
+                      ? projectMilestones
+                          .find((m) => m.id === pickedMilestoneId)
+                          ?.tasks?.find((t) => t.id === milestone.parentTaskId)
+                          ?.milestoneName || 'None'
+                      : 'None'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {pickedMilestoneId &&
+                    projectMilestones
+                      .find((m) => m.id === pickedMilestoneId)
+                      ?.tasks?.filter(
+                        (t) => t.id !== milestone.id && !t.parentTaskId,
+                      )
+                      .map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.milestoneName}
+                        </SelectItem>
+                      ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="task-type-select">Task Type</Label>
+              <Select
+                value={milestone.taskType ?? 'feature'}
+                onValueChange={(val) =>
+                  setMilestone({ ...milestone, taskType: val as TaskType })
+                }
+              >
+                <SelectTrigger id="task-type-select" className="w-full h-9">
+                  <span className="flex flex-1 text-left text-sm truncate capitalize">
+                    {milestone.taskType ?? 'feature'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="feature">Feature</SelectItem>
+                  <SelectItem value="bug">Bug</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -417,14 +448,21 @@ export default function TaskDialog({
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={saving} className="min-w-[90px]">
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={saving}
+            className="min-w-[90px]"
+          >
             {saving ? (
               <span className="flex items-center gap-1.5">
                 <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
                 Saving…
               </span>
+            ) : initialData ? (
+              'Save Changes'
             ) : (
-              initialData ? "Save Changes" : "Create Task"
+              'Create Task'
             )}
           </Button>
         </div>

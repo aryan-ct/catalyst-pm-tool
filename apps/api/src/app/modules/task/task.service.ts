@@ -19,8 +19,15 @@ export class TaskService {
     if (!milestone) {
       throw new NotFoundException('Milestone not found.');
     }
+    
+    const { assignedTo, ...restDto } = createTaskDto;
+    const data: any = { ...restDto, milestoneId: milestone_id };
+    if (assignedTo && assignedTo.length > 0) {
+      data.assignedTo = { connect: assignedTo.map((id) => ({ id })) };
+    }
+
     const createdTask = await prisma.task.create({
-      data: { ...createTaskDto, milestoneId: milestone_id },
+      data,
     });
 
     return createdTask;
@@ -33,11 +40,15 @@ export class TaskService {
       throw new NotFoundException('Task not found.');
     }
 
-    const { subtasks, ...taskData } = updateTaskDto;
+    const { assignedTo, ...restDto } = updateTaskDto;
+    const data: any = { ...restDto };
+    if (assignedTo) {
+      data.assignedTo = { set: assignedTo.map((id) => ({ id })) };
+    }
 
     const updatedTask = await prisma.task.update({
       where: { id: task_id },
-      data: taskData,
+      data,
       include: { subTasks: true },
     });
     return updatedTask;
@@ -50,7 +61,7 @@ export class TaskService {
       throw new NotFoundException('Task not found.');
     }
 
-    await prisma.subTask.deleteMany({ where: { taskId: task_id } });
+    await prisma.task.deleteMany({ where: { parentTaskId: task_id } });
     await prisma.task.delete({ where: { id: task_id } });
     return { message: 'Task deleted successfully' };
   }
