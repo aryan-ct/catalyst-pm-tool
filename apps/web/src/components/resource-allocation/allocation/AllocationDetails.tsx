@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar } from '@/components/ui/avatar';
 import { CircleX, ArrowLeft, Calendar as CalendarIcon, Plus, StickyNote } from 'lucide-react';
 
 const AllocationDetails = ({
@@ -84,6 +85,12 @@ const AllocationDetails = ({
           if (p.isNote) {
             return { resourceId: row.resourceId, desc: p.name };
           }
+
+          if (p.name === 'Generate Leads' && !p.isNote) {
+            const descStr = p.description ? `Generate Leads::${p.description}` : 'Generate Leads';
+            return { resourceId: row.resourceId, desc: descStr };
+          }
+
           const project = projects.find((proj) => proj.name === p.name);
           if (!project) return null;
           return { resourceId: row.resourceId, projectId: project.id, desc: p.description || '' };
@@ -197,7 +204,11 @@ const AllocationDetails = ({
             No data available
           </div>
         ) : (
-          rows.map((row, rowIndex) => (
+          rows.map((row, rowIndex) => {
+            const resource = resources.find((r) => r.id === row.resourceId);
+            const isHRResource = resource?.role === Roles.HR;
+
+            return (
             <div
               key={rowIndex}
               className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4"
@@ -208,9 +219,7 @@ const AllocationDetails = ({
                   {/* Resource name */}
                   <div className="col-span-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                        {row.resourceName.charAt(0)}
-                      </div>
+                      <Avatar name={row.resourceName} />
                       <span className="font-semibold text-foreground truncate">
                         {row.resourceName}
                       </span>
@@ -218,30 +227,35 @@ const AllocationDetails = ({
                   </div>
 
                   {/* Add project dropdown */}
-                  <div className="col-span-4">
-                    <Select<string>
-                      onValueChange={(value) => {
-                        if (!value) return;
-                        handleAddProject(rowIndex, value);
-                      }}
-                    >
-                      <SelectTrigger className="w-full bg-card border-border shadow-sm">
-                        <SelectValue placeholder="+ Add Project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROJECT_OPTIONS.filter(
-                          (p) => !row.projects.some((proj) => !proj.isNote && proj.name === p),
-                        ).map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
+                  {!isHRResource && (
+                    <div className="col-span-4">
+                      <Select<string>
+                        onValueChange={(value) => {
+                          if (!value) return;
+                          handleAddProject(rowIndex, value);
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-card border-border shadow-sm">
+                          <SelectValue placeholder="+ Add Project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {(resource?.role === Roles.BDE
+                          ? ['Generate Leads']
+                          : PROJECT_OPTIONS.filter((p) => p !== 'Generate Leads')
+                        )
+                          .filter((p) => !row.projects.some((proj) => !proj.isNote && proj.name === p))
+                          .map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
-                    </Select>
-                  </div>
+                      </Select>
+                    </div>
+                  )}
 
                   {/* Add note input */}
-                  <div className="col-span-5 flex gap-2">
+                  <div className={`flex gap-2 ${isHRResource ? 'col-span-9' : 'col-span-5'}`}>
                     <Input
                       placeholder="Add a note (e.g. Sick leave, Lead generation)"
                       value={noteInputs[row.resourceId] || ''}
@@ -286,9 +300,7 @@ const AllocationDetails = ({
                     <div className="font-medium text-sm text-foreground pl-11">
                       {!isEditable && entryIndex === 0 ? (
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold -ml-11">
-                            {row.resourceName.charAt(0)}
-                          </div>
+                          <Avatar name={row.resourceName} className="-ml-11" />
                           <span className="font-semibold">{row.resourceName}</span>
                         </div>
                       ) : null}
@@ -349,7 +361,8 @@ const AllocationDetails = ({
                 </div>
               ))}
             </div>
-          ))
+          );
+        })
         )}
       </div>
     </div>

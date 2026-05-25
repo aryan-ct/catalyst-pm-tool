@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Avatar } from '@/components/ui/avatar';
 import { Search, Users2, UserX, SlidersHorizontal } from 'lucide-react';
 
 const ResourcesTab = () => {
@@ -103,15 +104,9 @@ const ResourcesTab = () => {
       </div>
 
       {/* Resource selector pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pt-12 -mt-11 pb-4 -mb-2 px-12 -mx-11">
         {filteredResources.map((r) => {
           const isSelected = selected === r.id;
-          const initials = r.name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
 
           return (
             <button
@@ -123,12 +118,10 @@ const ResourcesTab = () => {
                   : 'bg-card text-foreground border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5'
                 }`}
             >
-              <div
-                className={`h-7 w-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'
-                  }`}
-              >
-                {initials}
-              </div>
+              <Avatar
+                name={r.name}
+                className={`h-7 w-7 rounded-lg text-[11px] ${isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'}`}
+              />
               <div className="flex flex-col items-start leading-tight">
                 <span className="capitalize">{r.name}</span>
                 <span

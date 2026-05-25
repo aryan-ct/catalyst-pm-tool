@@ -15,6 +15,7 @@ import {
   X,
   KeyRound,
 } from 'lucide-react';
+import { Avatar } from '@/components/ui/avatar';
 import catalystLogo from '@/assets/catalyst-logo.svg';
 
 export default function Dashboard() {
@@ -166,9 +167,7 @@ export default function Dashboard() {
             <div className="px-4 py-4 border-t border-border">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0 border border-primary/20">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'HR'}
-                  </div>
+                  <Avatar name={user?.name || 'HR'} className="border border-primary/20" />
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-medium text-foreground truncate capitalize">
                       {user.name || "HR"}

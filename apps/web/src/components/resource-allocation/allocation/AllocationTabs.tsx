@@ -40,7 +40,7 @@ const AllocationTabsContent = () => {
             }`}
             onClick={() => setActiveTab('allocation')}
           >
-            Allocation Sheets
+            {user?.role === "HR"? "Allocation Sheets" : "My Allocation"}
           </button>
 
           <button
@@ -51,7 +51,7 @@ const AllocationTabsContent = () => {
             }`}
             onClick={() => setActiveTab('resources')}
           >
-            Resources
+            {user?.role ==="HR" ? "Resources" : "Team Allocations"}
           </button>
         </div>
 

@@ -27,6 +27,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Milestone, SubTask, Status } from '../types/types';
 import { useAuth } from '@/context/AuthContext';
 import { Roles } from '@/lib/enum';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
   milestone: Milestone;
@@ -91,29 +92,7 @@ const taskTypeConfig = {
   },
 };
 
-const getResourceColor = (name: string) => {
-  const colors = [
-    'bg-red-100 text-red-700 border-red-200',
-    'bg-orange-100 text-orange-700 border-orange-200',
-    'bg-amber-100 text-amber-700 border-amber-200',
-    'bg-green-100 text-green-700 border-green-200',
-    'bg-emerald-100 text-emerald-700 border-emerald-200',
-    'bg-teal-100 text-teal-700 border-teal-200',
-    'bg-cyan-100 text-cyan-700 border-cyan-200',
-    'bg-blue-100 text-blue-700 border-blue-200',
-    'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'bg-violet-100 text-violet-700 border-violet-200',
-    'bg-purple-100 text-purple-700 border-purple-200',
-    'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
-    'bg-pink-100 text-pink-700 border-pink-200',
-    'bg-rose-100 text-rose-700 border-rose-200',
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-};
+
 
 export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
   const { user } = useAuth();
@@ -222,14 +201,13 @@ export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
 
             {/* Assigned Resources */}
             {milestone.assignedTo && milestone.assignedTo.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
+              <div className="flex items-center mt-2 -space-x-1.5">
                 {milestone.assignedTo.map((res) => (
-                  <span
+                  <Avatar
                     key={res.id}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${getResourceColor(res.name)}`}
-                  >
-                    {res.name}
-                  </span>
+                    name={res.name}
+                    className="h-6 w-6 text-[9px] border-2 border-card shadow-sm"
+                  />
                 ))}
               </div>
             )}
@@ -365,12 +343,13 @@ export default function MilestoneCard({ milestone, onEdit, onDelete }: Props) {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {milestone.assignedTo.map((res) => (
-                    <span
+                    <div
                       key={res.id}
-                      className={`px-2 py-1 rounded-md text-xs font-semibold border ${getResourceColor(res.name)}`}
+                      className="flex items-center gap-1.5 px-2 py-1 bg-secondary rounded-full text-xs font-semibold border border-border"
                     >
+                      <Avatar name={res.name} className="h-5 w-5 text-[9px] bg-background" />
                       {res.name}
-                    </span>
+                    </div>
                   ))}
                 </div>
               </div>

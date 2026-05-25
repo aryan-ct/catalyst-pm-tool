@@ -102,11 +102,7 @@ export class ResourceAllocationsService {
       },
     });
 
-    if (!resource_allocations || resource_allocations.length === 0) {
-      throw new NotFoundException('Resource allocations not found.');
-    }
-
-    return resource_allocations;
+    return resource_allocations || [];
   }
 
   async update(id: string, updateDto: UpdateResourceAllocationsDto) {

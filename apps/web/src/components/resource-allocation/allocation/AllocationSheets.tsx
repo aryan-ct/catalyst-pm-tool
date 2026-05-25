@@ -8,23 +8,36 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Users, ArrowRight, Activity } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, ArrowRight, Activity, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 const AllocationSheets = ({
   onSelectDate,
 }: {
   onSelectDate: (date: string) => void;
 }) => {
+  const { user } = useAuth();
+  const isHR = user?.role === 'HR';
   const today = new Date().toDateString();
   const { allocations } = useResourceAllocation();
 
   const uniqueDates = [...new Set(allocations.map((a) => a.date))];
 
+  const [pageHR, setPageHR] = useState(1);
+  const [pageMy, setPageMy] = useState(1);
+  const ITEMS_PER_PAGE = 7;
+
+  const hasToday = uniqueDates.includes(today);
   const sortedDates = uniqueDates.sort(
     (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
-  const latest10Dates = sortedDates.slice(0, 10);
+  const first3Dates = sortedDates.slice(0, hasToday ? 3 : 2);
+  const allRemainingDates = sortedDates.slice(hasToday ? 3 : 2);
+  
+  const totalPagesHR = Math.ceil(allRemainingDates.length / ITEMS_PER_PAGE);
+  const currentRemainingDates = allRemainingDates.slice((pageHR - 1) * ITEMS_PER_PAGE, pageHR * ITEMS_PER_PAGE);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
@@ -35,6 +48,105 @@ const AllocationSheets = ({
         date={selectedDate}
         onBack={() => setSelectedDate(null)}
       />
+    );
+  }
+
+  if (!isHR) {
+    const myAllocations = allocations.filter(a => a.resourceId === user?.id);
+    const todayAllocation = myAllocations.find(a => a.date === today);
+    const allPastAllocations = myAllocations.filter(a => a.date !== today).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    const totalPagesMy = Math.ceil(allPastAllocations.length / ITEMS_PER_PAGE);
+    const pastAllocations = allPastAllocations.slice((pageMy - 1) * ITEMS_PER_PAGE, pageMy * ITEMS_PER_PAGE);
+
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col gap-2">
+          <h3 className="text-lg font-semibold text-foreground leading-tight">My Allocations</h3>
+          <p className="text-sm text-muted-foreground">View your assigned tasks and projects.</p>
+        </div>
+
+        {/* Today's Segment Highlighted */}
+        <div>
+          <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Today</h4>
+          {todayAllocation ? (
+            <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute -top-6 -right-6 p-6 opacity-[0.03]">
+                <CalendarIcon className="h-40 w-40 text-primary" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                    <Activity className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                    {format(new Date(today), 'EEEE, MMMM d')}
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  {todayAllocation.projects.map((proj, i) => (
+                    <div key={i} className="bg-card/80 backdrop-blur-sm p-4 rounded-xl border border-border/60 shadow-sm">
+                      <p className="text-base font-bold text-foreground mb-1">{proj.name}</p>
+                      {proj.description && <p className="text-sm text-muted-foreground">{proj.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-muted/30 border border-dashed border-border rounded-2xl p-8 text-center">
+              <p className="text-foreground font-semibold">No allocations for today</p>
+              <p className="text-sm text-muted-foreground mt-1">Check back later or contact your manager.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Older Allocations */}
+        {pastAllocations.length > 0 && (
+          <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Previous Allocations</h4>
+            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-12 bg-muted/40 px-4 py-3 border-b border-border">
+                <div className="col-span-4 sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date</div>
+                <div className="hidden sm:block sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Day</div>
+                <div className="col-span-8 sm:col-span-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assigned Tasks</div>
+              </div>
+              
+              {pastAllocations.map((alloc) => (
+                <div key={alloc.date} className="grid grid-cols-12 px-4 py-3.5 border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                  <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground self-center">
+                    {format(new Date(alloc.date), 'MMM d, yyyy')}
+                  </div>
+                  <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground self-center">
+                    {getDayOfWeek(alloc.date)}
+                  </div>
+                  <div className="col-span-8 sm:col-span-6 flex flex-col gap-2">
+                    {alloc.projects.map((proj, i) => (
+                      <div key={i} className="flex flex-col bg-muted/40 px-3 py-2 rounded-lg border border-border/40">
+                        <span className="text-sm font-medium">{proj.name}</span>
+                        {proj.description && <span className="text-xs text-muted-foreground mt-0.5">{proj.description}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {totalPagesMy > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20">
+                  <span className="text-xs text-muted-foreground">
+                    Showing {(pageMy - 1) * ITEMS_PER_PAGE + 1} to {Math.min(pageMy * ITEMS_PER_PAGE, allPastAllocations.length)} of {allPastAllocations.length} entries
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPageMy(p => Math.max(1, p - 1))} disabled={pageMy === 1}>Previous</Button>
+                    <Button variant="outline" size="sm" onClick={() => setPageMy(p => Math.min(totalPagesMy, p + 1))} disabled={pageMy === totalPagesMy}>Next</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -67,6 +179,7 @@ const AllocationSheets = ({
                   onSelectDate(date.toDateString());
                 }
               }}
+              disabled={(date) => date > new Date() || !uniqueDates.includes(date.toDateString())}
               className="rounded-md border"
             />
           </PopoverContent>
@@ -74,7 +187,51 @@ const AllocationSheets = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {latest10Dates.map((date) => {
+        {!hasToday && (
+          <div
+            onClick={() => onSelectDate(today)}
+            className="group relative p-5 rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
+          >
+            <span className="absolute top-3 right-3 bg-white/25 text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest">
+              Today
+            </span>
+
+            <div className="flex flex-col gap-4">
+              {/* Day of week & Date */}
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                  {getDayOfWeek(today)}
+                </p>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-black leading-none tracking-tight">
+                    {getDayNum(today)}
+                  </span>
+                  <span className="text-sm font-semibold mb-1 text-white/70">
+                    {getMonthYear(today)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Empty State Message */}
+              <div className="bg-white/10 rounded-lg p-2.5 border border-white/10 mt-1">
+                <p className="text-xs font-medium text-white/90">No allocations created for today.</p>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px w-full bg-white/20" />
+
+              {/* Resource count + arrow */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold">Create Allocation</span>
+                <div className="h-7 w-7 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110 bg-white/20 text-white">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {first3Dates.map((date) => {
           const isToday = date === today;
           const count = allocations.filter((a) => a.date === date).length;
 
@@ -143,7 +300,58 @@ const AllocationSheets = ({
         })}
       </div>
 
-      {latest10Dates.length === 0 && (
+      {allRemainingDates.length > 0 && (
+        <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Previous Allocations</h4>
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-12 bg-muted/40 px-4 py-3 border-b border-border">
+              <div className="col-span-4 sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date</div>
+              <div className="hidden sm:block sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Day</div>
+              <div className="col-span-4 sm:col-span-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Resources</div>
+              <div className="col-span-4 sm:col-span-2 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Action</div>
+            </div>
+            
+            {currentRemainingDates.map((date) => {
+              const count = allocations.filter((a) => a.date === date).length;
+              return (
+                <div key={date} className="grid grid-cols-12 px-4 py-3.5 border-b border-border last:border-0 hover:bg-muted/20 items-center transition-colors">
+                  <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground">
+                    {format(new Date(date), 'MMM d, yyyy')}
+                  </div>
+                  <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground">
+                    {getDayOfWeek(date)}
+                  </div>
+                  <div className="col-span-4 sm:col-span-4 flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0 hidden sm:flex">
+                      <Users className="h-3 w-3" />
+                    </div>
+                    <span className="text-sm font-medium">{count} <span className="hidden sm:inline">{count === 1 ? 'resource' : 'resources'}</span></span>
+                  </div>
+                  <div className="col-span-4 sm:col-span-2 text-right">
+                    <Button variant="outline" size="sm" className="h-8" onClick={() => onSelectDate(date)}>
+                      View <ArrowRight className="ml-1.5 h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {totalPagesHR > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20">
+                <span className="text-xs text-muted-foreground">
+                  Showing {(pageHR - 1) * ITEMS_PER_PAGE + 1} to {Math.min(pageHR * ITEMS_PER_PAGE, allRemainingDates.length)} of {allRemainingDates.length} entries
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPageHR(p => Math.max(1, p - 1))} disabled={pageHR === 1}>Previous</Button>
+                  <Button variant="outline" size="sm" onClick={() => setPageHR(p => Math.min(totalPagesHR, p + 1))} disabled={pageHR === totalPagesHR}>Next</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {sortedDates.length === 0 && (
         <div className="text-center py-20 bg-muted/30 rounded-xl border border-dashed border-border">
           <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mx-auto mb-4">
             <Activity className="h-7 w-7" />

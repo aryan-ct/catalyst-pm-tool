@@ -23,6 +23,7 @@ import { Milestone, PMBackendMilestone, TaskType } from '../types/types';
 import { MilestoneErrors, validateMilestone } from './validate';
 import { TASK_API } from '@/api/task.api';
 import { RESOURCE_API } from '@/api/resource.api';
+import { Avatar } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -352,8 +353,9 @@ export default function TaskDialog({
                 {milestone.assignedTo.map((res) => (
                   <div
                     key={res.id}
-                    className="flex items-center gap-1.5 bg-secondary px-2.5 py-1 rounded-full text-xs font-medium"
+                    className="flex items-center gap-1.5 bg-secondary pl-1 pr-2.5 py-1 rounded-full text-xs font-medium border border-border"
                   >
+                    <Avatar name={res.name} className="h-5 w-5 text-[9px] bg-background" />
                     {res.name}
                     {isManager && (
                       <button

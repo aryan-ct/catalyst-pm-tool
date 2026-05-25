@@ -3,6 +3,7 @@ import { RESOURCE_API } from '@/api/resource.api';
 import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
 import { PROJECT_API } from '@/api/project.api';
 import { AllocationRow, Resource, Project } from './types';
+import { useAuth } from '@/context/AuthContext';
 
 interface ContextType {
   resources: Resource[];
@@ -23,12 +24,14 @@ export const ResourceAllocationContext = createContext<ContextType>({
 export const useResourceAllocation = () => useContext(ResourceAllocationContext);
 
 export const ResourceAllocationProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
   const [resourcesRaw, setResourcesRaw] = useState<any[]>([]);
   const [allocationsRaw, setAllocationsRaw] = useState<any[]>([]);
   const [projectsRaw, setProjectsRaw] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const [resData, allocData, projData] = await Promise.all([
@@ -48,7 +51,7 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user?.id, user?.role]);
 
   const data = useMemo(() => {
     const resources: Resource[] = resourcesRaw.map(r => ({
@@ -75,12 +78,21 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
       }
 
       if (!ra.projectId) {
-        row.projects.push({
-          id: ra.id,
-          name: ra.desc || '',
-          description: '',
-          isNote: true,
-        });
+        if (ra.desc === 'Generate Leads' || (ra.desc && ra.desc.startsWith('Generate Leads::'))) {
+          row.projects.push({
+            id: ra.id,
+            name: 'Generate Leads',
+            description: ra.desc.startsWith('Generate Leads::') ? ra.desc.substring('Generate Leads::'.length) : '',
+            isNote: false,
+          });
+        } else {
+          row.projects.push({
+            id: ra.id,
+            name: ra.desc || '',
+            description: '',
+            isNote: true,
+          });
+        }
       } else {
         const project = projectsRaw.find(p => p.id === ra.projectId);
         row.projects.push({

@@ -39,12 +39,7 @@ export class ResourceAllocationsController {
     @Query('end_date') end_date: Date,
     @Query('role') role: client.Role,
   ) {
-    if (user.role !== 'HR') {
-      const today = new Date();
-      start_date = new Date(today.setHours(0, 0, 0, 0));
-      end_date = new Date(today.setHours(23, 59, 59, 999));
-    }
-    
+    // Removed restriction so all users can see historical team allocations
     return this.resourceAllocationsService.findAll({
       role,
       end_date,
