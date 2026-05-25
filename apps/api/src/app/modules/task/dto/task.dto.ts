@@ -43,6 +43,10 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsString()
+  bugNumber?: string;
+
+  @IsOptional()
+  @IsString()
   parentTaskId?: string;
 }
 
@@ -75,6 +79,10 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsString()
   bugSheet?: string;
+
+  @IsOptional()
+  @IsString()
+  bugNumber?: string;
 
   @IsOptional()
   @IsString()

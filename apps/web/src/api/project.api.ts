@@ -78,6 +78,7 @@ const mapProjectForPM = (p: any) => ({
       milestoneDescription: t.description,
       estimatedHours: t.estimatedHours,
       bugSheet: '',
+      bugNumber: t.bugNumber || '',
       status: statusToFrontend(t.taskStatus),
       milestoneId: m.id,
       parentTaskId: t.parentTaskId || undefined,

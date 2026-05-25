@@ -292,6 +292,7 @@ export default function ProjectManagement() {
         setOpen={setOpen}
         initialData={selectedTask}
         onSave={handleSave}
+        onDelete={handleDelete}
         projectMilestones={selectedProject?.milestones ?? []}
         defaultMilestoneId={selectedMilestoneId}
       />

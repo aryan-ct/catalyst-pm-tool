@@ -7,6 +7,7 @@ model Task {
   taskStatus     TaskStatus
   taskType       TaskType   @default(FEATURE)
   bugSheet       String?
+  bugNumber      String?
   assignedTo     Resource[] @relation("TaskToResource")
 
   createdAt DateTime @default(now())
