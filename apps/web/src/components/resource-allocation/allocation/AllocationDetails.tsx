@@ -192,27 +192,28 @@ const AllocationDetails = ({
         )}
       </div>
 
-      <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden">
-        <div className="grid grid-cols-12 bg-muted/50 p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+      <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden flex flex-col">
+        <div className="grid grid-cols-12 bg-muted/50 p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-border shrink-0">
           <div className="col-span-3">Resource</div>
           <div className="col-span-4">Assigned Projects / Notes</div>
           <div className="col-span-5 text-right">Activity / Description</div>
         </div>
 
-        {rows.length === 0 ? (
-          <div className="text-center text-muted-foreground py-6">
-            No data available
-          </div>
-        ) : (
-          rows.map((row, rowIndex) => {
-            const resource = resources.find((r) => r.id === row.resourceId);
-            const isHRResource = resource?.role === Roles.HR;
+        <div className="max-h-[580px] overflow-y-auto divide-y divide-border/40">
+          {rows.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">
+              No data available
+            </div>
+          ) : (
+            rows.map((row, rowIndex) => {
+              const resource = resources.find((r) => r.id === row.resourceId);
+              const isHRResource = resource?.role === Roles.HR;
 
-            return (
-            <div
-              key={rowIndex}
-              className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors p-4"
-            >
+              return (
+              <div
+                key={rowIndex}
+                className="hover:bg-muted/30 transition-colors p-4"
+              >
               {/* Edit mode: header row with Add Project dropdown + Add Note input */}
               {isEditable && (
                 <div className="grid grid-cols-12 gap-4 px-4 items-center mb-2">
@@ -364,6 +365,7 @@ const AllocationDetails = ({
           );
         })
         )}
+        </div>
       </div>
     </div>
   );

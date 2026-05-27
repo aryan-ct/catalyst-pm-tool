@@ -69,8 +69,43 @@ export class ResourceAllocationsService {
     return prisma.$transaction([deletePromise, ...createPromises]);
   }
 
-  async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role }) {
-    const { start_date, end_date, role } = filters;
+  async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role; page?: number; limit?: number }) {
+    const { start_date, end_date, role, page, limit } = filters;
+
+    if (page !== undefined && limit !== undefined) {
+      const skip = (page - 1) * limit;
+      const take = limit;
+
+      const [data, total] = await Promise.all([
+        prisma.resourceAllocation.findMany({
+          where: {
+            ...(role && { role }),
+            ...((start_date || end_date) && {
+              createdAt: {
+                ...(start_date && { gte: new Date(start_date) }),
+                ...(end_date && { lte: new Date(end_date) }),
+              }
+            }),
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+        }),
+        prisma.resourceAllocation.count({
+          where: {
+            ...(role && { role }),
+            ...((start_date || end_date) && {
+              createdAt: {
+                ...(start_date && { gte: new Date(start_date) }),
+                ...(end_date && { lte: new Date(end_date) }),
+              }
+            }),
+          },
+        })
+      ]);
+
+      return { data, total };
+    }
 
     return prisma.resourceAllocation.findMany({
       where: {
@@ -82,10 +117,11 @@ export class ResourceAllocationsService {
           }
         }),
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findMyAllocations(id: string) {
+  async findMyAllocations(id: string, page?: number, limit?: number) {
     const resource = await prisma.resource.findUnique({
       where: {
         id,
@@ -96,10 +132,34 @@ export class ResourceAllocationsService {
       throw new NotFoundException('Resource not found.');
     }
 
+    if (page !== undefined && limit !== undefined) {
+      const skip = (page - 1) * limit;
+      const take = limit;
+
+      const [data, total] = await Promise.all([
+        prisma.resourceAllocation.findMany({
+          where: {
+            resourceId: id,
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+        }),
+        prisma.resourceAllocation.count({
+          where: {
+            resourceId: id,
+          },
+        })
+      ]);
+
+      return { data, total };
+    }
+
     const resource_allocations = await prisma.resourceAllocation.findMany({
       where: {
         resourceId: id,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
     return resource_allocations || [];

@@ -10,8 +10,8 @@ const createResourceAllocations = async (data: any[]) => {
   return result.data;
 };
 
-const getMyAllocations = async () => {
-  const result = await axiosInstance.get('resource-allocations/me');
+const getMyAllocations = async (params?: any) => {
+  const result = await axiosInstance.get('resource-allocations/me', { params });
   return result.data;
 };
 

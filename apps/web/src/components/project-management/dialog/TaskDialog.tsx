@@ -17,8 +17,22 @@ import {
   SelectTrigger,
 } from '@/components/ui/select';
 import { PencilRuler, Info, Trash2, Layers, CheckCircle } from 'lucide-react';
-import { Milestone, PMBackendMilestone, TaskType } from '../types/types';
+import { Milestone, PMBackendMilestone, TaskType, Status } from '../types/types';
 import { MilestoneErrors, validateMilestone } from './validate';
+
+const statusLabels: Record<Status, string> = {
+  todo: 'To Do',
+  'in-progress': 'In Progress',
+  'in-review': 'In Review',
+  done: 'Done',
+};
+
+const statusColors: Record<Status, string> = {
+  todo: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800',
+  'in-progress': 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
+  'in-review': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/30',
+  done: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30',
+};
 import { TASK_API } from '@/api/task.api';
 import { RESOURCE_API } from '@/api/resource.api';
 import { Avatar } from '@/components/ui/avatar';
@@ -73,7 +87,9 @@ export default function TaskDialog({
   const [pickedMilestoneId, setPickedMilestoneId] = useState<string>('');
   const [errors, setErrors] = useState<MilestoneErrors>({});
   const [saving, setSaving] = useState(false);
-  const [availableResources, setAvailableResources] = useState<{ id: string; name: string }[]>([]);
+  const [availableResources, setAvailableResources] = useState<
+    { id: string; name: string }[]
+  >([]);
 
   useEffect(() => {
     if (open) {
@@ -125,7 +141,8 @@ export default function TaskDialog({
           description: milestone.milestoneDescription,
           estimatedHours: milestone.estimatedHours,
           bugSheet: milestone.bugSheet,
-          bugNumber: milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
+          bugNumber:
+            milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
           taskStatus: milestone.status.toUpperCase(),
           milestoneId: initialData.milestoneId ?? targetMilestoneId,
           parentTaskId: milestone.parentTaskId,
@@ -144,7 +161,8 @@ export default function TaskDialog({
           description: milestone.milestoneDescription,
           estimatedHours: milestone.estimatedHours,
           bugSheet: milestone.bugSheet,
-          bugNumber: milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
+          bugNumber:
+            milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
           taskStatus: milestone.status.toUpperCase(),
           parentTaskId: milestone.parentTaskId,
           taskType: milestone.taskType?.toUpperCase(),
@@ -197,7 +215,9 @@ export default function TaskDialog({
   )?.milestoneName;
 
   const currentMilestoneId = pickedMilestoneId || defaultMilestoneId;
-  const currentMilestoneObj = projectMilestones.find((m) => m.id === currentMilestoneId);
+  const currentMilestoneObj = projectMilestones.find(
+    (m) => m.id === currentMilestoneId,
+  );
   const allMilestoneTasks = currentMilestoneObj?.tasks ?? [];
 
   return (
@@ -210,7 +230,9 @@ export default function TaskDialog({
               <Layers className="size-3.5" />
               <span>Project Tasks</span>
               <span>/</span>
-              <span className="text-foreground">{selectedMilestoneName || 'General'}</span>
+              <span className="text-foreground">
+                {selectedMilestoneName || 'General'}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -227,12 +249,14 @@ export default function TaskDialog({
 
         {/* Scrollable Drawer Body with Two-Column Layout */}
         <div className="flex-1 overflow-y-auto px-12 py-8 flex gap-10 min-h-0 bg-background/50">
-          
           {/* Left Column (Main Fields) */}
           <div className="flex-[2] flex flex-col gap-6 min-w-0 pr-4">
             {/* Task Name */}
             <div className="space-y-1.5">
-              <Label htmlFor="task-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <Label
+                htmlFor="task-name"
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+              >
                 Task Name
               </Label>
               <Input
@@ -247,7 +271,9 @@ export default function TaskDialog({
                 aria-invalid={!!errors.milestoneName}
               />
               {errors.milestoneName && (
-                <p className="text-destructive text-xs font-medium">{errors.milestoneName}</p>
+                <p className="text-destructive text-xs font-medium">
+                  {errors.milestoneName}
+                </p>
               )}
             </div>
 
@@ -269,7 +295,9 @@ export default function TaskDialog({
                 />
               </div>
               {errors.milestoneDescription && (
-                <p className="text-destructive text-xs font-medium">{errors.milestoneDescription}</p>
+                <p className="text-destructive text-xs font-medium">
+                  {errors.milestoneDescription}
+                </p>
               )}
             </div>
 
@@ -277,7 +305,10 @@ export default function TaskDialog({
             <div className="border-t border-border/60 pt-4 space-y-4">
               {/* Parent Task Selector */}
               <div className="space-y-1.5">
-                <Label htmlFor="parent-task-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Label
+                  htmlFor="parent-task-select"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
                   Parent Task
                 </Label>
                 <Select
@@ -286,19 +317,25 @@ export default function TaskDialog({
                   onValueChange={(val) => {
                     const parentId = val === 'none' ? undefined : val;
                     const parentTitle = parentId
-                      ? allMilestoneTasks.find((t) => t.id === parentId)?.milestoneName
+                      ? allMilestoneTasks.find((t) => t.id === parentId)
+                          ?.milestoneName
                       : undefined;
                     setMilestone({
                       ...milestone,
-                      parentTaskId: parentId,
+                      parentTaskId: parentId || '',
                       parentTaskTitle: parentTitle,
                     });
                   }}
                 >
-                  <SelectTrigger id="parent-task-select" className="w-full h-9 bg-background border-border">
+                  <SelectTrigger
+                    id="parent-task-select"
+                    className="w-full h-9 bg-background border-border"
+                  >
                     <span className="truncate text-sm">
                       {milestone.parentTaskId
-                        ? allMilestoneTasks.find((t) => t.id === milestone.parentTaskId)?.milestoneName || 'None'
+                        ? allMilestoneTasks.find(
+                            (t) => t.id === milestone.parentTaskId,
+                          )?.milestoneName || 'None'
                         : 'None'}
                     </span>
                   </SelectTrigger>
@@ -310,7 +347,7 @@ export default function TaskDialog({
                           t.id !== milestone.id &&
                           !t.parentTaskId &&
                           // Prevent circular reference (where this task is the parent of that task)
-                          t.tasks?.every((sub) => sub.id !== milestone.id)
+                          t.tasks?.every((sub) => sub.id !== milestone.id),
                       )
                       .map((t) => (
                         <SelectItem key={t.id} value={t.id}>
@@ -322,33 +359,37 @@ export default function TaskDialog({
               </div>
 
               {/* Children Tasks (Read-only list) */}
-              {milestone.id && milestone.tasks && milestone.tasks.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-primary" />
-                    Subtasks / Child Tasks ({milestone.tasks.length})
-                  </Label>
-                  <div className="space-y-1.5">
-                    {milestone.tasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 border border-border/40 hover:bg-muted/60 transition-colors"
-                      >
-                        <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 ${
-                          task.taskType === 'bug'
-                            ? 'text-red-600 bg-red-50 border-red-100'
-                            : 'text-blue-600 bg-blue-50 border-blue-100'
-                        }`}>
-                          {task.taskType}
-                        </span>
-                        <span className="text-sm text-foreground flex-1 leading-snug truncate">
-                          {task.title}
-                        </span>
-                      </div>
-                    ))}
+              {milestone.id &&
+                milestone.tasks &&
+                milestone.tasks.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <CheckCircle className="size-3.5 text-primary" />
+                      Subtasks / Child Tasks ({milestone.tasks.length})
+                    </Label>
+                    <div className="space-y-1.5">
+                      {milestone.tasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40 border border-border/40 hover:bg-muted/60 transition-colors"
+                        >
+                          <span
+                            className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 ${
+                              task.taskType === 'bug'
+                                ? 'text-red-600 bg-red-50 border-red-100'
+                                : 'text-blue-600 bg-blue-50 border-blue-100'
+                            }`}
+                          >
+                            {task.taskType}
+                          </span>
+                          <span className="text-sm text-foreground flex-1 leading-snug truncate">
+                            {task.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
 
@@ -356,28 +397,20 @@ export default function TaskDialog({
           <div className="w-[320px] shrink-0 flex flex-col gap-5 bg-muted/20 p-6 rounded-xl border border-border/60 h-fit">
             <div className="flex items-center gap-1.5 pb-2 border-b border-border/60">
               <Info className="size-4 text-muted-foreground" />
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Details Panel</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Details Panel
+              </span>
             </div>
 
-            {/* Status Dropdown */}
-            <div className="space-y-1.5">
+            {/* Status (Read-Only) */}
+            <div className="space-y-1.5 flex flex-col items-start">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Status
               </Label>
-              <Select
-                value={milestone.status}
-                onValueChange={(val) => setMilestone({ ...milestone, status: val as any })}
-              >
-                <SelectTrigger className="w-full h-9 bg-background border-border capitalize font-semibold">
-                  <span className="truncate">{milestone.status.replace('-', ' ')}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="in-review">In Review</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-semibold capitalize ${statusColors[milestone.status] ?? statusColors.todo}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                {statusLabels[milestone.status] ?? milestone.status.replace('-', ' ')}
+              </div>
             </div>
 
             {/* Task Type */}
@@ -393,7 +426,9 @@ export default function TaskDialog({
                 }
               >
                 <SelectTrigger className="w-full h-9 bg-background border-border capitalize">
-                  <span className="truncate font-semibold">{milestone.taskType ?? 'feature'}</span>
+                  <span className="truncate font-semibold">
+                    {milestone.taskType ?? 'feature'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="feature">Feature</SelectItem>
@@ -405,8 +440,14 @@ export default function TaskDialog({
             {/* Bug Number - conditional and optional */}
             {milestone.taskType === 'bug' && (
               <div className="space-y-1.5 animate-in fade-in duration-200">
-                <Label htmlFor="bug-number" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Bug Number <span className="text-muted-foreground/60 text-[10px]">(Optional)</span>
+                <Label
+                  htmlFor="bug-number"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Bug Number{' '}
+                  <span className="text-muted-foreground/60 text-[10px]">
+                    (Optional)
+                  </span>
                 </Label>
                 <Input
                   id="bug-number"
@@ -423,7 +464,10 @@ export default function TaskDialog({
 
             {/* Estimated Hours */}
             <div className="space-y-1.5">
-              <Label htmlFor="est-hours" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <Label
+                htmlFor="est-hours"
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+              >
                 Estimated Hours
               </Label>
               <Input
@@ -443,7 +487,9 @@ export default function TaskDialog({
                 aria-invalid={!!errors.estimatedHours}
               />
               {errors.estimatedHours && (
-                <p className="text-destructive text-xs font-medium">{errors.estimatedHours}</p>
+                <p className="text-destructive text-xs font-medium">
+                  {errors.estimatedHours}
+                </p>
               )}
             </div>
 
@@ -486,7 +532,9 @@ export default function TaskDialog({
                             } else {
                               setMilestone({
                                 ...milestone,
-                                assignedTo: current.filter((r) => r.id !== resource.id),
+                                assignedTo: current.filter(
+                                  (r) => r.id !== resource.id,
+                                ),
                               });
                             }
                           }}
@@ -511,7 +559,10 @@ export default function TaskDialog({
                       key={res.id}
                       className="flex items-center gap-1 bg-secondary pl-1 pr-2 py-0.5 rounded-full text-[11px] font-medium border border-border"
                     >
-                      <Avatar name={res.name} className="h-4.5 w-4.5 text-[8px] bg-background" />
+                      <Avatar
+                        name={res.name}
+                        className="h-4.5 w-4.5 text-[8px] bg-background"
+                      />
                       <span className="truncate max-w-[80px]">{res.name}</span>
                       {isManager && (
                         <button
@@ -537,14 +588,20 @@ export default function TaskDialog({
             {/* Milestone picker (Only visible on creation) */}
             {!initialData && projectMilestones.length > 0 && (
               <div className="space-y-1.5 border-t border-border/40 pt-3 mt-1">
-                <Label htmlFor="milestone-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-bold">
+                <Label
+                  htmlFor="milestone-select"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-bold"
+                >
                   Milestone Target
                 </Label>
                 <Select
                   value={pickedMilestoneId}
                   onValueChange={(val) => val && setPickedMilestoneId(val)}
                 >
-                  <SelectTrigger id="milestone-select" className="w-full h-9 bg-background border-border text-sm">
+                  <SelectTrigger
+                    id="milestone-select"
+                    className="w-full h-9 bg-background border-border text-sm"
+                  >
                     <span className="truncate">
                       {selectedMilestoneName ?? 'Choose milestone...'}
                     </span>
@@ -570,7 +627,7 @@ export default function TaskDialog({
               <Button
                 variant="destructive"
                 size="sm"
-                className="gap-1.5 shadow-sm font-semibold h-9 px-4 hover:bg-destructive/90"
+                className="gap-1.5 shadow-sm font-semibold h-9 px-4 hover:bg-destructive/90 hover:text-white"
                 disabled={saving}
                 onClick={handleDeleteTask}
               >

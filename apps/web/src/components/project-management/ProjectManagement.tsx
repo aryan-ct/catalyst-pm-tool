@@ -1,30 +1,36 @@
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { Roles } from "@/lib/enum";
-import { Milestone, PMProject, Status } from "./types/types";
-import { PROJECT_API } from "@/api/project.api";
-import { TASK_API } from "@/api/task.api";
-import ProjectSelector from "./kanban/ProjectSelector";
-import MilestoneSelector from "./kanban/MilestoneSelector";
-import KanbanBoard from "./kanban/KanbanBoard";
-import TaskDialog from "./dialog/TaskDialog";
-import { DragEndEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { Plus, LayoutGrid, Layers } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { Roles } from '@/lib/enum';
+import { Milestone, PMProject, Status } from './types/types';
+import { PROJECT_API } from '@/api/project.api';
+import { TASK_API } from '@/api/task.api';
+import ProjectSelector from './kanban/ProjectSelector';
+import MilestoneSelector from './kanban/MilestoneSelector';
+import KanbanBoard from './kanban/KanbanBoard';
+import TaskDialog from './dialog/TaskDialog';
+import { DragEndEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
+import {
+  Plus,
+  LayoutGrid,
+  Layers,
+  Link as LinkIcon,
+  ExternalLink,
+} from 'lucide-react';
 
 const statusToBackend: Record<Status, string> = {
-  "todo": "TODO",
-  "in-progress": "IN_PROGRESS",
-  "in-review": "IN_REVIEW",
-  "done": "DONE",
+  todo: 'TODO',
+  'in-progress': 'IN_PROGRESS',
+  'in-review': 'IN_REVIEW',
+  done: 'DONE',
 };
 
 export default function ProjectManagement() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<PMProject[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>('');
   const [kanbanItems, setKanbanItems] = useState<Milestone[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Milestone | null>(null);
@@ -61,13 +67,16 @@ export default function ProjectManagement() {
         }
       }
     } catch (err) {
-      console.error("Failed to load projects", err);
+      console.error('Failed to load projects', err);
     } finally {
       setLoading(false);
     }
   };
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
+  const selectedMilestone = selectedProject?.milestones.find(
+    (m) => m.id === selectedMilestoneId,
+  );
 
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -77,14 +86,16 @@ export default function ProjectManagement() {
       setSelectedMilestoneId(first.id);
       setKanbanItems(first.tasks);
     } else {
-      setSelectedMilestoneId("");
+      setSelectedMilestoneId('');
       setKanbanItems([]);
     }
   };
 
   const handleMilestoneChange = (milestoneId: string) => {
     setSelectedMilestoneId(milestoneId);
-    const milestone = selectedProject?.milestones.find((m) => m.id === milestoneId);
+    const milestone = selectedProject?.milestones.find(
+      (m) => m.id === milestoneId,
+    );
     setKanbanItems(milestone?.tasks ?? []);
   };
 
@@ -112,7 +123,7 @@ export default function ProjectManagement() {
             };
           }),
         };
-      })
+      }),
     );
   };
 
@@ -130,10 +141,10 @@ export default function ProjectManagement() {
               tasks: m.tasks.filter((t) => t.id !== id),
             })),
           };
-        })
+        }),
       );
     } catch (err) {
-      console.error("Delete task failed", err);
+      console.error('Delete task failed', err);
     }
   };
 
@@ -167,7 +178,7 @@ export default function ProjectManagement() {
     let destinationStatus: Status = sourceStatus;
     let targetIndex = activeIndex;
 
-    if (overData?.type === "milestone") {
+    if (overData?.type === 'milestone') {
       destinationStatus = overData.milestone.status;
       const sameColItems = items.filter((m) => m.status === destinationStatus);
       const overIndexInCol = sameColItems.findIndex((m) => m.id === overId);
@@ -177,7 +188,7 @@ export default function ProjectManagement() {
       targetIndex = globalIndices[overIndexInCol];
     }
 
-    if (overData?.type === "column") {
+    if (overData?.type === 'column') {
       destinationStatus = overData.status;
       const indicesInCol = items
         .map((m, i) => (m.status === destinationStatus ? i : -1))
@@ -203,7 +214,7 @@ export default function ProjectManagement() {
         milestoneId: activeMilestone.milestoneId!,
       });
     } catch (err) {
-      console.error("Status update failed", err);
+      console.error('Status update failed', err);
       // Revert optimistic update
       setKanbanItems(items);
     }
@@ -221,61 +232,91 @@ export default function ProjectManagement() {
     return (
       <div className="py-20 text-center bg-card rounded-xl border border-dashed border-border">
         <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground mx-auto mb-4">
-           <LayoutGrid className="h-8 w-8" />
+          <LayoutGrid className="h-8 w-8" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground">No projects found</h3>
-        <p className="text-muted-foreground mt-1 max-w-xs mx-auto">Create a project first to start managing tasks and milestones.</p>
+        <h3 className="text-lg font-semibold text-foreground">
+          No projects found
+        </h3>
+        <p className="text-muted-foreground mt-1 max-w-xs mx-auto">
+          Create a project first to start managing tasks and milestones.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-4 bg-card p-4 rounded-xl border border-border shadow-sm">
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-             <div className="p-2 rounded-lg bg-primary/10 text-primary hidden sm:block">
+          <div className="flex flex-col items-start gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary hidden sm:block">
                 <LayoutGrid className="h-4 w-4" />
-             </div>
-             <ProjectSelector
-               projects={projects}
-               selectedProjectId={selectedProjectId}
-               onSelect={handleProjectChange}
-             />
-          </div>
-          
-          {selectedProject && selectedProject.milestones.length > 0 && (
-            <div className="flex items-center gap-2 w-full sm:w-auto border-l border-border sm:pl-4">
-               <div className="p-2 rounded-lg bg-muted text-muted-foreground hidden sm:block">
-                  <Layers className="h-4 w-4" />
-               </div>
-               <MilestoneSelector
-                 milestones={selectedProject.milestones}
-                 selectedMilestoneId={selectedMilestoneId}
-                 onSelect={handleMilestoneChange}
-               />
+              </div>
+              <ProjectSelector
+                projects={projects}
+                selectedProjectId={selectedProjectId}
+                onSelect={handleProjectChange}
+              />
             </div>
+
+            {selectedProject && selectedProject.milestones.length > 0 && (
+              <div className="flex items-center gap-2 w-full">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground hidden sm:block">
+                  <Layers className="h-4 w-4" />
+                </div>
+                <MilestoneSelector
+                  milestones={selectedProject.milestones}
+                  selectedMilestoneId={selectedMilestoneId}
+                  onSelect={handleMilestoneChange}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {selectedMilestone?.bugSheet && (
+            <Button
+              variant="outline"
+              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-900/50 dark:hover:bg-indigo-950/30 gap-1.5 shadow-sm w-full sm:w-auto sm:ml-2 "
+            >
+              <a
+                href={selectedMilestone.bugSheet}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2"
+              >
+                <LinkIcon className="h-4 w-4" />
+                Bug Sheet
+                <ExternalLink className="h-3 w-3 opacity-60" />
+              </a>
+            </Button>
+          )}
+          {user?.role === Roles.MANAGER && (
+            <Button
+              onClick={handleAdd}
+              disabled={!selectedMilestoneId}
+              className="w-full md:w-auto shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+            </Button>
           )}
         </div>
-        
-        {user?.role === Roles.MANAGER && (
-          <Button
-            onClick={handleAdd}
-            disabled={!selectedMilestoneId}
-            className="w-full md:w-auto shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Task
-          </Button>
-        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
         {selectedProject && selectedProject.milestones.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
             <Layers className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-lg font-semibold text-foreground">No milestones found</h3>
-            <p className="text-muted-foreground mt-1">Add milestones to this project from the Projects tab to start tracking tasks.</p>
+            <h3 className="text-lg font-semibold text-foreground">
+              No milestones found
+            </h3>
+            <p className="text-muted-foreground mt-1">
+              Add milestones to this project from the Projects tab to start
+              tracking tasks.
+            </p>
           </div>
         ) : (
           <KanbanBoard

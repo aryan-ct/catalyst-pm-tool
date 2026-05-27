@@ -14,8 +14,8 @@ async function main() {
 
   console.log(`Found ${resources.length} resources and ${projects.length} projects.`);
 
-  // Create 10 days of dummy data
-  for (let i = 0; i <= 10; i++) {
+  // Create 30 days of dummy data
+  for (let i = 0; i <= 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     // ensure it's around mid-day so timezones don't push it to another day
