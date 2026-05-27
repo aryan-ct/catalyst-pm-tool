@@ -211,34 +211,51 @@ const AllocationSheets = ({
             Today
           </h4>
           {todayAllocation ? (
-            <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-              <div className="absolute -top-6 -right-6 p-6 opacity-[0.03]">
-                <CalendarIcon className="h-40 w-40 text-primary" />
+            <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 border-2 border-primary/20 rounded-2xl p-6 shadow-lg shadow-primary/5 relative overflow-hidden group">
+              <div className="absolute -top-10 -right-10 p-6 opacity-[0.04] transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6">
+                <CalendarIcon className="h-48 w-48 text-primary" />
               </div>
-              <div className="relative z-10 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
-                    <Activity className="h-4 w-4" />
+              <div className="relative z-10 space-y-5">
+                <div className="flex flex-col gap-1.5 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-sm ring-1 ring-primary/20">
+                      <Activity className="h-4.5 w-4.5" />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                      {format(new Date(today), 'EEEE, MMMM d')}
+                    </span>
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                    {format(new Date(today), 'EEEE, MMMM d')}
-                  </span>
+                  <h3 className="text-xl font-bold tracking-tight text-foreground ml-[44px]">
+                    Today's Schedule
+                  </h3>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 pl-[44px]">
                   {todayAllocation.projects.map((proj, i) => (
                     <div
                       key={i}
-                      className="bg-card/80 backdrop-blur-sm p-4 rounded-xl border border-border/60 shadow-sm"
+                      className="group/item relative bg-card/60 backdrop-blur-md p-4 rounded-xl border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden"
                     >
-                      <p className="text-base font-bold text-foreground mb-1">
-                        {proj.name}
-                      </p>
-                      {proj.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {proj.description}
-                        </p>
-                      )}
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 group-hover/item:bg-primary transition-colors duration-300" />
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                           {proj.isNote ? (
+                             <Activity className="h-4 w-4 text-muted-foreground group-hover/item:text-primary transition-colors duration-300" />
+                           ) : (
+                             <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shadow-[0_0_8px_var(--theme-primary)]" />
+                           )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-base font-bold text-foreground mb-1 group-hover/item:text-primary transition-colors duration-300">
+                            {proj.name}
+                          </p>
+                          {proj.description && (
+                            <p className="text-sm text-muted-foreground/80 leading-relaxed">
+                              {proj.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

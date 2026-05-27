@@ -50,6 +50,9 @@ export class UpdateResourceDto {
   role?: Role;
 
   @IsOptional()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  email?: string;
+
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

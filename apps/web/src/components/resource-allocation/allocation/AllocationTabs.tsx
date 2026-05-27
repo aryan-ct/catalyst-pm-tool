@@ -69,7 +69,7 @@ const AllocationTabsContent = () => {
         {activeTab === 'allocation' ? (
           <AllocationSheets onSelectDate={setSelectedDate} />
         ) : (
-          <ResourcesTab />
+          <ResourcesTab onSelectDate={setSelectedDate} />
         )}
       </div>
     </div>

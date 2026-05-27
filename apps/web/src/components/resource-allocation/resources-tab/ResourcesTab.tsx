@@ -10,10 +10,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Avatar } from '@/components/ui/avatar';
-import { Search, Users2, UserX, SlidersHorizontal } from 'lucide-react';
+import { Search, Users2, UserX, SlidersHorizontal, CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
-const ResourcesTab = () => {
-  const { resources } = useResourceAllocation();
+interface ResourcesTabProps {
+  onSelectDate?: (date: string) => void;
+}
+
+const ResourcesTab = ({ onSelectDate }: ResourcesTabProps) => {
+  const { resources, allocations } = useResourceAllocation();
+  const [pickerDate, setPickerDate] = useState<Date | undefined>(undefined);
+  const uniqueDates = Array.from(new Set(allocations.map((a) => a.date)));
   const [selected, setSelected] = useState<string>('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -64,6 +73,32 @@ const ResourcesTab = () => {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
+          {onSelectDate && (
+            <Popover>
+              <PopoverTrigger className="inline-flex w-full sm:w-64 items-center justify-start gap-2 rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-normal shadow-sm transition-all hover:bg-accent">
+                <CalendarIcon className="h-4 w-4 text-primary" />
+                {pickerDate ? format(pickerDate, 'PPP') : 'View historical data'}
+              </PopoverTrigger>
+
+              <PopoverContent className="w-auto p-0 border-border shadow-xl">
+                <Calendar
+                  mode="single"
+                  selected={pickerDate}
+                  onSelect={(date) => {
+                    setPickerDate(date);
+                    if (date) {
+                      onSelectDate(date.toDateString());
+                    }
+                  }}
+                  disabled={(date) =>
+                    date > new Date() || !uniqueDates.includes(date.toDateString())
+                  }
+                  className="rounded-md border"
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+
           <div className="flex items-center gap-2 text-muted-foreground">
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <Select<string>

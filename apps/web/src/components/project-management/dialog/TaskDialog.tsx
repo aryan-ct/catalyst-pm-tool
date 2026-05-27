@@ -143,7 +143,7 @@ export default function TaskDialog({
           bugSheet: milestone.bugSheet,
           bugNumber:
             milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
-          taskStatus: milestone.status.toUpperCase(),
+          taskStatus: milestone.status.toUpperCase().replace('-', '_'),
           milestoneId: initialData.milestoneId ?? targetMilestoneId,
           parentTaskId: milestone.parentTaskId,
           taskType: milestone.taskType?.toUpperCase(),
@@ -163,7 +163,7 @@ export default function TaskDialog({
           bugSheet: milestone.bugSheet,
           bugNumber:
             milestone.taskType === 'bug' ? milestone.bugNumber : undefined,
-          taskStatus: milestone.status.toUpperCase(),
+          taskStatus: milestone.status.toUpperCase().replace('-', '_'),
           parentTaskId: milestone.parentTaskId,
           taskType: milestone.taskType?.toUpperCase(),
           assignedTo: milestone.assignedTo?.map((r) => r.id),
