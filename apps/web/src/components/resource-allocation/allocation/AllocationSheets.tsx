@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AllocationDetails from './AllocationDetails';
 import { useResourceAllocation } from '../ResourceAllocationContext';
+import { Roles } from '@/lib/enum';
 import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
 import {
   Popover,
@@ -25,7 +26,7 @@ const AllocationSheets = ({
   onSelectDate: (date: string) => void;
 }) => {
   const { user } = useAuth();
-  const isHR = user?.role === 'HR';
+  const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const today = new Date().toDateString();
   const { allocations, resources, projects } = useResourceAllocation();
 

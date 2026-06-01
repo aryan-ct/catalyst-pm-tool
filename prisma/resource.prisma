@@ -17,5 +17,6 @@ enum Role {
   TESTER
   DESIGNER
   HR
+  JR_HR
   BDE
 }

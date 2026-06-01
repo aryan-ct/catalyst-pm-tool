@@ -6,6 +6,7 @@ export enum UserRole {
   TESTER = 'TESTER',
   DESIGNER = 'DESIGNER',
   HR = 'HR',
+  JR_HR = 'JR_HR',
   BDE = 'BDE',
 }
 

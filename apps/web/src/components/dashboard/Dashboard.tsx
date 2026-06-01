@@ -41,6 +41,7 @@ export default function Dashboard() {
         ];
         break;
       case Roles.HR:
+      case Roles.JR_HR:
         items = [
           { name: 'Resources', path: '/resources', icon: Users },
         ];
@@ -78,7 +79,7 @@ export default function Dashboard() {
   const menuItems = getMenuItems();
 
   const settingsItem = { name: 'Change Password', path: '/settings', icon: KeyRound };
-  const navItems = user?.role === Roles.HR ? menuItems : [...menuItems, settingsItem];
+  const navItems = (user?.role === Roles.HR || user?.role === Roles.JR_HR) ? menuItems : [...menuItems, settingsItem];
 
   useEffect(() => {
     if (!loading && user && menuItems.length > 0) {

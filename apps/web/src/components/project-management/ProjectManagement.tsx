@@ -293,7 +293,7 @@ export default function ProjectManagement() {
               </a>
             </Button>
           )}
-          {user?.role === Roles.MANAGER && (
+          {(user?.role === Roles.MANAGER || user?.role === Roles.DEV || user?.role === Roles.TESTER) && (
             <Button
               onClick={handleAdd}
               disabled={!selectedMilestoneId}

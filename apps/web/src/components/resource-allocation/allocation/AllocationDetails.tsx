@@ -26,7 +26,7 @@ const AllocationDetails = ({
   const { allocations, projects, resources, refreshData } =
     useResourceAllocation();
   const { user } = useAuth();
-  const isHR = user?.role === Roles.HR;
+  const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
 
   const PROJECT_OPTIONS = projects.map((p) => p.name);
 
@@ -207,7 +207,7 @@ const AllocationDetails = ({
           ) : (
             rows.map((row, rowIndex) => {
               const resource = resources.find((r) => r.id === row.resourceId);
-              const isHRResource = resource?.role === Roles.HR;
+              const isHRResource = resource?.role === Roles.HR || resource?.role === Roles.JR_HR;
 
               return (
               <div

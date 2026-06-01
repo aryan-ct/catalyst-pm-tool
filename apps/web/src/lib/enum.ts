@@ -4,6 +4,7 @@ export enum Roles {
   TESTER = 'TESTER',
   DESIGNER = 'DESIGNER',
   HR = 'HR',
+  JR_HR = 'JR_HR',
   BDE = 'BDE',
 }
 

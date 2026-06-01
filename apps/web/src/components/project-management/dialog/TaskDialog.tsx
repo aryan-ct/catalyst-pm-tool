@@ -83,6 +83,7 @@ export default function TaskDialog({
 }: Props) {
   const { user } = useAuth();
   const isManager = user?.role === Roles.MANAGER;
+  const canEdit = isManager || user?.role === Roles.DEV || user?.role === Roles.TESTER;
   const [milestone, setMilestone] = useState<Milestone>(emptyMilestone());
   const [pickedMilestoneId, setPickedMilestoneId] = useState<string>('');
   const [errors, setErrors] = useState<MilestoneErrors>({});
@@ -264,7 +265,7 @@ export default function TaskDialog({
                 className="text-base font-semibold border border-border focus-visible:ring-1 focus-visible:ring-primary px-3 h-10 w-full bg-background"
                 placeholder="Enter a clear, descriptive task name"
                 value={milestone.milestoneName}
-                disabled={!isManager}
+                disabled={!canEdit}
                 onChange={(e) =>
                   setMilestone({ ...milestone, milestoneName: e.target.value })
                 }
@@ -288,7 +289,7 @@ export default function TaskDialog({
                   onChange={(val) =>
                     setMilestone({ ...milestone, milestoneDescription: val })
                   }
-                  readOnly={!isManager}
+                  readOnly={!canEdit}
                   theme="snow"
                   placeholder="Describe what needs to be done..."
                   className="flex-1 flex flex-col [&>.ql-container]:flex-1 [&>.ql-container]:overflow-y-auto [&>.ql-container]:min-h-[180px] [&>.ql-editor]:text-sm [&>.ql-editor]:leading-relaxed"
@@ -312,7 +313,7 @@ export default function TaskDialog({
                   Parent Task
                 </Label>
                 <Select
-                  disabled={!isManager}
+                  disabled={!canEdit}
                   value={milestone.parentTaskId ?? 'none'}
                   onValueChange={(val) => {
                     const parentId = val === 'none' ? undefined : val;
@@ -419,7 +420,7 @@ export default function TaskDialog({
                 Task Type
               </Label>
               <Select
-                disabled={!isManager}
+                disabled={!canEdit}
                 value={milestone.taskType ?? 'feature'}
                 onValueChange={(val) =>
                   setMilestone({ ...milestone, taskType: val as TaskType })
@@ -454,7 +455,7 @@ export default function TaskDialog({
                   className="h-9 bg-background border-border"
                   placeholder="e.g. BUG-401"
                   value={milestone.bugNumber ?? ''}
-                  disabled={!isManager}
+                  disabled={!canEdit}
                   onChange={(e) =>
                     setMilestone({ ...milestone, bugNumber: e.target.value })
                   }
@@ -477,7 +478,7 @@ export default function TaskDialog({
                 min={0}
                 placeholder="0"
                 value={milestone.estimatedHours || ''}
-                disabled={!isManager}
+                disabled={!canEdit}
                 onChange={(e) =>
                   setMilestone({
                     ...milestone,
@@ -503,7 +504,7 @@ export default function TaskDialog({
                   <Button
                     variant="outline"
                     className="w-full justify-start h-9 px-3 font-normal text-sm bg-background border-border"
-                    disabled={!isManager}
+                    disabled={!canEdit}
                   >
                     <span className="truncate">
                       {milestone.assignedTo && milestone.assignedTo.length > 0
@@ -564,7 +565,7 @@ export default function TaskDialog({
                         className="h-4.5 w-4.5 text-[8px] bg-background"
                       />
                       <span className="truncate max-w-[80px]">{res.name}</span>
-                      {isManager && (
+                      {canEdit && (
                         <button
                           onClick={() =>
                             setMilestone({

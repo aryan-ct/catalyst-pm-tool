@@ -24,7 +24,7 @@ export class ResourceAllocationsController {
   ) {}
 
   @Post('create')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   create(
     @Body(new ParseArrayPipe({ items: CreateResourceAllocationDto }))
     createDto: CreateResourceAllocationDto[],
@@ -65,7 +65,7 @@ export class ResourceAllocationsController {
   }
 
   // Get Resource allocation resource id
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   @Get('resource/:resource_id')
   async getResourceAllocationByRoleAndId(
     @Param('resource_id') resource_id: client.Role,
@@ -74,7 +74,7 @@ export class ResourceAllocationsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateResourceAllocationsDto,

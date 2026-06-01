@@ -155,6 +155,7 @@ export default function ResourceModal({
                 <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
                 <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
                 <SelectItem value={Roles.HR}>HR</SelectItem>
+                <SelectItem value={Roles.JR_HR}>JR_HR</SelectItem>
                 <SelectItem value={Roles.BDE}>BDE</SelectItem>
               </SelectContent>
             </Select>

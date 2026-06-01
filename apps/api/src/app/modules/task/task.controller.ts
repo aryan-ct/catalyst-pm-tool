@@ -7,13 +7,13 @@ import { Roles, UserRole } from '../../decorators/roles.decorator';
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Roles(UserRole.MANAGER, UserRole.DEV)
+  @Roles(UserRole.MANAGER, UserRole.DEV, UserRole.TESTER)
   @Get()
   async getTasks() {
     return this.taskService.getTasks();
   }
 
-  @Roles(UserRole.DEV, UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.DEV, UserRole.TESTER)
   @Post('/:milestone_id')
   async createTask(
     @Param('milestone_id') milestone_id: string,
@@ -22,7 +22,7 @@ export class TaskController {
     return this.taskService.create(milestone_id, createTaskDto);
   }
 
-  @Roles(UserRole.DEV, UserRole.MANAGER)
+  @Roles(UserRole.MANAGER, UserRole.DEV, UserRole.TESTER)
   @Patch('/:task_id')
   async updateTask(
     @Param('task_id') task_id: string,

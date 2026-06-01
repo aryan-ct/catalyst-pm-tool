@@ -29,7 +29,7 @@ type ActiveTab = 'active' | 'inactive';
 
 export default function Resources() {
   const { user } = useAuth();
-  const isHR = user?.role === Roles.HR;
+  const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const [resources, setResources] = useState<Resource[]>([]);
   const [filter, setFilter] = useState('All');
   const [nameSearch, setNameSearch] = useState('');
@@ -114,6 +114,7 @@ export default function Resources() {
               <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
               <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
               <SelectItem value={Roles.HR}>HR</SelectItem>
+              <SelectItem value={Roles.JR_HR}>JR_HR</SelectItem>
               <SelectItem value={Roles.BDE}>BDE</SelectItem>
             </SelectContent>
           </Select>

@@ -171,7 +171,7 @@ export default function ResourceAllocation() {
                    <span>Allocated on {new Date(item.createdAt).toLocaleDateString()}</span>
                 </div>
 
-                {user?.role === Roles.HR && (
+                {(user?.role === Roles.HR || user?.role === Roles.JR_HR) && (
                   <Button
                     variant="outline"
                     size="sm"
