@@ -99,7 +99,13 @@ export class ProjectsService {
       select: { projectId: true },
     });
 
-    const projectIds = [...new Set(allocations.map((a) => a.projectId))];
+    const projectIds = [
+      ...new Set(
+        allocations
+          .map((a) => a.projectId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
     if (projectIds.length === 0) return [];
 
     return prisma.project.findMany({
