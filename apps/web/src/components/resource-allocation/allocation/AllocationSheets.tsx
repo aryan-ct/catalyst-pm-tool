@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import AllocationDetails from './AllocationDetails';
+import TaskDialog from '@/components/project-management/dialog/TaskDialog';
+import { Milestone } from '@/components/project-management/types/types';
 import { useResourceAllocation } from '../ResourceAllocationContext';
 import { Roles } from '@/lib/enum';
 import { RESOURCE_ALLOCATIONS_API } from '@/api/resource-allocations.api';
@@ -16,6 +18,7 @@ import {
   ArrowRight,
   Activity,
   Plus,
+  ListTodo,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -28,7 +31,10 @@ const AllocationSheets = ({
   const { user } = useAuth();
   const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const today = new Date().toDateString();
-  const { allocations, resources, projects } = useResourceAllocation();
+  const { allocations, resources, projects, refreshData } = useResourceAllocation();
+
+  const [draftActualHours, setDraftActualHours] = useState<Record<string, number | string | undefined>>({});
+  const [isSavingHours, setIsSavingHours] = useState(false);
 
   const uniqueDates = [...new Set(allocations.map((a) => a.date))];
 
@@ -57,8 +63,17 @@ const AllocationSheets = ({
   const groupMyAllocationsByDate = (rawData: any[]) => {
     const map = new Map<string, any>();
     
+    const taskMap = new Map<string, string>();
+    projects.forEach((p: any) => {
+      (p.milestones || []).forEach((m: any) => {
+        (m.tasks || []).forEach((t: any) => {
+          taskMap.set(t.id, t.title);
+        });
+      });
+    });
+    
     rawData.forEach((ra: any) => {
-      const dateStr = new Date(ra.createdAt).toDateString();
+      const dateStr = new Date(ra.date).toDateString();
       let row = map.get(dateStr);
       if (!row) {
         row = {
@@ -70,19 +85,26 @@ const AllocationSheets = ({
         map.set(dateStr, row);
       }
       
+      const taskTitle = ra.taskId ? taskMap.get(ra.taskId) || 'Unknown Task' : undefined;
+      const displayTitle = taskTitle || ra.desc || '';
+
       if (!ra.projectId) {
         if (ra.desc === 'Generate Leads' || (ra.desc && ra.desc.startsWith('Generate Leads::'))) {
           row.projects.push({
             id: ra.id,
             name: 'Generate Leads',
             description: ra.desc.startsWith('Generate Leads::') ? ra.desc.substring('Generate Leads::'.length) : '',
+            estimatedHours: ra.estimatedHours,
+            actualHours: ra.actualHours,
             isNote: false,
           });
         } else {
           row.projects.push({
             id: ra.id,
-            name: ra.desc || '',
-            description: '',
+            name: 'Misc task',
+            description: displayTitle,
+            estimatedHours: ra.estimatedHours,
+            actualHours: ra.actualHours,
             isNote: true,
           });
         }
@@ -91,7 +113,9 @@ const AllocationSheets = ({
         row.projects.push({
           id: ra.projectId,
           name: project ? project.name : 'Unknown Project',
-          description: ra.desc || '',
+          description: displayTitle,
+          estimatedHours: ra.estimatedHours,
+          actualHours: ra.actualHours,
           isNote: false,
         });
       }
@@ -104,7 +128,7 @@ const AllocationSheets = ({
   const groupHRAllocationsByDate = (rawData: any[]) => {
     const map = new Map<string, Set<string>>();
     rawData.forEach((ra: any) => {
-      const dateStr = new Date(ra.createdAt).toDateString();
+      const dateStr = new Date(ra.date).toDateString();
       if (!map.has(dateStr)) {
         map.set(dateStr, new Set<string>());
       }
@@ -126,7 +150,7 @@ const AllocationSheets = ({
       const rawData = response.data || response || [];
       
       // Filter out today's allocation from rawData if we show todayAllocation separately
-      const pastRawData = rawData.filter((ra: any) => new Date(ra.createdAt).toDateString() !== today);
+      const pastRawData = rawData.filter((ra: any) => new Date(ra.date).toDateString() !== today);
       const grouped = groupMyAllocationsByDate(pastRawData);
       
       setPastAllocationsMy(grouped);
@@ -135,6 +159,25 @@ const AllocationSheets = ({
       console.error('Failed to fetch past allocations for employee:', err);
     } finally {
       setLoadingMy(false);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSavingHours(true);
+    try {
+      const updates = Object.entries(draftActualHours).map(([taskId, actualHours]) => ({
+        id: taskId,
+        data: { actualHours: actualHours === '' ? null : Number(actualHours) }
+      }));
+      
+      await RESOURCE_ALLOCATIONS_API.bulkUpdateResourceAllocations(updates);
+      
+      setDraftActualHours({});
+      refreshData();
+    } catch (err) {
+      console.error('Failed to save actual hours', err);
+    } finally {
+      setIsSavingHours(false);
     }
   };
 
@@ -180,6 +223,49 @@ const AllocationSheets = ({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
 
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTaskData, setSelectedTaskData] = useState<Milestone | null>(null);
+  const [selectedProjectMilestones, setSelectedProjectMilestones] = useState<any[]>([]);
+
+  const openTaskModal = (projectId: string, taskId: string) => {
+    // Find the project from context
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    // Find the milestone containing the task
+    let foundTask: any = null;
+    let foundMilestone: any = null;
+    
+    (project.milestones || []).forEach((m: any) => {
+      const task = (m.tasks || []).find((t: any) => t.id === taskId);
+      if (task) {
+        foundTask = task;
+        foundMilestone = m;
+      }
+    });
+
+    if (foundTask) {
+      setSelectedProjectMilestones(project.milestones || []);
+      setSelectedTaskData({
+        id: foundTask.id,
+        milestoneName: foundTask.title,
+        milestoneDescription: foundTask.description,
+        estimatedHours: foundTask.estimatedHours,
+        bugSheet: foundTask.bugSheet,
+        bugNumber: foundTask.bugNumber,
+        status: foundTask.taskStatus?.toLowerCase().replace('_', '-') || 'todo',
+        milestoneId: foundMilestone.id,
+        taskType: foundTask.taskType?.toLowerCase() || 'feature',
+        assignedTo: foundTask.assignedTo?.map((userId: string) => {
+           const r = resources.find(r => r.id === userId);
+           return { id: userId, name: r?.name || 'Unknown' };
+        }) || [],
+        tasks: [],
+      } as Milestone);
+      setIsTaskModalOpen(true);
+    }
+  };
+
   if (selectedDate) {
     return (
       <AllocationDetails
@@ -217,48 +303,121 @@ const AllocationSheets = ({
                 <CalendarIcon className="h-48 w-48 text-primary" />
               </div>
               <div className="relative z-10 space-y-5">
-                <div className="flex flex-col gap-1.5 mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-sm ring-1 ring-primary/20">
-                      <Activity className="h-4.5 w-4.5" />
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-9 w-9 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-sm ring-1 ring-primary/20">
+                        <Activity className="h-4.5 w-4.5" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                        {format(new Date(today), 'EEEE, MMMM d')}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                      {format(new Date(today), 'EEEE, MMMM d')}
-                    </span>
+                    <h3 className="text-xl font-bold tracking-tight text-foreground ml-[44px]">
+                      Today's Schedule
+                    </h3>
                   </div>
-                  <h3 className="text-xl font-bold tracking-tight text-foreground ml-[44px]">
-                    Today's Schedule
-                  </h3>
+
+                  <Button 
+                    onClick={handleSaveChanges} 
+                    disabled={isSavingHours || Object.keys(draftActualHours).length === 0}
+                    className="h-9 px-5 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-primary/20 hover:scale-[1.05] transition-all bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {isSavingHours ? 'Saving...' : 'Save Changes'}
+                  </Button>
                 </div>
 
-                <div className="space-y-3 pl-[44px]">
-                  {todayAllocation.projects.map((proj, i) => (
-                    <div
-                      key={i}
-                      className="group/item relative bg-card/60 backdrop-blur-md p-4 rounded-xl border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 group-hover/item:bg-primary transition-colors duration-300" />
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5">
-                           {proj.isNote ? (
-                             <Activity className="h-4 w-4 text-muted-foreground group-hover/item:text-primary transition-colors duration-300" />
-                           ) : (
-                             <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shadow-[0_0_8px_var(--theme-primary)]" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                  {todayAllocation.projects.flatMap((proj, i) => {
+                    if (proj.tasks?.length > 0) {
+                      return proj.tasks.map((task: any, j: number) => (
+                        <div
+                          key={`${i}-${j}`}
+                          className="group/item relative bg-card/80 backdrop-blur-md p-5 rounded-2xl border border-border/60 shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/item:opacity-10 transition-opacity">
+                            {task.taskId ? <ListTodo className="h-24 w-24" /> : <Activity className="h-24 w-24" />}
+                          </div>
+                          
+                          <div className="relative z-10 flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--theme-primary)]" />
+                              <span className="text-xs font-bold uppercase tracking-wider text-primary truncate">
+                                {proj.name}
+                              </span>
+                            </div>
+                            
+                            <h4 className="text-base font-semibold text-foreground line-clamp-2 leading-snug">
+                              {task.taskId ? task.taskTitle : task.description || 'Custom Task'}
+                            </h4>
+                          </div>
+
+                          <div className="relative z-10 mt-6 flex flex-col gap-4">
+                            <div className="flex items-center justify-between gap-2">
+                              {task.estimatedHours ? (
+                                <span className="bg-muted px-2.5 py-1 rounded-md text-xs font-bold text-muted-foreground">
+                                  ETA: {task.estimatedHours}h
+                                </span>
+                              ) : <div />}
+                              
+                              <div className="flex items-center gap-2 bg-background border border-border/60 rounded-lg px-2.5 py-1 shadow-sm focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-primary">Actual</span>
+                                <input
+                                  type="number"
+                                  className="w-10 h-6 bg-transparent outline-none text-foreground font-semibold text-center text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  placeholder="0"
+                                  min="0"
+                                  step="0.5"
+                                  value={draftActualHours[task.id] !== undefined ? draftActualHours[task.id] : (task.actualHours || '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setDraftActualHours(prev => ({
+                                      ...prev,
+                                      [task.id]: val === '' ? '' : Number(val)
+                                    }));
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            {task.taskId && (
+                              <Button 
+                                variant="default" 
+                                className="w-full text-xs font-bold uppercase tracking-wider h-9 rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
+                                onClick={() => openTaskModal(proj.id, task.taskId)}
+                              >
+                                View Task Details
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    } else {
+                      return (
+                        <div
+                          key={`note-${i}`}
+                          className="group/item relative bg-amber-500/5 backdrop-blur-md p-5 rounded-2xl border border-amber-500/20 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col gap-3 overflow-hidden"
+                        >
+                           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/item:opacity-10 transition-opacity">
+                             <Activity className="h-24 w-24 text-amber-500" />
+                           </div>
+                           
+                           <div className="relative z-10 flex items-center gap-2">
+                             <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_theme(colors.amber.500)]" />
+                             <span className="text-xs font-bold uppercase tracking-wider text-amber-600 truncate">
+                               {proj.name}
+                             </span>
+                           </div>
+                           
+                           {proj.description && (
+                             <p className="relative z-10 text-sm text-foreground/80 leading-relaxed font-medium">
+                               {proj.description}
+                             </p>
                            )}
                         </div>
-                        <div className="flex-1">
-                          <p className="text-base font-bold text-foreground mb-1 group-hover/item:text-primary transition-colors duration-300">
-                            {proj.name}
-                          </p>
-                          {proj.description && (
-                            <p className="text-sm text-muted-foreground/80 leading-relaxed">
-                              {proj.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    }
+                  })}
                 </div>
               </div>
             </div>
@@ -311,19 +470,35 @@ const AllocationSheets = ({
                       {getDayOfWeek(alloc.date)}
                     </div>
                     <div className="col-span-8 sm:col-span-6 flex flex-col gap-2">
-                      {alloc.projects.map((proj, i) => (
+                      {alloc.projects.map((proj: any, i: number) => (
                         <div
                           key={i}
-                          className="flex flex-col bg-muted/40 px-3 py-2 rounded-lg border border-border/40"
+                          className="flex flex-col bg-muted/40 px-3 py-2.5 rounded-lg border border-border/40 hover:border-primary/20 transition-colors"
                         >
-                          <span className="text-sm font-medium">
-                            {proj.name}
-                          </span>
-                          {proj.description && (
-                            <span className="text-xs text-muted-foreground mt-0.5">
-                              {proj.description}
-                            </span>
-                          )}
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                                {proj.name}
+                              </span>
+                              {proj.description && (
+                                <span className="text-sm font-medium text-foreground mt-0.5">
+                                  {proj.description}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 shrink-0 bg-background rounded-md px-2 py-1 border border-border/50">
+                              <div className="flex flex-col items-end">
+                                <span className="text-[9px] uppercase font-bold text-muted-foreground">ETA</span>
+                                <span className="text-xs font-semibold">{proj.estimatedHours || 0}h</span>
+                              </div>
+                              <div className="w-px h-6 bg-border mx-1" />
+                              <div className="flex flex-col items-end">
+                                <span className="text-[9px] uppercase font-bold text-primary">Actual</span>
+                                <span className="text-xs font-bold text-primary">{proj.actualHours || 0}h</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -386,6 +561,15 @@ const AllocationSheets = ({
             </div>
           </div>
         )}
+
+        <TaskDialog
+          open={isTaskModalOpen}
+          setOpen={setIsTaskModalOpen}
+          initialData={selectedTaskData}
+          onSave={() => {}}
+          projectMilestones={selectedProjectMilestones}
+          defaultMilestoneId=""
+        />
       </div>
     );
   }

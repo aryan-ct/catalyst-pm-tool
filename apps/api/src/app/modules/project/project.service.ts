@@ -91,10 +91,10 @@ export class ProjectsService {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const allocations = await prisma.resourceAllocation.findMany({
+    const allocations = await prisma.dailyTaskAllocation.findMany({
       where: {
         resourceId: userId,
-        createdAt: { gte: startOfDay, lte: endOfDay },
+        date: { gte: startOfDay, lte: endOfDay },
       },
       select: { projectId: true },
     });
@@ -127,7 +127,7 @@ export class ProjectsService {
     _id: string,
     resource_allocation_id: string,
   ) {
-    const resourceAllocation = await prisma.resourceAllocation.findUnique({
+    const resourceAllocation = await prisma.dailyTaskAllocation.findUnique({
       where: {
         id: resource_allocation_id,
       },

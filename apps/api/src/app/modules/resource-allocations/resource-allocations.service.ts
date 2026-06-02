@@ -9,14 +9,17 @@ import { Role } from '@prisma/client';
 @Injectable()
 export class ResourceAllocationsService {
   async create(createDto: CreateResourceAllocationDto[]) {
-    const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    if (!createDto.length) return [];
+    
+    // We assume all items in the payload have the same date
+    const targetDate = new Date(createDto[0].date);
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-    // Delete existing allocations for today to replace them
-    const deletePromise = prisma.resourceAllocation.deleteMany({
+    // Delete existing daily allocations for this date to replace them
+    const deletePromise = prisma.dailyTaskAllocation.deleteMany({
       where: {
-        createdAt: {
+        date: {
           gte: startOfDay,
           lt: endOfDay,
         },
@@ -24,7 +27,6 @@ export class ResourceAllocationsService {
     });
 
     const resourceIds = [...new Set(createDto.map((dto) => dto.resourceId))];
-    // Only validate projectIds that are actually set (note entries have no projectId)
     const projectIds = [...new Set(createDto.map((dto) => dto.projectId).filter((id): id is string => !!id))];
 
     const resources = await prisma.resource.findMany({
@@ -54,14 +56,16 @@ export class ResourceAllocationsService {
 
     // Creating via transaction to ensure all or nothing
     const createPromises = createDto.map((dto) => {
-      const resource = resourceMap.get(dto.resourceId);
-      return prisma.resourceAllocation.create({
+      return prisma.dailyTaskAllocation.create({
         data: {
           resourceId: dto.resourceId,
           ...(dto.projectId && { projectId: dto.projectId }),
+          ...(dto.milestoneId && { milestoneId: dto.milestoneId }),
+          ...(dto.taskId && { taskId: dto.taskId }),
           desc: dto.desc,
-          resourceName: resource!.name,
-          role: resource!.role,
+          estimatedHours: dto.estimatedHours,
+          actualHours: dto.actualHours,
+          date: new Date(dto.date),
         },
       });
     });
@@ -72,52 +76,47 @@ export class ResourceAllocationsService {
   async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role; page?: number; limit?: number }) {
     const { start_date, end_date, role, page, limit } = filters;
 
+    // Optional role filtering would require a join or fetching resources first.
+    // Since DailyTaskAllocation doesn't store role natively like the old table, 
+    // we fetch valid resources if role is provided.
+    let validResourceIds: string[] | undefined = undefined;
+    if (role) {
+      const resources = await prisma.resource.findMany({ where: { role }});
+      validResourceIds = resources.map(r => r.id);
+    }
+
+    const whereClause: any = {
+      ...(validResourceIds && { resourceId: { in: validResourceIds } }),
+      ...((start_date || end_date) && {
+        date: {
+          ...(start_date && { gte: new Date(start_date) }),
+          ...(end_date && { lte: new Date(end_date) }),
+        }
+      }),
+    };
+
     if (page !== undefined && limit !== undefined) {
       const skip = (page - 1) * limit;
       const take = limit;
 
       const [data, total] = await Promise.all([
-        prisma.resourceAllocation.findMany({
-          where: {
-            ...(role && { role }),
-            ...((start_date || end_date) && {
-              createdAt: {
-                ...(start_date && { gte: new Date(start_date) }),
-                ...(end_date && { lte: new Date(end_date) }),
-              }
-            }),
-          },
-          orderBy: { createdAt: 'desc' },
+        prisma.dailyTaskAllocation.findMany({
+          where: whereClause,
+          orderBy: { date: 'desc' },
           skip,
           take,
         }),
-        prisma.resourceAllocation.count({
-          where: {
-            ...(role && { role }),
-            ...((start_date || end_date) && {
-              createdAt: {
-                ...(start_date && { gte: new Date(start_date) }),
-                ...(end_date && { lte: new Date(end_date) }),
-              }
-            }),
-          },
+        prisma.dailyTaskAllocation.count({
+          where: whereClause,
         })
       ]);
 
       return { data, total };
     }
 
-    return prisma.resourceAllocation.findMany({
-      where: {
-        ...(role && { role }),
-        ...( (start_date || end_date) && {
-          createdAt: {
-            ...(start_date && { gte: new Date(start_date) }),
-            ...(end_date && { lte: new Date(end_date) }),
-          }
-        }),
-      },
-      orderBy: { createdAt: 'desc' },
+    return prisma.dailyTaskAllocation.findMany({
+      where: whereClause,
+      orderBy: { date: 'desc' },
     });
   }
 
@@ -137,15 +136,15 @@ export class ResourceAllocationsService {
       const take = limit;
 
       const [data, total] = await Promise.all([
-        prisma.resourceAllocation.findMany({
+        prisma.dailyTaskAllocation.findMany({
           where: {
             resourceId: id,
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { date: 'desc' },
           skip,
           take,
         }),
-        prisma.resourceAllocation.count({
+        prisma.dailyTaskAllocation.count({
           where: {
             resourceId: id,
           },
@@ -155,31 +154,52 @@ export class ResourceAllocationsService {
       return { data, total };
     }
 
-    const resource_allocations = await prisma.resourceAllocation.findMany({
+    const resource_allocations = await prisma.dailyTaskAllocation.findMany({
       where: {
         resourceId: id,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { date: 'desc' },
     });
 
     return resource_allocations || [];
   }
 
   async update(id: string, updateDto: UpdateResourceAllocationsDto) {
-    const allocation = await prisma.resourceAllocation.findUnique({
+    const allocation = await prisma.dailyTaskAllocation.findUnique({
       where: { id },
     });
     if (!allocation) {
-      throw new NotFoundException('Resource allocation not found.');
+      throw new NotFoundException('Daily task allocation not found.');
     }
-    return prisma.resourceAllocation.update({
+    
+    // Omit undefined dates or map them correctly
+    const dataToUpdate: any = { ...updateDto };
+    if (updateDto.date) {
+        dataToUpdate.date = new Date(updateDto.date);
+    }
+
+    return prisma.dailyTaskAllocation.update({
       where: { id },
-      data: updateDto,
+      data: dataToUpdate,
     });
   }
 
+  async bulkUpdate(updates: { id: string, data: UpdateResourceAllocationsDto }[]) {
+    const updatePromises = updates.map(update => {
+       const dataToUpdate: any = { ...update.data };
+       if (update.data.date) {
+           dataToUpdate.date = new Date(update.data.date);
+       }
+       return prisma.dailyTaskAllocation.update({
+           where: { id: update.id },
+           data: dataToUpdate,
+       });
+    });
+    return prisma.$transaction(updatePromises);
+  }
+
   async getByResourceId(resource_id: string) {
-    return prisma.resourceAllocation.findMany({
+    return prisma.dailyTaskAllocation.findMany({
       where: {
         resourceId: resource_id,
       },

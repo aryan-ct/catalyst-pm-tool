@@ -1,8 +1,16 @@
+export type ProjectTask = {
+  id?: string; // DailyTaskAllocation ID
+  taskId?: string; // Real Task ID if applicable
+  taskTitle?: string;
+  description?: string; // For dummy tasks
+  estimatedHours?: number;
+  actualHours?: number;
+};
+
 export type Project = {
-  id: string;
-  name: string;
-  description?: string;
-  isNote?: boolean;
+  id: string; // Project ID
+  name: string; // Project Name
+  tasks: ProjectTask[];
 };
 
 export type AllocationRow = {

@@ -73,8 +73,14 @@ export class ResourceAllocationsController {
     return this.resourceAllocationsService.getByResourceId(resource_id);
   }
 
+  @Patch('bulk-update')
+  bulkUpdate(
+    @Body() updates: { id: string; data: UpdateResourceAllocationsDto }[],
+  ) {
+    return this.resourceAllocationsService.bulkUpdate(updates);
+  }
+
   @Patch(':id')
-  @Roles(UserRole.HR, UserRole.JR_HR)
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateResourceAllocationsDto,
