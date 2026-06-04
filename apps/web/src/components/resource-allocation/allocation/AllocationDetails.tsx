@@ -63,23 +63,63 @@ const AllocationDetails = ({
         map[r.id] = [];
       });
 
-      dayAllocations.forEach((alloc) => {
-        const rows: RowState[] = [];
-        alloc.projects.forEach((proj) => {
-          proj.tasks?.forEach((task) => {
-            rows.push({
-              id: task.id || Math.random().toString(),
-              projectId: proj.id.startsWith('note-') ? '' : proj.id,
-              milestoneId: (task as any).milestoneId || '',
-              taskId: task.taskId || '',
-              desc: task.taskId ? '' : task.description || '',
-              estimatedHours: task.estimatedHours ?? '',
-              actualHours: task.actualHours ?? '',
+      if (dayAllocations.length > 0) {
+        dayAllocations.forEach((alloc) => {
+          const rows: RowState[] = [];
+          alloc.projects.forEach((proj) => {
+            proj.tasks?.forEach((task) => {
+              rows.push({
+                id: task.id || Math.random().toString(),
+                projectId: proj.id.startsWith('note-') ? 'none' : proj.id,
+                milestoneId: (task as any).milestoneId || '',
+                taskId: task.taskId || '',
+                desc: task.taskId ? '' : task.description || '',
+                estimatedHours: task.estimatedHours ?? '',
+                actualHours: task.actualHours ?? '',
+              });
             });
           });
+          map[alloc.resourceId] = rows;
         });
-        map[alloc.resourceId] = rows;
-      });
+      } else if (isEditable) {
+        // Pre-populate from previous day to reduce data-entry effort
+        const prevDate = [...new Set(allocations.map((a) => a.date))]
+          .filter((d) => new Date(d).getTime() < new Date(today).getTime())
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
+        if (prevDate) {
+          allocations
+            .filter((a) => a.date === prevDate)
+            .forEach((alloc) => {
+              if (!(alloc.resourceId in map)) return;
+              const rows: RowState[] = [];
+              alloc.projects.forEach((proj) => {
+                proj.tasks?.forEach((task) => {
+                  const projectId = proj.id.startsWith('note-') ? 'none' : proj.id;
+                  let milestoneId = '';
+                  if (task.taskId && projectId) {
+                    const project = projects.find((p: any) => p.id === projectId);
+                    (project?.milestones || []).forEach((m: any) => {
+                      if ((m.tasks || []).some((t: any) => t.id === task.taskId)) {
+                        milestoneId = m.id;
+                      }
+                    });
+                  }
+                  rows.push({
+                    id: Math.random().toString(),
+                    projectId,
+                    milestoneId,
+                    taskId: task.taskId || '',
+                    desc: task.taskId ? '' : task.description || '',
+                    estimatedHours: task.estimatedHours ?? '',
+                    actualHours: '',
+                  });
+                });
+              });
+              map[alloc.resourceId] = rows;
+            });
+        }
+      }
 
       return map;
     },
@@ -99,7 +139,7 @@ const AllocationDetails = ({
           proj.tasks?.forEach((task) => {
             rows.push({
               id: task.id || Math.random().toString(),
-              projectId: proj.id.startsWith('note-') ? '' : proj.id,
+              projectId: proj.id.startsWith('note-') ? 'none' : proj.id,
               milestoneId: (task as any).milestoneId || '',
               taskId: task.taskId || '',
               desc: task.taskId ? '' : task.description || '',

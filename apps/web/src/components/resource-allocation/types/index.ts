@@ -2,6 +2,7 @@ export type ProjectTask = {
   id?: string; // DailyTaskAllocation ID
   taskId?: string; // Real Task ID if applicable
   taskTitle?: string;
+  taskDescription?: string; // Description from the project task definition
   description?: string; // For dummy tasks
   estimatedHours?: number;
   actualHours?: number;

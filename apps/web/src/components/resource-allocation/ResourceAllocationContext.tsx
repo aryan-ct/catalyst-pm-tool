@@ -60,12 +60,14 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
       role: r.role,
     }));
 
-    // Flatten all tasks from all projects to easily look up task titles
+    // Flatten all tasks from all projects to easily look up task titles and descriptions
     const taskMap = new Map<string, string>();
+    const taskDescMap = new Map<string, string>();
     projectsRaw.forEach(p => {
       (p.milestones || []).forEach((m: any) => {
         (m.tasks || []).forEach((t: any) => {
           taskMap.set(t.id, t.title);
+          if (t.description) taskDescMap.set(t.id, t.description);
         });
       });
     });
@@ -121,7 +123,8 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
 
       // Add the task to the project entry
       const taskTitle = ra.taskId ? taskMap.get(ra.taskId) || 'Unknown Task' : undefined;
-      
+      const taskDescription = ra.taskId ? taskDescMap.get(ra.taskId) : undefined;
+
       // Parse description for "Generate Leads" legacy format
       let desc = ra.desc;
       if (!ra.projectId && ra.desc?.startsWith('Generate Leads::')) {
@@ -132,6 +135,7 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
         id: ra.id,
         taskId: ra.taskId,
         taskTitle,
+        taskDescription,
         description: desc,
         estimatedHours: ra.estimatedHours,
         actualHours: ra.actualHours,

@@ -88,8 +88,16 @@ const ResourceTable = ({ resourceId }: { resourceId: string }) => {
                       p.tasks.map((t: any, tIdx: number) => (
                         <div key={tIdx} className="flex flex-col bg-muted/40 px-3 py-2.5 rounded-lg border border-border/40 hover:border-primary/20 transition-colors">
                           <div className="flex justify-between items-start gap-4">
-                            <div className="flex flex-col">
-                               <span className="text-sm font-medium text-foreground">{t.taskTitle || t.description || 'Custom Task'}</span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm font-medium text-foreground">
+                                {t.taskTitle || t.description || 'Custom Task'}
+                              </span>
+                              {t.taskDescription && (
+                                <div
+                                  className="text-xs text-muted-foreground leading-snug [&_p]:m-0 [&_ul]:my-0.5 [&_ul]:pl-3 [&_ol]:my-0.5 [&_ol]:pl-3 [&_li]:my-0 [&_strong]:font-semibold [&_em]:italic"
+                                  dangerouslySetInnerHTML={{ __html: t.taskDescription }}
+                                />
+                              )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0 bg-background rounded-md px-2 py-1 border border-border/50">
                               <div className="flex flex-col items-end">

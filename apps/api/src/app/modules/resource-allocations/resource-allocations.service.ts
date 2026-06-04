@@ -70,7 +70,39 @@ export class ResourceAllocationsService {
       });
     });
 
-    return prisma.$transaction([deletePromise, ...createPromises]);
+    const result = await prisma.$transaction([deletePromise, ...createPromises]);
+
+    // Sync task assignedTo: merge allocated resources into each task's assignedTo list
+    const taskResourceMap = new Map<string, Set<string>>();
+    for (const dto of createDto) {
+      if (dto.taskId) {
+        if (!taskResourceMap.has(dto.taskId)) {
+          taskResourceMap.set(dto.taskId, new Set());
+        }
+        taskResourceMap.get(dto.taskId)!.add(dto.resourceId);
+      }
+    }
+
+    if (taskResourceMap.size > 0) {
+      const taskIds = [...taskResourceMap.keys()];
+      const tasks = await prisma.task.findMany({
+        where: { id: { in: taskIds } },
+        include: { assignedTo: { select: { id: true } } },
+      });
+
+      const taskUpdates = tasks.map((task) => {
+        const currentIds = task.assignedTo.map((r) => r.id);
+        const merged = [...new Set([...currentIds, ...taskResourceMap.get(task.id)!])];
+        return prisma.task.update({
+          where: { id: task.id },
+          data: { assignedTo: { set: merged.map((id) => ({ id })) } },
+        });
+      });
+
+      await prisma.$transaction(taskUpdates);
+    }
+
+    return result;
   }
 
   async findAll(filters: { start_date?: Date; end_date?: Date; role?: Role; page?: number; limit?: number }) {

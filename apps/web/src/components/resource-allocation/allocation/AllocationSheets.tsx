@@ -19,6 +19,7 @@ import {
   Activity,
   Plus,
   ListTodo,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -31,9 +32,12 @@ const AllocationSheets = ({
   const { user } = useAuth();
   const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const today = new Date().toDateString();
-  const { allocations, resources, projects, refreshData } = useResourceAllocation();
+  const { allocations, resources, projects, refreshData } =
+    useResourceAllocation();
 
-  const [draftActualHours, setDraftActualHours] = useState<Record<string, number | string | undefined>>({});
+  const [draftActualHours, setDraftActualHours] = useState<
+    Record<string, number | string | undefined>
+  >({});
   const [isSavingHours, setIsSavingHours] = useState(false);
 
   const uniqueDates = [...new Set(allocations.map((a) => a.date))];
@@ -44,7 +48,9 @@ const AllocationSheets = ({
   const [pageSizeMy, setPageSizeMy] = useState(7);
 
   // Local state for paginated data
-  const [pastAllocationsHR, setPastAllocationsHR] = useState<{ date: string; count: number }[]>([]);
+  const [pastAllocationsHR, setPastAllocationsHR] = useState<
+    { date: string; count: number }[]
+  >([]);
   const [totalHR, setTotalHR] = useState(0);
   const [loadingHR, setLoadingHR] = useState(false);
 
@@ -62,7 +68,7 @@ const AllocationSheets = ({
   // Group raw allocations by date for a single employee
   const groupMyAllocationsByDate = (rawData: any[]) => {
     const map = new Map<string, any>();
-    
+
     const taskMap = new Map<string, string>();
     projects.forEach((p: any) => {
       (p.milestones || []).forEach((m: any) => {
@@ -71,29 +77,39 @@ const AllocationSheets = ({
         });
       });
     });
-    
+
     rawData.forEach((ra: any) => {
       const dateStr = new Date(ra.date).toDateString();
       let row = map.get(dateStr);
       if (!row) {
         row = {
           resourceId: ra.resourceId,
-          resourceName: ra.resourceName || resources.find(r => r.id === ra.resourceId)?.name || 'Unknown',
+          resourceName:
+            ra.resourceName ||
+            resources.find((r) => r.id === ra.resourceId)?.name ||
+            'Unknown',
           date: dateStr,
-          projects: []
+          projects: [],
         };
         map.set(dateStr, row);
       }
-      
-      const taskTitle = ra.taskId ? taskMap.get(ra.taskId) || 'Unknown Task' : undefined;
+
+      const taskTitle = ra.taskId
+        ? taskMap.get(ra.taskId) || 'Unknown Task'
+        : undefined;
       const displayTitle = taskTitle || ra.desc || '';
 
       if (!ra.projectId) {
-        if (ra.desc === 'Generate Leads' || (ra.desc && ra.desc.startsWith('Generate Leads::'))) {
+        if (
+          ra.desc === 'Generate Leads' ||
+          (ra.desc && ra.desc.startsWith('Generate Leads::'))
+        ) {
           row.projects.push({
             id: ra.id,
             name: 'Generate Leads',
-            description: ra.desc.startsWith('Generate Leads::') ? ra.desc.substring('Generate Leads::'.length) : '',
+            description: ra.desc.startsWith('Generate Leads::')
+              ? ra.desc.substring('Generate Leads::'.length)
+              : '',
             estimatedHours: ra.estimatedHours,
             actualHours: ra.actualHours,
             isNote: false,
@@ -109,7 +125,7 @@ const AllocationSheets = ({
           });
         }
       } else {
-        const project = projects.find(p => p.id === ra.projectId);
+        const project = projects.find((p) => p.id === ra.projectId);
         row.projects.push({
           id: ra.projectId,
           name: project ? project.name : 'Unknown Project',
@@ -134,10 +150,10 @@ const AllocationSheets = ({
       }
       map.get(dateStr)!.add(ra.resourceId);
     });
-    
+
     return Array.from(map.entries()).map(([dateStr, resourceSet]) => ({
       date: dateStr,
-      count: resourceSet.size
+      count: resourceSet.size,
     }));
   };
 
@@ -148,11 +164,13 @@ const AllocationSheets = ({
     try {
       const response = await RESOURCE_ALLOCATIONS_API.getMyAllocations();
       const rawData = response.data || response || [];
-      
+
       // Filter out today's allocation from rawData if we show todayAllocation separately
-      const pastRawData = rawData.filter((ra: any) => new Date(ra.date).toDateString() !== today);
+      const pastRawData = rawData.filter(
+        (ra: any) => new Date(ra.date).toDateString() !== today,
+      );
       const grouped = groupMyAllocationsByDate(pastRawData);
-      
+
       setPastAllocationsMy(grouped);
       setTotalMy(grouped.length);
     } catch (err) {
@@ -165,13 +183,17 @@ const AllocationSheets = ({
   const handleSaveChanges = async () => {
     setIsSavingHours(true);
     try {
-      const updates = Object.entries(draftActualHours).map(([taskId, actualHours]) => ({
-        id: taskId,
-        data: { actualHours: actualHours === '' ? null : Number(actualHours) }
-      }));
-      
+      const updates = Object.entries(draftActualHours).map(
+        ([taskId, actualHours]) => ({
+          id: taskId,
+          data: {
+            actualHours: actualHours === '' ? null : Number(actualHours),
+          },
+        }),
+      );
+
       await RESOURCE_ALLOCATIONS_API.bulkUpdateResourceAllocations(updates);
-      
+
       setDraftActualHours({});
       refreshData();
     } catch (err) {
@@ -194,9 +216,10 @@ const AllocationSheets = ({
         params.end_date = oldestDate.toISOString();
       }
 
-      const response = await RESOURCE_ALLOCATIONS_API.getAllResourceAllocations(params);
+      const response =
+        await RESOURCE_ALLOCATIONS_API.getAllResourceAllocations(params);
       const rawData = response.data || response || [];
-      
+
       const grouped = groupHRAllocationsByDate(rawData);
       setPastAllocationsHR(grouped);
       setTotalHR(grouped.length);
@@ -224,18 +247,22 @@ const AllocationSheets = ({
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [selectedTaskData, setSelectedTaskData] = useState<Milestone | null>(null);
-  const [selectedProjectMilestones, setSelectedProjectMilestones] = useState<any[]>([]);
+  const [selectedTaskData, setSelectedTaskData] = useState<Milestone | null>(
+    null,
+  );
+  const [selectedProjectMilestones, setSelectedProjectMilestones] = useState<
+    any[]
+  >([]);
 
   const openTaskModal = (projectId: string, taskId: string) => {
     // Find the project from context
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (!project) return;
-    
+
     // Find the milestone containing the task
     let foundTask: any = null;
     let foundMilestone: any = null;
-    
+
     (project.milestones || []).forEach((m: any) => {
       const task = (m.tasks || []).find((t: any) => t.id === taskId);
       if (task) {
@@ -256,10 +283,15 @@ const AllocationSheets = ({
         status: foundTask.taskStatus?.toLowerCase().replace('_', '-') || 'todo',
         milestoneId: foundMilestone.id,
         taskType: foundTask.taskType?.toLowerCase() || 'feature',
-        assignedTo: foundTask.assignedTo?.map((userId: string) => {
-           const r = resources.find(r => r.id === userId);
-           return { id: userId, name: r?.name || 'Unknown' };
-        }) || [],
+        assignedTo:
+          foundTask.assignedTo?.map((entry: any) => {
+            const id = typeof entry === 'string' ? entry : entry.id;
+            const name =
+              typeof entry === 'object' && entry.name
+                ? entry.name
+                : (resources.find((r) => r.id === id)?.name ?? 'Unknown');
+            return { id, name };
+          }) || [],
         tasks: [],
       } as Milestone);
       setIsTaskModalOpen(true);
@@ -318,9 +350,12 @@ const AllocationSheets = ({
                     </h3>
                   </div>
 
-                  <Button 
-                    onClick={handleSaveChanges} 
-                    disabled={isSavingHours || Object.keys(draftActualHours).length === 0}
+                  <Button
+                    onClick={handleSaveChanges}
+                    disabled={
+                      isSavingHours ||
+                      Object.keys(draftActualHours).length === 0
+                    }
                     className="h-9 px-5 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-primary/20 hover:scale-[1.05] transition-all bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {isSavingHours ? 'Saving...' : 'Save Changes'}
@@ -336,9 +371,13 @@ const AllocationSheets = ({
                           className="group/item relative bg-card/80 backdrop-blur-md p-5 rounded-2xl border border-border/60 shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300 flex flex-col justify-between overflow-hidden"
                         >
                           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/item:opacity-10 transition-opacity">
-                            {task.taskId ? <ListTodo className="h-24 w-24" /> : <Activity className="h-24 w-24" />}
+                            {task.taskId ? (
+                              <ListTodo className="h-24 w-24" />
+                            ) : (
+                              <Activity className="h-24 w-24" />
+                            )}
                           </div>
-                          
+
                           <div className="relative z-10 flex flex-col gap-3">
                             <div className="flex items-center gap-2">
                               <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--theme-primary)]" />
@@ -346,34 +385,45 @@ const AllocationSheets = ({
                                 {proj.name}
                               </span>
                             </div>
-                            
+
                             <h4 className="text-base font-semibold text-foreground line-clamp-2 leading-snug">
-                              {task.taskId ? task.taskTitle : task.description || 'Custom Task'}
+                              {task.taskId
+                                ? task.taskTitle
+                                : task.description || 'Custom Task'}
                             </h4>
                           </div>
 
                           <div className="relative z-10 mt-6 flex flex-col gap-4">
                             <div className="flex items-center justify-between gap-2">
                               {task.estimatedHours ? (
-                                <span className="bg-muted px-2.5 py-1 rounded-md text-xs font-bold text-muted-foreground">
-                                  ETA: {task.estimatedHours}h
+                                <span className="bg-muted px-2.5 py-1 rounded-md text-xs font-bold text-muted-foreground flex items-center gap-1">
+                                  Estimated <Clock className="h-4 w-4" />:{' '}
+                                  {task.estimatedHours}h
                                 </span>
-                              ) : <div />}
-                              
+                              ) : (
+                                <div />
+                              )}
+
                               <div className="flex items-center gap-2 bg-background border border-border/60 rounded-lg px-2.5 py-1 shadow-sm focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-primary">Actual</span>
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-primary flex items-center gap-1">
+                                  Actual <Clock className="h-4 w-4" />:{' '}
+                                </span>
                                 <input
                                   type="number"
                                   className="w-10 h-6 bg-transparent outline-none text-foreground font-semibold text-center text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   placeholder="0"
                                   min="0"
                                   step="0.5"
-                                  value={draftActualHours[task.id] !== undefined ? draftActualHours[task.id] : (task.actualHours || '')}
+                                  value={
+                                    draftActualHours[task.id] !== undefined
+                                      ? draftActualHours[task.id]
+                                      : task.actualHours || ''
+                                  }
                                   onChange={(e) => {
                                     const val = e.target.value;
-                                    setDraftActualHours(prev => ({
+                                    setDraftActualHours((prev) => ({
                                       ...prev,
-                                      [task.id]: val === '' ? '' : Number(val)
+                                      [task.id]: val === '' ? '' : Number(val),
                                     }));
                                   }}
                                 />
@@ -381,10 +431,12 @@ const AllocationSheets = ({
                             </div>
 
                             {task.taskId && (
-                              <Button 
-                                variant="default" 
+                              <Button
+                                variant="default"
                                 className="w-full text-xs font-bold uppercase tracking-wider h-9 rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
-                                onClick={() => openTaskModal(proj.id, task.taskId)}
+                                onClick={() =>
+                                  openTaskModal(proj.id, task.taskId)
+                                }
                               >
                                 View Task Details
                               </Button>
@@ -398,22 +450,22 @@ const AllocationSheets = ({
                           key={`note-${i}`}
                           className="group/item relative bg-amber-500/5 backdrop-blur-md p-5 rounded-2xl border border-amber-500/20 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col gap-3 overflow-hidden"
                         >
-                           <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/item:opacity-10 transition-opacity">
-                             <Activity className="h-24 w-24 text-amber-500" />
-                           </div>
-                           
-                           <div className="relative z-10 flex items-center gap-2">
-                             <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_theme(colors.amber.500)]" />
-                             <span className="text-xs font-bold uppercase tracking-wider text-amber-600 truncate">
-                               {proj.name}
-                             </span>
-                           </div>
-                           
-                           {proj.description && (
-                             <p className="relative z-10 text-sm text-foreground/80 leading-relaxed font-medium">
-                               {proj.description}
-                             </p>
-                           )}
+                          <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/item:opacity-10 transition-opacity">
+                            <Activity className="h-24 w-24 text-amber-500" />
+                          </div>
+
+                          <div className="relative z-10 flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_theme(colors.amber.500)]" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 truncate">
+                              {proj.name}
+                            </span>
+                          </div>
+
+                          {proj.description && (
+                            <p className="relative z-10 text-sm text-foreground/80 leading-relaxed font-medium">
+                              {proj.description}
+                            </p>
+                          )}
                         </div>
                       );
                     }
@@ -458,67 +510,76 @@ const AllocationSheets = ({
                     <Activity className="h-6 w-6 text-primary animate-spin" />
                   </div>
                 )}
-                {pastAllocationsMy.slice((pageMy - 1) * pageSizeMy, pageMy * pageSizeMy).map((alloc) => (
-                  <div
-                    key={alloc.date}
-                    className="grid grid-cols-12 px-4 py-3.5 hover:bg-muted/20 transition-colors"
-                  >
-                    <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground self-center">
-                      {format(new Date(alloc.date), 'MMM d, yyyy')}
-                    </div>
-                    <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground self-center">
-                      {getDayOfWeek(alloc.date)}
-                    </div>
-                    <div className="col-span-8 sm:col-span-6 flex flex-col gap-2">
-                      {alloc.projects.map((proj: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex flex-col bg-muted/40 px-3 py-2.5 rounded-lg border border-border/40 hover:border-primary/20 transition-colors"
-                        >
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex flex-col">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                                {proj.name}
-                              </span>
-                              {proj.description && (
-                                <span className="text-sm font-medium text-foreground mt-0.5">
-                                  {proj.description}
+                {pastAllocationsMy
+                  .slice((pageMy - 1) * pageSizeMy, pageMy * pageSizeMy)
+                  .map((alloc) => (
+                    <div
+                      key={alloc.date}
+                      className="grid grid-cols-12 px-4 py-3.5 hover:bg-muted/20 transition-colors"
+                    >
+                      <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground self-center">
+                        {format(new Date(alloc.date), 'MMM d, yyyy')}
+                      </div>
+                      <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground self-center">
+                        {getDayOfWeek(alloc.date)}
+                      </div>
+                      <div className="col-span-8 sm:col-span-6 flex flex-col gap-2">
+                        {alloc.projects.map((proj: any, i: number) => (
+                          <div
+                            key={i}
+                            className="flex flex-col bg-muted/40 px-3 py-2.5 rounded-lg border border-border/40 hover:border-primary/20 transition-colors"
+                          >
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex flex-col">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                                  {proj.name}
                                 </span>
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2 shrink-0 bg-background rounded-md px-2 py-1 border border-border/50">
-                              <div className="flex flex-col items-end">
-                                <span className="text-[9px] uppercase font-bold text-muted-foreground">ETA</span>
-                                <span className="text-xs font-semibold">{proj.estimatedHours || 0}h</span>
+                                {proj.description && (
+                                  <span className="text-sm font-medium text-foreground mt-0.5">
+                                    {proj.description}
+                                  </span>
+                                )}
                               </div>
-                              <div className="w-px h-6 bg-border mx-1" />
-                              <div className="flex flex-col items-end">
-                                <span className="text-[9px] uppercase font-bold text-primary">Actual</span>
-                                <span className="text-xs font-bold text-primary">{proj.actualHours || 0}h</span>
+
+                              <div className="flex items-center gap-2 shrink-0 bg-background rounded-md px-2 py-1 border border-border/50">
+                                <div className="flex flex-col items-end">
+                                  <span className="text-[9px] uppercase font-bold text-muted-foreground">
+                                    ETA
+                                  </span>
+                                  <span className="text-xs font-semibold">
+                                    {proj.estimatedHours || 0}h
+                                  </span>
+                                </div>
+                                <div className="w-px h-6 bg-border mx-1" />
+                                <div className="flex flex-col items-end">
+                                  <span className="text-[9px] uppercase font-bold text-primary">
+                                    Actual
+                                  </span>
+                                  <span className="text-xs font-bold text-primary">
+                                    {proj.actualHours || 0}h
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
 
               {totalMy > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/20">
                   <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                     <span className="text-xs text-muted-foreground">
-                      Showing {Math.min((pageMy - 1) * pageSizeMy + 1, totalMy)} to{' '}
-                      {Math.min(
-                        pageMy * pageSizeMy,
-                        totalMy,
-                      )}{' '}
-                      of {totalMy} entries
+                      Showing {Math.min((pageMy - 1) * pageSizeMy + 1, totalMy)}{' '}
+                      to {Math.min(pageMy * pageSizeMy, totalMy)} of {totalMy}{' '}
+                      entries
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground font-medium">Rows per page:</span>
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        Rows per page:
+                      </span>
                       <select
                         value={pageSizeMy}
                         onChange={(e) => {
@@ -551,7 +612,11 @@ const AllocationSheets = ({
                       onClick={() =>
                         setPageMy((p) => Math.min(totalPagesMy, p + 1))
                       }
-                      disabled={pageMy === totalPagesMy || totalPagesMy <= 1 || loadingMy}
+                      disabled={
+                        pageMy === totalPagesMy ||
+                        totalPagesMy <= 1 ||
+                        loadingMy
+                      }
                     >
                       Next
                     </Button>
@@ -750,124 +815,134 @@ const AllocationSheets = ({
         })}
       </div>
 
-      {pastAllocationsHR.length > 0 && (() => {
-        const totalPagesHR = Math.ceil(totalHR / pageSizeHR);
-        return (
-          <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">
-              Previous Allocations
-            </h4>
-            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col relative">
-              <div className="grid grid-cols-12 bg-muted/40 px-4 py-3 border-b border-border shrink-0">
-                <div className="col-span-4 sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Date
-                </div>
-                <div className="hidden sm:block sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Day
-                </div>
-                <div className="col-span-4 sm:col-span-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Resources
-                </div>
-                <div className="col-span-4 sm:col-span-2 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Action
-                </div>
-              </div>
-
-              <div className="max-h-[350px] overflow-y-auto divide-y divide-border/60 relative min-h-[150px]">
-                {loadingHR && (
-                  <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center z-10 transition-all">
-                    <Activity className="h-6 w-6 text-primary animate-spin" />
+      {pastAllocationsHR.length > 0 &&
+        (() => {
+          const totalPagesHR = Math.ceil(totalHR / pageSizeHR);
+          return (
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">
+                Previous Allocations
+              </h4>
+              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col relative">
+                <div className="grid grid-cols-12 bg-muted/40 px-4 py-3 border-b border-border shrink-0">
+                  <div className="col-span-4 sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Date
                   </div>
-                )}
-                {pastAllocationsHR.slice((pageHR - 1) * pageSizeHR, pageHR * pageSizeHR).map(({ date, count }) => (
-                  <div
-                    key={date}
-                    className="grid grid-cols-12 px-4 py-3.5 hover:bg-muted/20 items-center transition-colors"
-                  >
-                    <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground">
-                      {format(new Date(date), 'MMM d, yyyy')}
+                  <div className="hidden sm:block sm:col-span-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Day
+                  </div>
+                  <div className="col-span-4 sm:col-span-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Resources
+                  </div>
+                  <div className="col-span-4 sm:col-span-2 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Action
+                  </div>
+                </div>
+
+                <div className="max-h-[350px] overflow-y-auto divide-y divide-border/60 relative min-h-[150px]">
+                  {loadingHR && (
+                    <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center z-10 transition-all">
+                      <Activity className="h-6 w-6 text-primary animate-spin" />
                     </div>
-                    <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground">
-                      {getDayOfWeek(date)}
-                    </div>
-                    <div className="col-span-4 sm:col-span-4 flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0 hidden sm:flex">
-                        <Users className="h-3 w-3" />
+                  )}
+                  {pastAllocationsHR
+                    .slice((pageHR - 1) * pageSizeHR, pageHR * pageSizeHR)
+                    .map(({ date, count }) => (
+                      <div
+                        key={date}
+                        className="grid grid-cols-12 px-4 py-3.5 hover:bg-muted/20 items-center transition-colors"
+                      >
+                        <div className="col-span-4 sm:col-span-3 text-sm font-semibold text-foreground">
+                          {format(new Date(date), 'MMM d, yyyy')}
+                        </div>
+                        <div className="hidden sm:block sm:col-span-3 text-sm text-muted-foreground">
+                          {getDayOfWeek(date)}
+                        </div>
+                        <div className="col-span-4 sm:col-span-4 flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0 hidden sm:flex">
+                            <Users className="h-3 w-3" />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {count}{' '}
+                            <span className="hidden sm:inline">
+                              {count === 1 ? 'resource' : 'resources'}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="col-span-4 sm:col-span-2 text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            onClick={() => onSelectDate(date)}
+                          >
+                            View <ArrowRight className="ml-1.5 h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium">
-                        {count}{' '}
-                        <span className="hidden sm:inline">
-                          {count === 1 ? 'resource' : 'resources'}
-                        </span>
+                    ))}
+                </div>
+
+                {totalHR > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/20">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                      <span className="text-xs text-muted-foreground">
+                        Showing{' '}
+                        {Math.min((pageHR - 1) * pageSizeHR + 1, totalHR)} to{' '}
+                        {Math.min(pageHR * pageSizeHR, totalHR)} of {totalHR}{' '}
+                        entries
                       </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground font-medium">
+                          Rows per page:
+                        </span>
+                        <select
+                          value={pageSizeHR}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setPageSizeHR(val);
+                            setPageHR(1);
+                          }}
+                          className="bg-card border border-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm hover:bg-muted/10 transition-colors"
+                        >
+                          {[5, 7, 10, 20, 50].map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="col-span-4 sm:col-span-2 text-right">
+                    <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8"
-                        onClick={() => onSelectDate(date)}
+                        onClick={() => setPageHR((p) => Math.max(1, p - 1))}
+                        disabled={pageHR === 1 || loadingHR}
                       >
-                        View <ArrowRight className="ml-1.5 h-3 w-3" />
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setPageHR((p) => Math.min(totalPagesHR, p + 1))
+                        }
+                        disabled={
+                          pageHR === totalPagesHR ||
+                          totalPagesHR <= 1 ||
+                          loadingHR
+                        }
+                      >
+                        Next
                       </Button>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-
-              {totalHR > 0 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/20">
-                  <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                    <span className="text-xs text-muted-foreground">
-                      Showing {Math.min((pageHR - 1) * pageSizeHR + 1, totalHR)} to{' '}
-                      {Math.min(pageHR * pageSizeHR, totalHR)}{' '}
-                      of {totalHR} entries
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground font-medium">Rows per page:</span>
-                      <select
-                        value={pageSizeHR}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          setPageSizeHR(val);
-                          setPageHR(1);
-                        }}
-                        className="bg-card border border-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm hover:bg-muted/10 transition-colors"
-                      >
-                        {[5, 7, 10, 20, 50].map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPageHR((p) => Math.max(1, p - 1))}
-                      disabled={pageHR === 1 || loadingHR}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPageHR((p) => Math.min(totalPagesHR, p + 1))
-                      }
-                      disabled={pageHR === totalPagesHR || totalPagesHR <= 1 || loadingHR}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {sortedDates.length === 0 && (
         <div className="text-center py-20 bg-muted/30 rounded-xl border border-dashed border-border">
