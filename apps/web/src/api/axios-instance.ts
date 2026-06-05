@@ -17,7 +17,7 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-const getEntityName = (url: string = '') => {
+const getEntityName = (url = '') => {
   if (url.includes('/leads')) return 'Lead';
   if (url.includes('/projects')) return 'Project';
   if (url.includes('/resources')) return 'Resource';

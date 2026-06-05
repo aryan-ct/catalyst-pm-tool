@@ -15,8 +15,13 @@ export interface Milestone {
   milestoneDescription: string;
   estimatedHours: number;
   bugSheet?: string;
+  bugNumber?: string;
   status: Status;
   milestoneId?: string; // backend Milestone this Task belongs to
+  parentTaskId?: string;
+  parentTaskTitle?: string;
+  taskType?: TaskType;
+  assignedTo?: { id: string; name: string }[];
   tasks: SubTask[];
 }
 

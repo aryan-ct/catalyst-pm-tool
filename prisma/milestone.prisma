@@ -1,5 +1,5 @@
 model Milestone {
-  id                   String @id @default(uuid())
+  id                   String  @id @default(uuid())
   milestoneName        String
   milestoneDescription String
   estimatedHours       Float
@@ -13,5 +13,5 @@ model Milestone {
 
   // Relation
   project Project @relation(fields: [projectId], references: [id])
-  tasks Task[]
+  tasks   Task[]
 }

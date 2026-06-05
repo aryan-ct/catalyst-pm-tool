@@ -9,10 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Users2, UserX, SlidersHorizontal } from 'lucide-react';
+import { Avatar } from '@/components/ui/avatar';
+import { Search, Users2, UserX, SlidersHorizontal, CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
-const ResourcesTab = () => {
-  const { resources } = useResourceAllocation();
+interface ResourcesTabProps {
+  onSelectDate?: (date: string) => void;
+}
+
+const ResourcesTab = ({ onSelectDate }: ResourcesTabProps) => {
+  const { resources, allocations } = useResourceAllocation();
+  const [pickerDate, setPickerDate] = useState<Date | undefined>(undefined);
+  const uniqueDates = Array.from(new Set(allocations.map((a) => a.date)));
   const [selected, setSelected] = useState<string>('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -63,6 +73,32 @@ const ResourcesTab = () => {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
+          {onSelectDate && (
+            <Popover>
+              <PopoverTrigger className="inline-flex w-full sm:w-64 items-center justify-start gap-2 rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-normal shadow-sm transition-all hover:bg-accent">
+                <CalendarIcon className="h-4 w-4 text-primary" />
+                {pickerDate ? format(pickerDate, 'PPP') : 'View historical data'}
+              </PopoverTrigger>
+
+              <PopoverContent className="w-auto p-0 border-border shadow-xl">
+                <Calendar
+                  mode="single"
+                  selected={pickerDate}
+                  onSelect={(date) => {
+                    setPickerDate(date);
+                    if (date) {
+                      onSelectDate(date.toDateString());
+                    }
+                  }}
+                  disabled={(date) =>
+                    date > new Date() || !uniqueDates.includes(date.toDateString())
+                  }
+                  className="rounded-md border"
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+
           <div className="flex items-center gap-2 text-muted-foreground">
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <Select<string>
@@ -103,15 +139,9 @@ const ResourcesTab = () => {
       </div>
 
       {/* Resource selector pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pt-12 -mt-11 pb-4 -mb-2 px-12 -mx-11">
         {filteredResources.map((r) => {
           const isSelected = selected === r.id;
-          const initials = r.name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
 
           return (
             <button
@@ -123,12 +153,10 @@ const ResourcesTab = () => {
                   : 'bg-card text-foreground border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5'
                 }`}
             >
-              <div
-                className={`h-7 w-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'
-                  }`}
-              >
-                {initials}
-              </div>
+              <Avatar
+                name={r.name}
+                className={`h-7 w-7 rounded-lg text-[11px] ${isSelected ? 'bg-white/25 text-white' : 'bg-primary/10 text-primary'}`}
+              />
               <div className="flex flex-col items-start leading-tight">
                 <span className="capitalize">{r.name}</span>
                 <span

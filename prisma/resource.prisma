@@ -6,6 +6,7 @@ model Resource {
   role      Role
   isActive  Boolean
   leads     Lead[]
+  tasks     Task[]   @relation("TaskToResource")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -16,5 +17,6 @@ enum Role {
   TESTER
   DESIGNER
   HR
+  JR_HR
   BDE
 }

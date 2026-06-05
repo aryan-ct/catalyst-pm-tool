@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Avatar } from '@/components/ui/avatar';
 import { Pencil, Mail, Shield, UserCircle, Search, KeyRound } from 'lucide-react';
 import { Roles } from '@/lib/enum';
 import { RESOURCE_API } from '@/api/resource.api';
@@ -28,7 +29,7 @@ type ActiveTab = 'active' | 'inactive';
 
 export default function Resources() {
   const { user } = useAuth();
-  const isHR = user?.role === Roles.HR;
+  const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const [resources, setResources] = useState<Resource[]>([]);
   const [filter, setFilter] = useState('All');
   const [nameSearch, setNameSearch] = useState('');
@@ -113,6 +114,7 @@ export default function Resources() {
               <SelectItem value={Roles.TESTER}>TESTER</SelectItem>
               <SelectItem value={Roles.DESIGNER}>DESIGNER</SelectItem>
               <SelectItem value={Roles.HR}>HR</SelectItem>
+              <SelectItem value={Roles.JR_HR}>JR_HR</SelectItem>
               <SelectItem value={Roles.BDE}>BDE</SelectItem>
             </SelectContent>
           </Select>
@@ -140,9 +142,7 @@ export default function Resources() {
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <UserCircle className="h-8 w-8" />
-                  </div>
+                  <Avatar name={r.name} className="h-12 w-12 text-base" />
                   <div>
                     <h3 className="font-semibold text-lg text-foreground line-clamp-1">{r.name}</h3>
                     <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${

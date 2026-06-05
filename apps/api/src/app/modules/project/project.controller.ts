@@ -19,7 +19,7 @@ export class ProjectsController {
   constructor(private readonly projectService: ProjectsService) { }
 
   // Create Project
-  @Roles(UserRole.MANAGER, UserRole.HR)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.JR_HR)
   @Post('create')
   async createProject(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.createProject(createProjectDto);
@@ -40,14 +40,14 @@ export class ProjectsController {
   }
 
   // Get Project by ID
-  @Roles(UserRole.MANAGER, UserRole.HR)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.JR_HR)
   @Get(':id')
   async getProjectById(@Param('id') id: string) {
     return this.projectService.findById(id);
   }
 
   // Updated project by Id
-  @Roles(UserRole.MANAGER, UserRole.HR)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.JR_HR)
   @Patch(':id')
   async updateProject(
     @Param('id') id: string,

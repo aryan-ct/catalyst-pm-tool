@@ -1,4 +1,4 @@
-import { TaskStatus } from '@prisma/client';
+import { TaskStatus, TaskType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -6,39 +6,48 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
-import { CreateSubtaskDto } from '../../subtask/dto/subtask.dto';
 
 export class CreateTaskDto {
   @IsString()
   title!: string;
 
+  @IsOptional()
   @IsString()
-  description!: string;
+  description?: string;
 
+  @IsOptional()
   @IsNumber()
-  estimatedHours!: number;
+  estimatedHours?: number;
 
   @IsEnum(TaskStatus)
+  @IsOptional()
   taskStatus: TaskStatus = TaskStatus.TODO;
 
+  @IsEnum(TaskType)
+  @IsOptional()
+  taskType: TaskType = TaskType.FEATURE;
+
+  @IsOptional()
   @IsNumber()
-  actualHours!: number;
+  actualHours?: number;
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  assignTo?: string[];
+  assignedTo?: string[];
 
   @IsOptional()
   @IsString()
   bugSheet?: string;
 
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => CreateSubtaskDto)
-  subtasks?: CreateSubtaskDto[];
+  @IsString()
+  bugNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  parentTaskId?: string;
 }
 
 export class UpdateTaskDto {
@@ -59,19 +68,27 @@ export class UpdateTaskDto {
   taskStatus?: TaskStatus;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  assignTo?: string[];
+  @IsEnum(TaskType)
+  taskType?: TaskType;
 
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => CreateSubtaskDto)
-  subtasks?: CreateSubtaskDto[];
+  @IsArray()
+  @IsString({ each: true })
+  assignedTo?: string[];
 
   @IsOptional()
   @IsString()
   bugSheet?: string;
 
+  @IsOptional()
   @IsString()
-  milestoneId!: string;
+  bugNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  milestoneId?: string;
+
+  @IsOptional()
+  @IsString()
+  parentTaskId?: string;
 }

@@ -11,7 +11,6 @@ import { ResourceAllocationsModule } from './modules/resource-allocations/resour
 import { MilestoneModule } from './modules/milestone/milestone.module';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { TaskModule } from './modules/task/task.module';
-import { SubtaskModule } from './modules/subtask/subtask.module';
 
 @Module({
   imports: [
@@ -22,7 +21,6 @@ import { SubtaskModule } from './modules/subtask/subtask.module';
     ResourceAllocationsModule,
     MilestoneModule,
     TaskModule,
-    SubtaskModule,
   ],
   controllers: [AppController],
   providers: [

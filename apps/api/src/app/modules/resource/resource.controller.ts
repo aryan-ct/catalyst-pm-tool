@@ -20,7 +20,7 @@ export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) { }
 
   @Get('all')
-  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.DEV, UserRole.TESTER, UserRole.BDE, UserRole.DESIGNER)
+  @Roles(UserRole.MANAGER, UserRole.HR, UserRole.JR_HR, UserRole.DEV, UserRole.TESTER, UserRole.BDE, UserRole.DESIGNER)
   async findAll(@Query('role') role?: Role) {
     return this.resourcesService.findAll(role);
   }
@@ -39,13 +39,13 @@ export class ResourcesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   async findOneById(@Param('id') id: string) {
     return this.resourcesService.findById(id);
   }
 
   @Post('create')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   async createResource(
     @Body() createResourceDto: CreateResourceDto,
   ): Promise<CreateResourceDto> {
@@ -53,7 +53,7 @@ export class ResourcesController {
   }
 
   @Patch('update/:id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   async updateResource(
     @Param('id') id: string,
     @Body() updateResourceDto: UpdateResourceDto,
@@ -62,7 +62,7 @@ export class ResourcesController {
   }
 
   @Patch('reset-password/:id')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   async resetPassword(
     @Param('id') id: string,
     @Body() resetPasswordDto: ResetPasswordDto,

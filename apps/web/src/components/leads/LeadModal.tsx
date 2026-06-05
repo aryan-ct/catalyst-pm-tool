@@ -32,7 +32,7 @@ export default function LeadModal({ onSuccess, role }: any) {
 
   const handleSubmit = async () => {
 
-    let err: any = {};
+    const err: any = {};
     let valid = true;
 
     if (!form.client) {

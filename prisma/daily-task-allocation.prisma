@@ -1,0 +1,14 @@
+model DailyTaskAllocation {
+  id              String   @id @default(uuid())
+  resourceId      String
+  projectId       String?
+  milestoneId     String?
+  taskId          String?
+  desc            String?
+  estimatedHours  Float?
+  actualHours     Float?
+  date            DateTime
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

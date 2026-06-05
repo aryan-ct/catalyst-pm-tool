@@ -11,7 +11,7 @@ const AllocationTabsContent = () => {
   const [activeTab, setActiveTab] = useState<'allocation' | 'resources'>('allocation');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const { user } = useAuth();
-  const isHR = user?.role === Roles.HR;
+  const isHR = user?.role === Roles.HR || user?.role === Roles.JR_HR;
   const { allocations } = useResourceAllocation();
 
   const today = new Date().toDateString();
@@ -40,7 +40,7 @@ const AllocationTabsContent = () => {
             }`}
             onClick={() => setActiveTab('allocation')}
           >
-            Allocation Sheets
+            {isHR ? "Allocation Sheets" : "My Allocation"}
           </button>
 
           <button
@@ -51,7 +51,7 @@ const AllocationTabsContent = () => {
             }`}
             onClick={() => setActiveTab('resources')}
           >
-            Resources
+            {isHR ? "Resources" : "Team Allocations"}
           </button>
         </div>
 
@@ -69,7 +69,7 @@ const AllocationTabsContent = () => {
         {activeTab === 'allocation' ? (
           <AllocationSheets onSelectDate={setSelectedDate} />
         ) : (
-          <ResourcesTab />
+          <ResourcesTab onSelectDate={setSelectedDate} />
         )}
       </div>
     </div>

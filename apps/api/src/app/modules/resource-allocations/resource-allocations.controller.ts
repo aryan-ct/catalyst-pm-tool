@@ -24,7 +24,7 @@ export class ResourceAllocationsController {
   ) {}
 
   @Post('create')
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   create(
     @Body(new ParseArrayPipe({ items: CreateResourceAllocationDto }))
     createDto: CreateResourceAllocationDto[],
@@ -38,27 +38,34 @@ export class ResourceAllocationsController {
     @Query('start_date') start_date: Date,
     @Query('end_date') end_date: Date,
     @Query('role') role: client.Role,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    if (user.role !== 'HR') {
-      const today = new Date();
-      start_date = new Date(today.setHours(0, 0, 0, 0));
-      end_date = new Date(today.setHours(23, 59, 59, 999));
-    }
-    
+    // Removed restriction so all users can see historical team allocations
     return this.resourceAllocationsService.findAll({
       role,
       end_date,
       start_date,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 
   @Get('me')
-  getMyAllocations(@CurrentUser() user: client.Resource) {
-    return this.resourceAllocationsService.findMyAllocations(user.id);
+  getMyAllocations(
+    @CurrentUser() user: client.Resource,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.resourceAllocationsService.findMyAllocations(
+      user.id,
+      page ? parseInt(page, 10) : undefined,
+      limit ? parseInt(limit, 10) : undefined,
+    );
   }
 
   // Get Resource allocation resource id
-  @Roles(UserRole.HR)
+  @Roles(UserRole.HR, UserRole.JR_HR)
   @Get('resource/:resource_id')
   async getResourceAllocationByRoleAndId(
     @Param('resource_id') resource_id: client.Role,
@@ -66,8 +73,14 @@ export class ResourceAllocationsController {
     return this.resourceAllocationsService.getByResourceId(resource_id);
   }
 
+  @Patch('bulk-update')
+  bulkUpdate(
+    @Body() updates: { id: string; data: UpdateResourceAllocationsDto }[],
+  ) {
+    return this.resourceAllocationsService.bulkUpdate(updates);
+  }
+
   @Patch(':id')
-  @Roles(UserRole.HR)
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateResourceAllocationsDto,

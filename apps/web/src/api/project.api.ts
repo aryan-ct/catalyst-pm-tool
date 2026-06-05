@@ -78,8 +78,13 @@ const mapProjectForPM = (p: any) => ({
       milestoneDescription: t.description,
       estimatedHours: t.estimatedHours,
       bugSheet: '',
+      bugNumber: t.bugNumber || '',
       status: statusToFrontend(t.taskStatus),
       milestoneId: m.id,
+      parentTaskId: t.parentTaskId || undefined,
+      parentTaskTitle: t.parentTask?.title || (t.parentTaskId ? m.tasks.find((pt: any) => pt.id === t.parentTaskId)?.title : undefined),
+      taskType: (t.taskType || 'FEATURE').toLowerCase(),
+      assignedTo: (t.assignedTo || []).map((r: any) => ({ id: r.id, name: r.name })),
       tasks: (t.subTasks || []).map((st: any) => ({
         id: st.id,
         title: st.title,

@@ -56,7 +56,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -72,7 +72,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -91,15 +91,21 @@ export class ProjectsService {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const allocations = await prisma.resourceAllocation.findMany({
+    const allocations = await prisma.dailyTaskAllocation.findMany({
       where: {
         resourceId: userId,
-        createdAt: { gte: startOfDay, lte: endOfDay },
+        date: { gte: startOfDay, lte: endOfDay },
       },
       select: { projectId: true },
     });
 
-    const projectIds = [...new Set(allocations.map((a) => a.projectId))];
+    const projectIds = [
+      ...new Set(
+        allocations
+          .map((a) => a.projectId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
     if (projectIds.length === 0) return [];
 
     return prisma.project.findMany({
@@ -108,7 +114,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },
@@ -121,7 +127,7 @@ export class ProjectsService {
     _id: string,
     resource_allocation_id: string,
   ) {
-    const resourceAllocation = await prisma.resourceAllocation.findUnique({
+    const resourceAllocation = await prisma.dailyTaskAllocation.findUnique({
       where: {
         id: resource_allocation_id,
       },
@@ -161,7 +167,7 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true },
+              include: { subTasks: true, parentTask: true, assignedTo: true },
             },
           },
         },

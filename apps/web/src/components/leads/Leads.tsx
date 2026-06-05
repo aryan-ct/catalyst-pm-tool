@@ -16,6 +16,7 @@ import { Roles } from "@/lib/enum";
 import {
   Edit2, CheckCircle, XCircle, Plus,
   Target, CalendarDays, CheckCircle2, FolderOpen,
+  Eye, Link2, User,
 } from "lucide-react";
 
 const STATUS_STYLES = {
@@ -88,6 +89,7 @@ export default function Leads({ setProjects }: any) {
   const [editLead, setEditLead] = useState<any>(null);
   const [lostLeadId, setLostLeadId] = useState<string | null>(null);
   const [convertConfirmLeadId, setConvertConfirmLeadId] = useState<string | null>(null);
+  const [viewingLead, setViewingLead] = useState<any>(null);
 
   const handleMarkConverted = async () => {
     if (!convertConfirmLeadId) return;
@@ -180,9 +182,9 @@ export default function Leads({ setProjects }: any) {
             return (
               <Card
                 key={i}
-                className={`group relative hover:shadow-lg transition-all duration-200 border-border border-l-4 ${style.border} overflow-hidden hover:-translate-y-0.5`}
+                className={`group relative flex flex-col hover:shadow-lg transition-all duration-200 border-border border-l-4 ${style.border} overflow-hidden hover:-translate-y-0.5`}
               >
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="p-5 flex flex-col flex-1 gap-4">
                   {/* Header: avatar + name + edit */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -234,42 +236,50 @@ export default function Leads({ setProjects }: any) {
                     </div>
                   )}
 
-                  {/* Actions */}
-                  {(showBDEActions || showManagerAction) && (
-                    <div className="pt-3 border-t border-border flex gap-2 flex-wrap">
-                      {showBDEActions && (
-                        <>
-                          <Button
-                            size="sm"
-                            className="flex-1 h-8 text-xs"
-                            onClick={() => setConvertConfirmLeadId(l.id)}
-                          >
-                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                            Convert
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="flex-1 h-8 text-xs"
-                            onClick={() => setLostLeadId(l.id)}
-                          >
-                            <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                            Mark Lost
-                          </Button>
-                        </>
-                      )}
-                      {showManagerAction && (
-                        <Button
-                          size="sm"
-                          className="w-full h-8 text-xs"
-                          onClick={() => setConvertLead({ ...l, index: i })}
-                        >
-                          <Plus className="w-3.5 h-3.5 mr-1.5" />
-                          Create Project
-                        </Button>
-                      )}
+                  {/* BDE actions */}
+                  {showBDEActions && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={() => setConvertConfirmLeadId(l.id)}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Convert
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1 h-8 text-xs"
+                        onClick={() => setLostLeadId(l.id)}
+                      >
+                        <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Mark Lost
+                      </Button>
                     </div>
                   )}
+
+                  {/* Bottom row: Create Project + View Lead */}
+                  <div className="mt-auto pt-3 border-t border-border flex gap-2">
+                    {showManagerAction && (
+                      <Button
+                        size="sm"
+                        className="flex-1 gap-1.5"
+                        onClick={() => setConvertLead({ ...l, index: i })}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Create Project
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      className="flex-1 gap-1.5"
+                      onClick={() => setViewingLead(l)}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View Lead
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -335,6 +345,104 @@ export default function Leads({ setProjects }: any) {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Lead view dialog */}
+      {viewingLead && (() => {
+        const s = STATUS_STYLES[viewingLead.status as keyof typeof STATUS_STYLES] ?? STATUS_STYLES.Active;
+        const initials = (viewingLead.client ?? "?")[0].toUpperCase();
+        return (
+          <Dialog open={!!viewingLead} onOpenChange={(open) => !open && setViewingLead(null)}>
+            <DialogContent className="max-w-md p-0">
+
+              {/* Header */}
+              <div className="px-6 pt-6 pb-5 border-b border-border">
+                <div className="flex items-start gap-4">
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 ${s.avatar}`}>
+                    {initials}
+                  </div>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl leading-tight text-left truncate">
+                        {viewingLead.client}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold mt-1.5 ${s.text}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${s.dot}`} />
+                      {viewingLead.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="px-6 py-5 space-y-4">
+
+                {/* Project name */}
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Project</p>
+                    <p className="text-sm font-medium text-foreground">{viewingLead.projectName || "—"}</p>
+                  </div>
+                </div>
+
+                {/* Created date */}
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Created</p>
+                    <p className="text-sm font-medium text-foreground">{viewingLead.createdAt ?? "—"}</p>
+                  </div>
+                </div>
+
+                {/* Converted date */}
+                {viewingLead.convertedAt && (
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Converted</p>
+                      <p className="text-sm font-medium text-emerald-600">{viewingLead.convertedAt}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Links */}
+                {viewingLead.links?.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Link2 className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5">Links</p>
+                      <div className="space-y-1.5">
+                        {viewingLead.links.map((link: string, idx: number) => (
+                          <a
+                            key={idx}
+                            href={link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate"
+                          >
+                            <Link2 className="h-3 w-3 shrink-0" />
+                            {link}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 }
