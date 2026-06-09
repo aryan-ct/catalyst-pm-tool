@@ -1,0 +1,21 @@
+model AssetUpdateRequest {
+  id                String              @id @default(uuid())
+  assetId           String
+  assetName         String
+  requestedById     String
+  requestedByName   String
+  requestedChanges  Json
+  reason            String?
+  status            UpdateRequestStatus @default(PENDING)
+  hrComment         String?
+  reviewedById      String?
+  reviewedByName    String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+enum UpdateRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

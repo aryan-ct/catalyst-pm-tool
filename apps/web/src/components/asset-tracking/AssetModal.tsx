@@ -253,7 +253,7 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
 
   /* ─── Full-screen edit layout ─── */
   const fullScreenContent = (
-    <div className="flex flex-col h-full bg-muted/30">
+    <div className="flex flex-col flex-1 min-h-0 bg-muted/30">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-white border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
         <div className="max-w-5xl mx-auto space-y-5">
 
           {/* Row 1: Asset Identity + Status */}
@@ -473,7 +473,7 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
 
       <DialogContent
         showCloseButton={false}
-        className="!top-0 !left-0 !translate-x-0 !translate-y-0 !max-w-none !w-screen !h-screen !rounded-none !p-0 overflow-hidden"
+        className="!top-0 !left-0 !right-0 !bottom-0 !translate-x-0 !translate-y-0 !max-w-none !w-screen !rounded-none !p-0 !flex !flex-col overflow-hidden"
       >
         {fullScreenContent}
       </DialogContent>
