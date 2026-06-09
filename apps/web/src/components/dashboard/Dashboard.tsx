@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   KeyRound,
+  Package,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import catalystLogo from '@/assets/catalyst-logo.svg';
@@ -44,6 +45,7 @@ export default function Dashboard() {
       case Roles.JR_HR:
         items = [
           { name: 'Resources', path: '/resources', icon: Users },
+          { name: 'Asset Tracking', path: '/asset-tracking', icon: Package },
         ];
         break;
       case Roles.BDE:
@@ -72,6 +74,11 @@ export default function Dashboard() {
       path: '/resource-allocation',
       icon: Calendar,
     });
+
+    // My Asset visible to non-HR roles
+    if (user.role !== Roles.HR && user.role !== Roles.JR_HR) {
+      items.push({ name: 'My Asset', path: '/my-asset', icon: Package });
+    }
 
     return items;
   };

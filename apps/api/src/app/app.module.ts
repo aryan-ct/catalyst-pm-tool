@@ -11,6 +11,7 @@ import { ResourceAllocationsModule } from './modules/resource-allocations/resour
 import { MilestoneModule } from './modules/milestone/milestone.module';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { TaskModule } from './modules/task/task.module';
+import { AssetTrackingModule } from './modules/asset-tracking/asset-tracking.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TaskModule } from './modules/task/task.module';
     ResourceAllocationsModule,
     MilestoneModule,
     TaskModule,
+    AssetTrackingModule,
   ],
   controllers: [AppController],
   providers: [
