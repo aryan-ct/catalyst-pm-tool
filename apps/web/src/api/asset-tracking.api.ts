@@ -11,7 +11,8 @@ export type Asset = {
   serialNumber?: string | null;
   status: AssetStatus;
   productConfiguration?: string | null;
-  laptopPinPassword?: string | null;
+  laptopPin?: string | null;
+  laptopPassword?: string | null;
   assetPrice?: number | null;
   dateOfAllocation?: string | null;
   loans?: string | null;
@@ -35,7 +36,7 @@ const getAll = async (status?: AssetStatus): Promise<Asset[]> => {
   return response.data;
 };
 
-const getMyAsset = async (): Promise<Asset | null> => {
+const getMyAsset = async (): Promise<Asset[]> => {
   const response = await axiosInstance.get('/asset-tracking/my-asset');
   return response.data;
 };

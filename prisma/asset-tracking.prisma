@@ -6,7 +6,8 @@ model AssetTracking {
   serialNumber         String?          @unique
   status               AssetStatus      @default(AVAILABLE)
   productConfiguration String?
-  laptopPinPassword    String?
+  laptopPin            String?
+  laptopPassword       String?
   assetPrice           Decimal?
   dateOfAllocation     DateTime?
   loans                String?

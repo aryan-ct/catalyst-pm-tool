@@ -168,9 +168,9 @@ const AllocationDetails = ({
         if (
           row.desc &&
           !row.taskId &&
-          (!row.estimatedHours || Number(row.estimatedHours) <= 0)
+          (row.estimatedHours === '' || row.estimatedHours === undefined || row.estimatedHours === null || Number(row.estimatedHours) < 0)
         ) {
-          validationError = 'Please provide an ETA for all custom tasks.';
+          validationError = 'Please provide a valid ETA (>= 0) for all custom tasks.';
         }
 
         payload.push({
@@ -346,7 +346,7 @@ const AllocationDetails = ({
                 }
                 className="w-10 h-6 bg-transparent outline-none text-foreground text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="0"
-                min="0.5"
+                min="0"
                 step="0.5"
               />
               <span>h</span>
@@ -367,11 +367,24 @@ const AllocationDetails = ({
                 }}
               />
             </div>
-            {row.taskId && row.estimatedHours ? (
-              <div className="shrink-0 bg-muted/60 px-2.5 py-1.5 rounded-lg text-xs font-bold text-muted-foreground border border-border/60 shadow-sm flex items-center gap-1.5 justify-between whitespace-nowrap w-[94px] opacity-70 cursor-not-allowed">
-                <Clock className="h-4 w-4 shrink-0" />
-                <span className="text-foreground">{row.estimatedHours}</span>
-                <span className="text-foreground">h</span>
+            {row.taskId ? (
+              <div className="shrink-0 bg-muted/60 px-2 py-1 rounded-lg text-xs font-bold text-muted-foreground border border-border/60 shadow-sm flex items-center gap-1.5 whitespace-nowrap focus-within:ring-2 focus-within:ring-primary/30 transition-all">
+                <span>
+                  <Clock className="h-4 w-4 shrink-0" />
+                </span>
+                <input
+                  type="number"
+                  required
+                  value={row.estimatedHours !== undefined && row.estimatedHours !== null ? row.estimatedHours : ''}
+                  onChange={(e) =>
+                    updateRow(resourceId, index, 'estimatedHours', e.target.value)
+                  }
+                  className="w-10 h-6 bg-transparent outline-none text-foreground text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder="0"
+                  min="0"
+                  step="0.5"
+                />
+                <span>h</span>
               </div>
             ) : null}
           </div>

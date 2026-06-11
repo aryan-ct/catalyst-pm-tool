@@ -12,7 +12,6 @@ import { MilestoneModule } from './modules/milestone/milestone.module';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { TaskModule } from './modules/task/task.module';
 import { AssetTrackingModule } from './modules/asset-tracking/asset-tracking.module';
-import { AssetUpdateRequestModule } from './modules/asset-update-request/asset-update-request.module';
 
 @Module({
   imports: [
@@ -24,7 +23,6 @@ import { AssetUpdateRequestModule } from './modules/asset-update-request/asset-u
     MilestoneModule,
     TaskModule,
     AssetTrackingModule,
-    AssetUpdateRequestModule,
   ],
   controllers: [AppController],
   providers: [

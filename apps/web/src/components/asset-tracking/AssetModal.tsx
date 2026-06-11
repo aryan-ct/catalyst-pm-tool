@@ -53,7 +53,8 @@ const EMPTY_FORM = {
   serialNumber: '',
   status: 'AVAILABLE' as AssetStatus,
   productConfiguration: '',
-  laptopPinPassword: '',
+  laptopPin: '',
+  laptopPassword: '',
   assetPrice: '',
   dateOfAllocation: '',
   loans: '',
@@ -162,7 +163,8 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
         serialNumber: editData.serialNumber ?? '',
         status: editData.status ?? 'AVAILABLE',
         productConfiguration: editData.productConfiguration ?? '',
-        laptopPinPassword: editData.laptopPinPassword ?? '',
+        laptopPin: editData.laptopPin ?? '',
+        laptopPassword: editData.laptopPassword ?? '',
         assetPrice: editData.assetPrice != null ? String(editData.assetPrice) : '',
         dateOfAllocation: editData.dateOfAllocation
           ? editData.dateOfAllocation.split('T')[0]
@@ -212,7 +214,8 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
       workingCondition: form.workingCondition,
       ...(form.serialNumber && { serialNumber: form.serialNumber }),
       ...(form.productConfiguration && { productConfiguration: form.productConfiguration }),
-      ...(form.laptopPinPassword && { laptopPinPassword: form.laptopPinPassword }),
+      ...(form.laptopPin && { laptopPin: form.laptopPin }),
+      ...(form.laptopPassword && { laptopPassword: form.laptopPassword }),
       ...(form.assetPrice && { assetPrice: Number(form.assetPrice) }),
       ...(form.dateOfAllocation && { dateOfAllocation: form.dateOfAllocation }),
       ...(form.loans && { loans: form.loans }),
@@ -363,14 +366,32 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
               <Field label="Product Configuration" icon={<Cpu className="h-3 w-3" />} className="sm:col-span-2">
                 <Input value={form.productConfiguration} onChange={set('productConfiguration')} placeholder="e.g. i7, 16GB RAM, 512GB SSD" />
               </Field>
-              <Field label="Laptop PIN / Password" icon={<Laptop className="h-3 w-3" />} className="sm:col-span-2">
+              <Field label="Laptop PIN" icon={<Laptop className="h-3 w-3" />}>
                 <div className="relative">
                   <Input
                     type={showPin ? 'text' : 'password'}
-                    value={form.laptopPinPassword}
-                    onChange={set('laptopPinPassword')}
+                    value={form.laptopPin}
+                    onChange={set('laptopPin')}
                     className="pr-10"
-                    placeholder="Enter PIN or password"
+                    placeholder="e.g. 1234"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin((s) => !s)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </Field>
+              <Field label="Laptop Password" icon={<Laptop className="h-3 w-3" />}>
+                <div className="relative">
+                  <Input
+                    type={showPin ? 'text' : 'password'}
+                    value={form.laptopPassword}
+                    onChange={set('laptopPassword')}
+                    className="pr-10"
+                    placeholder="Login password"
                   />
                   <button
                     type="button"

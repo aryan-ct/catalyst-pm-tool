@@ -2,7 +2,7 @@ model Task {
   id             String     @id @default(uuid())
   title          String
   description    String
-  estimatedHours Float
+  estimatedHours Float?
   actualHours    Float
   taskStatus     TaskStatus
   taskType       TaskType   @default(FEATURE)

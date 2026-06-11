@@ -61,7 +61,7 @@ const emptyMilestone = (): Milestone => ({
   id: '',
   milestoneName: '',
   milestoneDescription: '',
-  estimatedHours: 0,
+  estimatedHours: undefined,
   bugSheet: '',
   bugNumber: '',
   status: 'todo',
@@ -125,6 +125,7 @@ export default function TaskDialog({
       ...milestone,
       milestoneDescription: cleanDesc,
     });
+    delete validationErrors.estimatedHours;
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -469,7 +470,10 @@ export default function TaskDialog({
                 htmlFor="est-hours"
                 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
               >
-                Estimated Hours
+                Estimated Hours{' '}
+                <span className="text-muted-foreground/60 text-[10px]">
+                  (Optional)
+                </span>
               </Label>
               <Input
                 id="est-hours"
@@ -482,16 +486,10 @@ export default function TaskDialog({
                 onChange={(e) =>
                   setMilestone({
                     ...milestone,
-                    estimatedHours: Number(e.target.value),
+                    estimatedHours: e.target.value ? Number(e.target.value) : undefined,
                   })
                 }
-                aria-invalid={!!errors.estimatedHours}
               />
-              {errors.estimatedHours && (
-                <p className="text-destructive text-xs font-medium">
-                  {errors.estimatedHours}
-                </p>
-              )}
             </div>
 
             {/* Assigned Resources */}

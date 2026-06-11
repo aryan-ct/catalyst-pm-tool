@@ -32,7 +32,11 @@ export class CreateAssetTrackingDto {
 
   @IsOptional()
   @IsString()
-  laptopPinPassword?: string;
+  laptopPin?: string;
+
+  @IsOptional()
+  @IsString()
+  laptopPassword?: string;
 
   @IsOptional()
   @IsNumber()
@@ -99,7 +103,11 @@ export class UpdateAssetTrackingDto {
 
   @IsOptional()
   @IsString()
-  laptopPinPassword?: string;
+  laptopPin?: string;
+
+  @IsOptional()
+  @IsString()
+  laptopPassword?: string;
 
   @IsOptional()
   @IsNumber()

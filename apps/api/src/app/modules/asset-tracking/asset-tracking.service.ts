@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '../../config/prima.config';
 import { AssetStatus, Role } from '@prisma/client';
 import { CreateAssetTrackingDto, UpdateAssetTrackingDto } from './dto/asset-tracking.dto';
@@ -17,8 +13,9 @@ export class AssetTrackingService {
   }
 
   async findByResourceId(resourceId: string) {
-    return prisma.assetTracking.findFirst({
-      where: { addedByResourceId: resourceId },
+    return prisma.assetTracking.findMany({
+      where: { allocatedTo: resourceId },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -39,14 +36,6 @@ export class AssetTrackingService {
   }
 
   async createByResource(dto: CreateAssetTrackingDto, resourceId: string, resourceName: string) {
-    const existing = await prisma.assetTracking.findFirst({
-      where: { addedByResourceId: resourceId },
-    });
-
-    if (existing) {
-      throw new BadRequestException('You have already submitted an asset.');
-    }
-
     return prisma.assetTracking.create({
       data: {
         ...dto,
