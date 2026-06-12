@@ -21,13 +21,17 @@ export class CreateResourceAllocationDto {
   desc?: string;
 
   @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
   @IsNumber()
   estimatedHours?: number;
 
   @IsOptional()
   @IsNumber()
   actualHours?: number;
-  
+
   @IsDateString()
   date!: string;
 }
@@ -36,11 +40,11 @@ export class UpdateResourceAllocationsDto {
   @IsOptional()
   @IsString()
   projectId?: string;
-  
+
   @IsOptional()
   @IsString()
   milestoneId?: string;
-  
+
   @IsOptional()
   @IsString()
   taskId?: string;
@@ -48,6 +52,10 @@ export class UpdateResourceAllocationsDto {
   @IsOptional()
   @IsString()
   desc?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()

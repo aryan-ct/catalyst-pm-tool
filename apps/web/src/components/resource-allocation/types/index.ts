@@ -3,7 +3,8 @@ export type ProjectTask = {
   taskId?: string; // Real Task ID if applicable
   taskTitle?: string;
   taskDescription?: string; // Description from the project task definition
-  description?: string; // For dummy tasks
+  description?: string; // For dummy tasks (the title/name)
+  customDescription?: string; // Rich-text description stored on the allocation (freetext tasks)
   estimatedHours?: number;
   actualHours?: number;
 };

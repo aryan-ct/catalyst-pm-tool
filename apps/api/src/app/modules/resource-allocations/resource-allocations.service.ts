@@ -63,6 +63,7 @@ export class ResourceAllocationsService {
           ...(dto.milestoneId && { milestoneId: dto.milestoneId }),
           ...(dto.taskId && { taskId: dto.taskId }),
           desc: dto.desc,
+          description: dto.description,
           estimatedHours: dto.estimatedHours,
           actualHours: dto.actualHours,
           date: new Date(dto.date),

@@ -5,6 +5,7 @@ model DailyTaskAllocation {
   milestoneId     String?
   taskId          String?
   desc            String?
+  description     String?
   estimatedHours  Float?
   actualHours     Float?
   date            DateTime

@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import CreateCustomTaskDialog from './CreateCustomTaskDialog';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import {
@@ -247,12 +248,16 @@ const AllocationSheets = ({
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [selectedTaskData, setSelectedTaskData] = useState<Milestone | null>(
-    null,
-  );
-  const [selectedProjectMilestones, setSelectedProjectMilestones] = useState<
-    any[]
-  >([]);
+  const [selectedTaskData, setSelectedTaskData] = useState<Milestone | null>(null);
+  const [selectedProjectMilestones, setSelectedProjectMilestones] = useState<any[]>([]);
+
+  const [customTaskView, setCustomTaskView] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    projectId: string;
+    estimatedHours: number | string;
+  }>({ open: false, title: '', description: '', projectId: '', estimatedHours: '' });
 
   const openTaskModal = (projectId: string, taskId: string) => {
     // Find the project from context
@@ -430,17 +435,25 @@ const AllocationSheets = ({
                               </div>
                             </div>
 
-                            {task.taskId && (
-                              <Button
-                                variant="default"
-                                className="w-full text-xs font-bold uppercase tracking-wider h-9 rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
-                                onClick={() =>
-                                  openTaskModal(proj.id, task.taskId)
+                            <Button
+                              variant="default"
+                              className="w-full text-xs font-bold uppercase tracking-wider h-9 rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
+                              onClick={() => {
+                                if (task.taskId) {
+                                  openTaskModal(proj.id, task.taskId);
+                                } else {
+                                  setCustomTaskView({
+                                    open: true,
+                                    title: task.description || 'Custom Task',
+                                    description: task.customDescription || '',
+                                    projectId: proj.id.startsWith('note-') ? '' : proj.id,
+                                    estimatedHours: task.estimatedHours ?? '',
+                                  });
                                 }
-                              >
-                                View Task Details
-                              </Button>
-                            )}
+                              }}
+                            >
+                              View Task Details
+                            </Button>
                           </div>
                         </div>
                       ));
@@ -634,6 +647,18 @@ const AllocationSheets = ({
           onSave={() => {}}
           projectMilestones={selectedProjectMilestones}
           defaultMilestoneId=""
+        />
+
+        <CreateCustomTaskDialog
+          open={customTaskView.open}
+          setOpen={(v) => setCustomTaskView((s) => ({ ...s, open: v }))}
+          projects={projects}
+          defaultTitle={customTaskView.title}
+          defaultDescription={customTaskView.description}
+          defaultProjectId={customTaskView.projectId}
+          defaultEstimatedHours={customTaskView.estimatedHours}
+          readOnly
+          onCreated={() => {}}
         />
       </div>
     );

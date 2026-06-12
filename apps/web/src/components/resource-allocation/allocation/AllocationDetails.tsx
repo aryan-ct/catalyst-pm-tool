@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useResourceAllocation } from '../ResourceAllocationContext';
@@ -21,11 +21,14 @@ import {
   ListTodo,
   Trash2,
   UserRound,
-  CheckCircle2,
   FolderDot,
   Clock,
+  Sparkles,
 } from 'lucide-react';
 import { TaskCombobox } from './TaskCombobox';
+import CreateCustomTaskDialog, {
+  type CreatedCustomTask,
+} from './CreateCustomTaskDialog';
 
 type RowState = {
   id: string;
@@ -33,6 +36,7 @@ type RowState = {
   milestoneId?: string;
   taskId: string;
   desc: string;
+  customDescription?: string;
   estimatedHours: number | string;
   actualHours: number | string;
 };
@@ -74,6 +78,7 @@ const AllocationDetails = ({
                 milestoneId: (task as any).milestoneId || '',
                 taskId: task.taskId || '',
                 desc: task.taskId ? '' : task.description || '',
+                customDescription: task.customDescription,
                 estimatedHours: task.estimatedHours ?? '',
                 actualHours: task.actualHours ?? '',
               });
@@ -95,12 +100,18 @@ const AllocationDetails = ({
               const rows: RowState[] = [];
               alloc.projects.forEach((proj) => {
                 proj.tasks?.forEach((task) => {
-                  const projectId = proj.id.startsWith('note-') ? 'none' : proj.id;
+                  const projectId = proj.id.startsWith('note-')
+                    ? 'none'
+                    : proj.id;
                   let milestoneId = '';
                   if (task.taskId && projectId) {
-                    const project = projects.find((p: any) => p.id === projectId);
+                    const project = projects.find(
+                      (p: any) => p.id === projectId,
+                    );
                     (project?.milestones || []).forEach((m: any) => {
-                      if ((m.tasks || []).some((t: any) => t.id === task.taskId)) {
+                      if (
+                        (m.tasks || []).some((t: any) => t.id === task.taskId)
+                      ) {
                         milestoneId = m.id;
                       }
                     });
@@ -143,6 +154,7 @@ const AllocationDetails = ({
               milestoneId: (task as any).milestoneId || '',
               taskId: task.taskId || '',
               desc: task.taskId ? '' : task.description || '',
+              customDescription: task.customDescription,
               estimatedHours: task.estimatedHours ?? '',
               actualHours: task.actualHours ?? '',
             });
@@ -156,6 +168,89 @@ const AllocationDetails = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [customTaskDialog, setCustomTaskDialog] = useState<{
+    open: boolean;
+    resourceId: string;
+    projectId: string;
+    milestoneId: string;
+    initialTitle: string;
+    /** Index of the row that triggered this dialog; -1 = add a new row */
+    rowIndex: number;
+  }>({
+    open: false,
+    resourceId: '',
+    projectId: '',
+    milestoneId: '',
+    initialTitle: '',
+    rowIndex: -1,
+  });
+
+  const handleCustomTaskCreated = async (task: CreatedCustomTask) => {
+    const { resourceId, rowIndex } = customTaskDialog;
+
+    const applyToRow = (rows: RowState[], idx: number): RowState[] => {
+      const updated = [...rows];
+      if (task.id && task.milestoneId && task.projectId) {
+        // Real DB task
+        updated[idx] = {
+          ...updated[idx],
+          projectId: task.projectId,
+          milestoneId: task.milestoneId,
+          taskId: task.id,
+          desc: '',
+          estimatedHours: task.estimatedHours ?? '',
+        };
+      } else {
+        // Freetext / misc
+        updated[idx] = {
+          ...updated[idx],
+          projectId: task.projectId || 'none',
+          milestoneId: '',
+          taskId: '',
+          desc: task.title,
+          customDescription: task.description,
+          estimatedHours: task.estimatedHours ?? '',
+        };
+      }
+      return updated;
+    };
+
+    if (task.id && task.milestoneId) {
+      // Refresh context so the new task appears in all comboboxes
+      await refreshData();
+    }
+
+    setResourceRows((prev) => {
+      const rows = prev[resourceId] || [];
+      if (rowIndex >= 0 && rows[rowIndex]) {
+        return { ...prev, [resourceId]: applyToRow(rows, rowIndex) };
+      }
+      // Add new row
+      const newRow: RowState =
+        task.id && task.milestoneId && task.projectId
+          ? {
+              id: Math.random().toString(),
+              projectId: task.projectId,
+              milestoneId: task.milestoneId,
+              taskId: task.id,
+              desc: '',
+              estimatedHours: task.estimatedHours ?? '',
+              actualHours: '',
+            }
+          : {
+              id: Math.random().toString(),
+              projectId: task.projectId || 'none',
+              milestoneId: '',
+              taskId: '',
+              desc: task.title,
+              customDescription: task.description,
+              estimatedHours: task.estimatedHours ?? '',
+              actualHours: '',
+            };
+      return { ...prev, [resourceId]: [...rows, newRow] };
+    });
+  };
+
   const handleSubmit = async () => {
     const payload: any[] = [];
     let validationError = '';
@@ -168,17 +263,23 @@ const AllocationDetails = ({
         if (
           row.desc &&
           !row.taskId &&
-          (row.estimatedHours === '' || row.estimatedHours === undefined || row.estimatedHours === null || Number(row.estimatedHours) < 0)
+          (row.estimatedHours === '' ||
+            row.estimatedHours === undefined ||
+            row.estimatedHours === null ||
+            Number(row.estimatedHours) < 0)
         ) {
-          validationError = 'Please provide a valid ETA (>= 0) for all custom tasks.';
+          validationError =
+            'Please provide a valid ETA (>= 0) for all custom tasks.';
         }
 
         payload.push({
           resourceId: resId,
-          projectId: row.projectId === 'none' ? undefined : (row.projectId || undefined),
+          projectId:
+            row.projectId === 'none' ? undefined : row.projectId || undefined,
           milestoneId: row.milestoneId || undefined,
           taskId: row.taskId || undefined,
           desc: row.taskId ? undefined : row.desc || 'Custom Task',
+          description: row.taskId ? undefined : (row.customDescription || undefined),
           estimatedHours:
             row.estimatedHours === '' ? undefined : Number(row.estimatedHours),
           actualHours:
@@ -362,8 +463,14 @@ const AllocationDetails = ({
                   updateRow(resourceId, index, 'taskId', val);
                 }}
                 onCreateCustomTask={(desc) => {
-                  updateRow(resourceId, index, 'taskId', '');
-                  updateRow(resourceId, index, 'desc', desc);
+                  setCustomTaskDialog({
+                    open: true,
+                    resourceId,
+                    projectId: row.projectId !== 'none' ? (row.projectId || '') : '',
+                    milestoneId: row.milestoneId || '',
+                    initialTitle: desc,
+                    rowIndex: index,
+                  });
                 }}
               />
             </div>
@@ -375,9 +482,19 @@ const AllocationDetails = ({
                 <input
                   type="number"
                   required
-                  value={row.estimatedHours !== undefined && row.estimatedHours !== null ? row.estimatedHours : ''}
+                  value={
+                    row.estimatedHours !== undefined &&
+                    row.estimatedHours !== null
+                      ? row.estimatedHours
+                      : ''
+                  }
                   onChange={(e) =>
-                    updateRow(resourceId, index, 'estimatedHours', e.target.value)
+                    updateRow(
+                      resourceId,
+                      index,
+                      'estimatedHours',
+                      e.target.value,
+                    )
                   }
                   className="w-10 h-6 bg-transparent outline-none text-foreground text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0"
@@ -448,11 +565,13 @@ const AllocationDetails = ({
                 <ListTodo className="h-3.5 w-3.5 text-primary/70" /> Task
               </div>
               <div className="flex items-center gap-1.5 w-[94px]">
-                <Clock className="h-3.5 w-3.5 text-amber-600/70" /> 
+                <Clock className="h-3.5 w-3.5 text-amber-600/70" />
                 <span className="text-amber-600/70">ETA</span>
               </div>
             </div>
-            <div className="col-span-1 text-right pr-2 flex items-center justify-end">Action</div>
+            <div className="col-span-1 text-right pr-2 flex items-center justify-end">
+              Action
+            </div>
           </div>
         )}
 
@@ -490,14 +609,33 @@ const AllocationDetails = ({
                       </div>
                     </div>
                     {isEditable && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 gap-2 text-xs font-semibold rounded-lg shadow-sm border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-                        onClick={() => handleAddRow(resource.id)}
-                      >
-                        <Plus className="h-4 w-4" /> Add Task
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 gap-2 text-xs font-semibold rounded-lg shadow-sm border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                          onClick={() => handleAddRow(resource.id)}
+                        >
+                          <Plus className="h-4 w-4" /> Add Task
+                        </Button>
+                        {/* <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 gap-2 text-xs font-semibold rounded-lg shadow-sm border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all"
+                          onClick={() =>
+                            setCustomTaskDialog({
+                              open: true,
+                              resourceId: resource.id,
+                              projectId: '',
+                              milestoneId: '',
+                              initialTitle: '',
+                              rowIndex: -1,
+                            })
+                          }
+                        >
+                          <Sparkles className="h-4 w-4" /> Create Custom Task
+                        </Button> */}
+                      </div>
                     )}
                   </div>
 
@@ -608,6 +746,16 @@ const AllocationDetails = ({
           )}
         </div>
       </div>
+
+      <CreateCustomTaskDialog
+        open={customTaskDialog.open}
+        setOpen={(v) => setCustomTaskDialog((s) => ({ ...s, open: v }))}
+        projects={projects}
+        defaultProjectId={customTaskDialog.projectId}
+        defaultMilestoneId={customTaskDialog.milestoneId}
+        defaultTitle={customTaskDialog.initialTitle}
+        onCreated={handleCustomTaskCreated}
+      />
     </div>
   );
 };
