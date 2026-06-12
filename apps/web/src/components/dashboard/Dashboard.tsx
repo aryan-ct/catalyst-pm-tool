@@ -15,6 +15,7 @@ import {
   X,
   KeyRound,
   Package,
+  Clock,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import catalystLogo from '@/assets/catalyst-logo.svg';
@@ -39,6 +40,7 @@ export default function Dashboard() {
             icon: LayoutGrid,
           },
           { name: 'Leads', path: '/leads', icon: Zap },
+          { name: 'Timesheet', path: '/timesheet', icon: Clock },
         ];
         break;
       case Roles.HR:
@@ -46,6 +48,7 @@ export default function Dashboard() {
         items = [
           { name: 'Resources', path: '/resources', icon: Users },
           { name: 'Asset Tracking', path: '/asset-tracking', icon: Package },
+          { name: 'Timesheet', path: '/timesheet', icon: Clock },
         ];
         break;
       case Roles.BDE:

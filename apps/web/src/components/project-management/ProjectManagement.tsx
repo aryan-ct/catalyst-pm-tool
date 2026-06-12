@@ -100,13 +100,44 @@ export default function ProjectManagement() {
   };
 
   const handleSave = (task: Milestone) => {
-    setKanbanItems((prev) => {
-      const exists = prev.find((t) => t.id === task.id);
-      if (exists) return prev.map((t) => (t.id === task.id ? task : t));
-      return [...prev, task];
-    });
+    const oldParentId = selectedTask?.parentTaskId;
+    const newParentId = task.parentTaskId;
 
-    // Keep project state in sync
+    const applySubtaskRelation = (items: Milestone[]): Milestone[] => {
+      // Update or add the task itself
+      let updated = items.find((t) => t.id === task.id)
+        ? items.map((t) => (t.id === task.id ? task : t))
+        : [...items, task];
+
+      // Remove from old parent's subtasks if parent changed
+      if (oldParentId && oldParentId !== newParentId) {
+        updated = updated.map((t) =>
+          t.id === oldParentId
+            ? { ...t, tasks: t.tasks.filter((s) => s.id !== task.id) }
+            : t,
+        );
+      }
+
+      // Add to new parent's subtasks
+      if (newParentId) {
+        updated = updated.map((t) => {
+          if (t.id !== newParentId) return t;
+          if (t.tasks.find((s) => s.id === task.id)) return t;
+          return {
+            ...t,
+            tasks: [
+              ...t.tasks,
+              { id: task.id, title: task.milestoneName, taskType: task.taskType ?? 'feature' },
+            ],
+          };
+        });
+      }
+
+      return updated;
+    };
+
+    setKanbanItems((prev) => applySubtaskRelation(prev));
+
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== selectedProjectId) return p;
@@ -114,13 +145,7 @@ export default function ProjectManagement() {
           ...p,
           milestones: p.milestones.map((m) => {
             if (m.id !== selectedMilestoneId) return m;
-            const existsInMilestone = m.tasks.find((t) => t.id === task.id);
-            return {
-              ...m,
-              tasks: existsInMilestone
-                ? m.tasks.map((t) => (t.id === task.id ? task : t))
-                : [...m.tasks, task],
-            };
+            return { ...m, tasks: applySubtaskRelation(m.tasks) };
           }),
         };
       }),
