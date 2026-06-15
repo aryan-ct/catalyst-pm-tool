@@ -1,0 +1,14 @@
+model Timesheet {
+  id          String    @id @default(uuid())
+  startDate   DateTime
+  endDate     DateTime
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  resourceId  String
+  resource    Resource  @relation(fields: [resourceId], references: [id])
+  totalHours  Float?
+  timeLogs    TimeLog[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

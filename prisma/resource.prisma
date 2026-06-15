@@ -5,10 +5,11 @@ model Resource {
   password  String
   role      Role
   isActive  Boolean
-  leads     Lead[]
-  tasks     Task[]   @relation("TaskToResource")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  leads      Lead[]
+  tasks      Task[]      @relation("TaskToResource")
+  timesheets Timesheet[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 enum Role {
