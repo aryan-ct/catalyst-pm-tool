@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, MoreVertical, Eye, Download } from 'lucide-react';
 import { TimesheetAPI } from '@/api/timesheet.api';
 import CreateTimesheetModal from './CreateTimesheetModal';
 import ViewEditTimesheetModal from './ViewEditTimesheetModal';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import * as XLSX from 'xlsx';
 
 export default function Timesheet() {
   const [timesheets, setTimesheets] = useState<any[]>([]);
@@ -21,6 +28,30 @@ export default function Timesheet() {
     } catch (error) {
       console.error('Failed to fetch timesheets', error);
     }
+  };
+
+  const handleExport = (ts: any) => {
+    const exportData = [
+      {
+        'Created On': ts.createdAt ? new Date(ts.createdAt).toLocaleDateString() : '—',
+        'Date Range': `${new Date(ts.startDate).toLocaleDateString()} – ${new Date(ts.endDate).toLocaleDateString()}`,
+        'Project': ts.project?.name || ts.projectId,
+        'Resource': ts.resource?.name || ts.resourceId,
+        'Total Hours': `${ts.totalHours ?? 0} hrs`,
+        'Time Logs': `${ts.timeLogs?.length ?? 0} entries`,
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Timesheet');
+
+    const projectName = ts.project?.name || 'Project';
+    const resourceName = ts.resource?.name || 'Resource';
+    const startDate = new Date(ts.startDate).toLocaleDateString().replace(/\//g, '-');
+    const endDate = new Date(ts.endDate).toLocaleDateString().replace(/\//g, '-');
+    
+    XLSX.writeFile(workbook, `Timesheet_${projectName}_${resourceName}_${startDate}_to_${endDate}.xlsx`);
   };
 
   React.useEffect(() => {
@@ -106,14 +137,23 @@ export default function Timesheet() {
                     <td className="px-4 py-3">{ts.totalHours ?? 0} hrs</td>
                     <td className="px-4 py-3 text-muted-foreground">{ts.timeLogs?.length ?? 0} entries</td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-primary hover:text-primary/80"
-                        onClick={() => setSelectedTimesheetId(ts.id)}
-                      >
-                        View / Edit
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem onClick={() => setSelectedTimesheetId(ts.id)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View / Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport(ts)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Export
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))
