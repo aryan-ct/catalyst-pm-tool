@@ -85,6 +85,7 @@ const mapProjectForPM = (p: any) => ({
       parentTaskTitle: t.parentTask?.title || (t.parentTaskId ? m.tasks.find((pt: any) => pt.id === t.parentTaskId)?.title : undefined),
       taskType: (t.taskType || 'FEATURE').toLowerCase(),
       assignedTo: (t.assignedTo || []).map((r: any) => ({ id: r.id, name: r.name })),
+      commentsCount: t._count?.comments ?? 0,
       tasks: (t.subTasks || []).map((st: any) => ({
         id: st.id,
         title: st.title,

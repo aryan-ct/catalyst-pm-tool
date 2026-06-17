@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, Bug, Sparkles } from 'lucide-react';
+import { Clock, Bug, Sparkles, MessageSquare } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Milestone } from '../types/types';
 import { Avatar } from '@/components/ui/avatar';
+import { TASK_COMMENT_API, TaskComment } from '@/api/task-comment.api';
+import TaskCommentsDrawer from '../comments/TaskCommentsDrawer';
 
 interface Props {
   milestone: Milestone;
@@ -48,6 +51,40 @@ export default function MilestoneCard({ milestone, onEdit }: Props) {
   };
 
   const isBug = milestone.taskType === 'bug';
+
+  const [comments, setComments] = useState<TaskComment[] | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const ensureCommentsLoaded = async () => {
+    if (comments !== null) return;
+    setCommentsLoading(true);
+    try {
+      const data = await TASK_COMMENT_API.getComments(milestone.id);
+      setComments(data);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleAddComment = async (content: string) => {
+    const created = await TASK_COMMENT_API.addComment(milestone.id, content);
+    setComments((prev) => [...(prev ?? []), created]);
+  };
+
+  const handleUpdateComment = async (commentId: string, content: string) => {
+    const updated = await TASK_COMMENT_API.updateComment(commentId, content);
+    setComments(
+      (prev) => prev?.map((c) => (c.id === commentId ? updated : c)) ?? prev,
+    );
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    await TASK_COMMENT_API.deleteComment(commentId);
+    setComments((prev) => prev?.filter((c) => c.id !== commentId) ?? prev);
+  };
+
+  const commentCount = comments?.length ?? milestone.commentsCount ?? 0;
 
   return (
     <div
@@ -97,9 +134,9 @@ export default function MilestoneCard({ milestone, onEdit }: Props) {
             </div>
           </div>
 
-          {/* Task Type Badges Footer Row */}
-          {milestone.taskType && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-border/40">
+          {/* Task Type Badges + Comments Footer Row */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-border/40">
+            {milestone.taskType && (
               <div className={`flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border shadow-2xs ${
                 isBug
                   ? 'text-red-600 bg-red-50 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30'
@@ -112,16 +149,44 @@ export default function MilestoneCard({ milestone, onEdit }: Props) {
                 )}
                 <span>{milestone.taskType}</span>
               </div>
+            )}
 
-              {isBug && milestone.bugNumber && (
-                <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground bg-muted px-2.5 py-0.5 rounded-md border border-border/50 shadow-2xs">
-                  <span>#{milestone.bugNumber}</span>
-                </div>
-              )}
-            </div>
-          )}
+            {isBug && milestone.bugNumber && (
+              <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground bg-muted px-2.5 py-0.5 rounded-md border border-border/50 shadow-2xs">
+                <span>#{milestone.bugNumber}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDrawerOpen(true);
+                ensureCommentsLoaded();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="ml-auto flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-muted/70 hover:bg-muted px-2.5 py-1 rounded-full border border-border/40 shadow-xs transition-colors"
+            >
+              <MessageSquare className="h-3 w-3 shrink-0" />
+              {commentCount > 0 && <span>{commentCount}</span>}
+            </button>
+          </div>
         </CardContent>
       </Card>
+
+      <TaskCommentsDrawer
+        taskTitle={milestone.milestoneName}
+        open={drawerOpen}
+        onOpenChange={(next) => {
+          setDrawerOpen(next);
+          if (next) ensureCommentsLoaded();
+        }}
+        comments={comments}
+        loading={commentsLoading}
+        onAdd={handleAddComment}
+        onUpdate={handleUpdateComment}
+        onDelete={handleDeleteComment}
+      />
     </div>
   );
 }

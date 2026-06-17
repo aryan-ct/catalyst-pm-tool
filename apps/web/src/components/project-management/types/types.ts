@@ -22,6 +22,7 @@ export interface Milestone {
   parentTaskTitle?: string;
   taskType?: TaskType;
   assignedTo?: { id: string; name: string }[];
+  commentsCount?: number;
   tasks: SubTask[];
 }
 

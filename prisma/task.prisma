@@ -22,6 +22,8 @@ model Task {
   parentTaskId String?
   parentTask   Task?   @relation("TaskToSubTask", fields: [parentTaskId], references: [id], onDelete: Cascade)
   subTasks     Task[]  @relation("TaskToSubTask")
+
+  comments TaskComment[]
 }
 
 enum TaskStatus {

@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 import { TaskModule } from './modules/task/task.module';
 import { AssetTrackingModule } from './modules/asset-tracking/asset-tracking.module';
 import { TimesheetModule } from './modules/timesheet/timesheet.module';
+import { TaskCommentModule } from './modules/task-comment/task-comment.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TimesheetModule } from './modules/timesheet/timesheet.module';
     TaskModule,
     AssetTrackingModule,
     TimesheetModule,
+    TaskCommentModule,
   ],
   controllers: [AppController],
   providers: [

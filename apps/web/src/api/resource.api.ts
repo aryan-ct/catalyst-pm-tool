@@ -2,6 +2,7 @@ import { Roles } from '@/lib/enum';
 import axiosInstance from './axios-instance';
 
 export type Resource = {
+  id?: string;
   name: string;
   role: Roles | null;
   email: string;

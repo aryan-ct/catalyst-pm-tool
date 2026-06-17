@@ -56,7 +56,12 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true, parentTask: true, assignedTo: true },
+              include: {
+                subTasks: true,
+                parentTask: true,
+                assignedTo: true,
+                _count: { select: { comments: true } },
+              },
             },
           },
         },
@@ -72,7 +77,12 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true, parentTask: true, assignedTo: true },
+              include: {
+                subTasks: true,
+                parentTask: true,
+                assignedTo: true,
+                _count: { select: { comments: true } },
+              },
             },
           },
         },
@@ -114,7 +124,12 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true, parentTask: true, assignedTo: true },
+              include: {
+                subTasks: true,
+                parentTask: true,
+                assignedTo: true,
+                _count: { select: { comments: true } },
+              },
             },
           },
         },
@@ -167,7 +182,12 @@ export class ProjectsService {
         milestones: {
           include: {
             tasks: {
-              include: { subTasks: true, parentTask: true, assignedTo: true },
+              include: {
+                subTasks: true,
+                parentTask: true,
+                assignedTo: true,
+                _count: { select: { comments: true } },
+              },
             },
           },
         },
