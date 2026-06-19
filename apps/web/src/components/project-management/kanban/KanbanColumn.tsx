@@ -10,6 +10,7 @@ interface Props {
   milestones: Milestone[];
   onEdit: (milestone: Milestone) => void;
   onDelete: (id: string) => void;
+  onCommentsCountChange?: (taskId: string, count: number) => void;
 }
 
 const columnConfig: Record<
@@ -50,7 +51,7 @@ const columnConfig: Record<
   },
 };
 
-export default function KanbanColumn({ id, title, milestones, onEdit, onDelete }: Props) {
+export default function KanbanColumn({ id, title, milestones, onEdit, onDelete, onCommentsCountChange }: Props) {
   const { setNodeRef } = useDroppable({
     id,
     data: { type: "column", status: id },
@@ -83,7 +84,7 @@ export default function KanbanColumn({ id, title, milestones, onEdit, onDelete }
       >
         <SortableContext items={milestones.map((m) => m.id)} strategy={verticalListSortingStrategy}>
           {milestones.map((milestone) => (
-            <MilestoneCard key={milestone.id} milestone={milestone} onEdit={onEdit} onDelete={onDelete} />
+            <MilestoneCard key={milestone.id} milestone={milestone} onEdit={onEdit} onDelete={onDelete} onCommentsCountChange={onCommentsCountChange} />
           ))}
         </SortableContext>
 

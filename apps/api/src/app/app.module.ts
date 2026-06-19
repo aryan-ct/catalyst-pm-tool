@@ -14,6 +14,7 @@ import { TaskModule } from './modules/task/task.module';
 import { AssetTrackingModule } from './modules/asset-tracking/asset-tracking.module';
 import { TimesheetModule } from './modules/timesheet/timesheet.module';
 import { TaskCommentModule } from './modules/task-comment/task-comment.module';
+import { ProjectDocumentModule } from './modules/project-document/project-document.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TaskCommentModule } from './modules/task-comment/task-comment.module';
     AssetTrackingModule,
     TimesheetModule,
     TaskCommentModule,
+    ProjectDocumentModule,
   ],
   controllers: [AppController],
   providers: [

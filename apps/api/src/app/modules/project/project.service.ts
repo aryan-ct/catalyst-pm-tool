@@ -53,6 +53,7 @@ export class ProjectsService {
         projectStatus: project_status,
       },
       include: {
+        documents: { orderBy: { createdAt: 'asc' } },
         milestones: {
           include: {
             tasks: {
@@ -74,6 +75,7 @@ export class ProjectsService {
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
+        documents: { orderBy: { createdAt: 'asc' } },
         milestones: {
           include: {
             tasks: {
@@ -121,6 +123,7 @@ export class ProjectsService {
     return prisma.project.findMany({
       where: { id: { in: projectIds } },
       include: {
+        documents: { orderBy: { createdAt: 'asc' } },
         milestones: {
           include: {
             tasks: {
@@ -179,6 +182,7 @@ export class ProjectsService {
       where: { id },
       data: { ...updateData },
       include: {
+        documents: { orderBy: { createdAt: 'asc' } },
         milestones: {
           include: {
             tasks: {

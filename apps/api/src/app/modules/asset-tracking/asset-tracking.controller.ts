@@ -9,7 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { AssetTrackingService } from './asset-tracking.service';
-import { CreateAssetTrackingDto, UpdateAssetTrackingDto } from './dto/asset-tracking.dto';
+import {
+  CreateAssetTrackingDto,
+  UpdateAssetTrackingDto,
+} from './dto/asset-tracking.dto';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import type { AssetStatus, Resource, Role } from '@prisma/client';
@@ -20,9 +23,13 @@ export class AssetTrackingController {
 
   @Get()
   @Roles(
-    UserRole.HR, UserRole.JR_HR,
-    UserRole.MANAGER, UserRole.DEV, UserRole.TESTER,
-    UserRole.DESIGNER, UserRole.BDE,
+    UserRole.HR,
+    UserRole.JR_HR,
+    UserRole.MANAGER,
+    UserRole.DEV,
+    UserRole.TESTER,
+    UserRole.DESIGNER,
+    UserRole.BDE,
   )
   async findAll(
     @CurrentUser() user: Resource,
@@ -36,8 +43,11 @@ export class AssetTrackingController {
 
   @Get('my-asset')
   @Roles(
-    UserRole.MANAGER, UserRole.DEV, UserRole.TESTER,
-    UserRole.DESIGNER, UserRole.BDE,
+    UserRole.MANAGER,
+    UserRole.DEV,
+    UserRole.TESTER,
+    UserRole.DESIGNER,
+    UserRole.BDE,
   )
   async findMyAsset(@CurrentUser() user: Resource) {
     return this.assetTrackingService.findByResourceId(user.id);
@@ -51,9 +61,13 @@ export class AssetTrackingController {
 
   @Post()
   @Roles(
-    UserRole.HR, UserRole.JR_HR,
-    UserRole.MANAGER, UserRole.DEV, UserRole.TESTER,
-    UserRole.DESIGNER, UserRole.BDE,
+    UserRole.HR,
+    UserRole.JR_HR,
+    UserRole.MANAGER,
+    UserRole.DEV,
+    UserRole.TESTER,
+    UserRole.DESIGNER,
+    UserRole.BDE,
   )
   async create(
     @Body() dto: CreateAssetTrackingDto,
@@ -67,10 +81,7 @@ export class AssetTrackingController {
 
   @Patch(':id')
   @Roles(UserRole.HR, UserRole.JR_HR)
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateAssetTrackingDto,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdateAssetTrackingDto) {
     return this.assetTrackingService.update(id, dto);
   }
 

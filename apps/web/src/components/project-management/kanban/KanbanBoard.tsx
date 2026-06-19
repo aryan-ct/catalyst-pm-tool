@@ -27,6 +27,7 @@ interface Props {
   onEdit: (milestone: Milestone) => void;
   onDelete: (id: string) => void;
   onDragEnd: (event: DragEndEvent) => void;
+  onCommentsCountChange?: (taskId: string, count: number) => void;
 }
 
 export default function KanbanBoard({
@@ -34,6 +35,7 @@ export default function KanbanBoard({
   onEdit,
   onDelete,
   onDragEnd,
+  onCommentsCountChange,
 }: Props) {
   const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(
     null,
@@ -95,6 +97,7 @@ export default function KanbanBoard({
               milestones={milestones.filter((m) => m.status === column.id)}
               onEdit={onEdit}
               onDelete={handleDeleteClick}
+              onCommentsCountChange={onCommentsCountChange}
             />
           ))}
         </div>

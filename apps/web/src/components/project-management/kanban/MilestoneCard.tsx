@@ -12,6 +12,7 @@ interface Props {
   milestone: Milestone;
   onEdit: (milestone: Milestone) => void;
   onDelete: (id: string) => void;
+  onCommentsCountChange?: (taskId: string, count: number) => void;
 }
 
 const getAvatarColor = (name: string) => {
@@ -31,7 +32,7 @@ const getAvatarColor = (name: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export default function MilestoneCard({ milestone, onEdit }: Props) {
+export default function MilestoneCard({ milestone, onEdit, onCommentsCountChange }: Props) {
   const {
     attributes,
     listeners,
@@ -69,7 +70,9 @@ export default function MilestoneCard({ milestone, onEdit }: Props) {
 
   const handleAddComment = async (content: string) => {
     const created = await TASK_COMMENT_API.addComment(milestone.id, content);
-    setComments((prev) => [...(prev ?? []), created]);
+    const next = [...(comments ?? []), created];
+    setComments(next);
+    onCommentsCountChange?.(milestone.id, next.length);
   };
 
   const handleUpdateComment = async (commentId: string, content: string) => {
@@ -81,7 +84,9 @@ export default function MilestoneCard({ milestone, onEdit }: Props) {
 
   const handleDeleteComment = async (commentId: string) => {
     await TASK_COMMENT_API.deleteComment(commentId);
-    setComments((prev) => prev?.filter((c) => c.id !== commentId) ?? prev);
+    const next = (comments ?? []).filter((c) => c.id !== commentId);
+    setComments(next);
+    onCommentsCountChange?.(milestone.id, next.length);
   };
 
   const commentCount = comments?.length ?? milestone.commentsCount ?? 0;

@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { prisma } from '../../config/prima.config';
 import { AssetStatus, Role } from '@prisma/client';
-import { CreateAssetTrackingDto, UpdateAssetTrackingDto } from './dto/asset-tracking.dto';
+import {
+  CreateAssetTrackingDto,
+  UpdateAssetTrackingDto,
+} from './dto/asset-tracking.dto';
 
 @Injectable()
 export class AssetTrackingService {
@@ -26,16 +33,46 @@ export class AssetTrackingService {
   }
 
   async createByHR(dto: CreateAssetTrackingDto) {
+    const product = await prisma.assetTracking.findUnique({
+      where: {
+        serialNumber: dto.serialNumber,
+      },
+    });
+
+    if (product) {
+      throw new ConflictException(
+        `Product with the serial number ${product.serialNumber} already exists.`,
+      );
+    }
+
     return prisma.assetTracking.create({
       data: {
         ...dto,
         assetPrice: dto.assetPrice !== undefined ? dto.assetPrice : undefined,
-        dateOfAllocation: dto.dateOfAllocation ? new Date(dto.dateOfAllocation) : undefined,
+        dateOfAllocation: dto.dateOfAllocation
+          ? new Date(dto.dateOfAllocation)
+          : undefined,
       },
     });
   }
 
-  async createByResource(dto: CreateAssetTrackingDto, resourceId: string, resourceName: string) {
+  async createByResource(
+    dto: CreateAssetTrackingDto,
+    resourceId: string,
+    resourceName: string,
+  ) {
+    const product = await prisma.assetTracking.findUnique({
+      where: {
+        serialNumber: dto.serialNumber,
+      },
+    });
+
+    if (product) {
+      throw new ConflictException(
+        `Product with the serial number ${product.serialNumber} already exists.`,
+      );
+    }
+
     return prisma.assetTracking.create({
       data: {
         ...dto,
@@ -60,7 +97,9 @@ export class AssetTrackingService {
       data: {
         ...dto,
         assetPrice: dto.assetPrice !== undefined ? dto.assetPrice : undefined,
-        dateOfAllocation: dto.dateOfAllocation ? new Date(dto.dateOfAllocation) : undefined,
+        dateOfAllocation: dto.dateOfAllocation
+          ? new Date(dto.dateOfAllocation)
+          : undefined,
       },
     });
   }
