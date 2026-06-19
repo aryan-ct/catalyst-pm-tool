@@ -123,21 +123,22 @@ export default function Projects() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">
             {p.status}
           </span>
-          {p.docLink && (
+          {p.documents?.map((doc: any) => (
             <a
-              href={p.docLink}
+              key={doc.id}
+              href={doc.link}
               className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
               target="_blank"
               rel="noreferrer"
             >
               <ExternalLink className="h-3 w-3" />
-              Docs
+              {doc.title}
             </a>
-          )}
+          ))}
         </div>
 
         <div className="grid grid-cols-2 gap-4 py-3 border-y border-border">

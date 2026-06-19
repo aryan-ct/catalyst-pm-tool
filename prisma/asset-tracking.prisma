@@ -1,0 +1,37 @@
+model AssetTracking {
+  id                   String           @id @default(uuid())
+  name                 String
+  product              String
+  productName          String
+  serialNumber         String?          @unique
+  status               AssetStatus      @default(AVAILABLE)
+  productConfiguration String?
+  laptopPin            String?
+  laptopPassword       String?
+  assetPrice           Decimal?
+  dateOfAllocation     DateTime?
+  loans                String?
+  otherAccessories     String?
+  comments             String?
+  workingCondition     WorkingCondition @default(GOOD)
+  previousUser         String?
+  allocatedTo          String?
+  allocatedToName      String?
+  addedByResourceId    String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ALLOCATED
+  IN_REPAIR
+  RETIRED
+}
+
+enum WorkingCondition {
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}

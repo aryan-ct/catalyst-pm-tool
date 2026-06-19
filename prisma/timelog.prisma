@@ -1,0 +1,11 @@
+model TimeLog {
+  id              String    @id @default(uuid())
+  timesheetId     String
+  timesheet       Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+  workingHours    Float
+  taskTitle       String
+  taskDescription String?
+  date            DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}

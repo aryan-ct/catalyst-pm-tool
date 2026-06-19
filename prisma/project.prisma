@@ -9,8 +9,9 @@ model Project {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  // Relation field (one project → many milestones)
-  milestones Milestone[]
+  milestones  Milestone[]
+  timesheets  Timesheet[]
+  documents   ProjectDocument[]
 }
 
 enum ProjectStatus {

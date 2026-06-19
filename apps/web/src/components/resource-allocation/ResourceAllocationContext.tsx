@@ -137,6 +137,7 @@ export const ResourceAllocationProvider = ({ children }: { children: React.React
         taskTitle,
         taskDescription,
         description: desc,
+        customDescription: ra.taskId ? undefined : ra.description,
         estimatedHours: ra.estimatedHours,
         actualHours: ra.actualHours,
       };

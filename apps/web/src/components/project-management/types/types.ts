@@ -13,7 +13,7 @@ export interface Milestone {
   id: string;
   milestoneName: string;
   milestoneDescription: string;
-  estimatedHours: number;
+  estimatedHours?: number;
   bugSheet?: string;
   bugNumber?: string;
   status: Status;
@@ -22,6 +22,7 @@ export interface Milestone {
   parentTaskTitle?: string;
   taskType?: TaskType;
   assignedTo?: { id: string; name: string }[];
+  commentsCount?: number;
   tasks: SubTask[];
 }
 
@@ -41,6 +42,7 @@ export interface PMProject {
   name: string;
   description: string;
   status?: string;
+  documents?: { id: string; title: string; link: string }[];
   milestones: PMBackendMilestone[];
 }
 

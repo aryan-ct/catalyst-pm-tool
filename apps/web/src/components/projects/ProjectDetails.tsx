@@ -82,20 +82,21 @@ export default function ProjectDetails({ project, onBack }: Props) {
                 <p className="text-sm font-medium text-foreground">{milestones.length}</p>
               </div>
             </div>
-            {project.docLink && (
+            {project.documents?.map((doc: any) => (
               <a
-                href={project.docLink}
+                key={doc.id}
+                href={doc.link}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 hover:bg-primary/10 transition-colors"
               >
                 <ExternalLink className="h-4 w-4 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] text-primary/70 uppercase tracking-wider font-semibold">Docs</p>
-                  <p className="text-sm font-medium text-primary">Open</p>
+                  <p className="text-[10px] text-primary/70 uppercase tracking-wider font-semibold">Doc</p>
+                  <p className="text-sm font-medium text-primary truncate max-w-[120px]">{doc.title}</p>
                 </div>
               </a>
-            )}
+            ))}
           </div>
         </CardContent>
       </Card>

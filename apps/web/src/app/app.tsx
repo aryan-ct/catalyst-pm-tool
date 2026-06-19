@@ -8,6 +8,9 @@ import Leads from '@/components/leads/Leads';
 import ProjectManagement from '@/components/project-management/ProjectManagement';
 import AllocationTabs from '@/components/resource-allocation/allocation/AllocationTabs';
 import ChangePassword from '@/components/settings/ChangePassword';
+import AssetTracking from '@/components/asset-tracking/AssetTracking';
+import MyAsset from '@/components/asset-tracking/MyAsset';
+import Timesheet from '@/components/timesheet/Timesheet';
 import { Toaster } from 'react-hot-toast';
 
 export function App() {
@@ -21,6 +24,9 @@ export function App() {
           <Route path="leads" element={<Leads />} />
           <Route path="resources" element={<Resources />} />
           <Route path="resource-allocation" element={<AllocationTabs />} />
+          <Route path="asset-tracking" element={<AssetTracking />} />
+          <Route path="my-asset" element={<MyAsset />} />
+          <Route path="timesheet" element={<Timesheet />} />
           <Route path="settings" element={<ChangePassword />} />
         </Route>
         <Route path="/login" element={<LoginForm />} />

@@ -1,5 +1,3 @@
-// src/components/projects/ProjectModal.tsx
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,9 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import CustomRTE from './RichTextEditor';
+import { Plus, Trash2 } from 'lucide-react';
 import { validateProject } from './validate';
 import { PROJECT_API } from '../../api/project.api';
+import { PROJECT_DOCUMENT_API } from '../../api/project-document.api';
+
+type DocRow = { id?: string; title: string; link: string };
 
 export default function ProjectModal({
   setProjects,
@@ -40,29 +41,38 @@ export default function ProjectModal({
     date: '',
     hours: 0,
     status: '',
-    docLink: '',
   });
 
   const [milestones, setMilestones] = useState<any[]>([]);
-  const [errors, setErrors] = useState<any>({
-    milestones: [],
-  });
+  const [docRows, setDocRows] = useState<DocRow[]>([]);
+  const [deletedDocIds, setDeletedDocIds] = useState<string[]>([]);
+  const [errors, setErrors] = useState<any>({ milestones: [] });
 
-  // ✅ Prefill on edit
   useEffect(() => {
     if (editData) {
-      setForm(editData);
+      setForm({
+        name: editData.name ?? '',
+        client: editData.client ?? '',
+        date: editData.date ?? '',
+        hours: editData.hours ?? 0,
+        status: editData.status ?? '',
+      });
       setMilestones(editData.milestones || []);
+      setDocRows(
+        (editData.documents || []).map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          link: d.link,
+        })),
+      );
+      setDeletedDocIds([]);
       setOpen(true);
     }
   }, [editData]);
 
   useEffect(() => {
     if (prefill) {
-      setForm((prev) => ({
-        ...prev,
-        ...prefill,
-      }));
+      setForm((prev) => ({ ...prev, ...prefill }));
       setOpen(true);
     }
   }, [prefill]);
@@ -73,77 +83,70 @@ export default function ProjectModal({
     }
   }, [prefill, editData]);
 
-  // ✅ Submit handler
-  //   const handleSubmit = () => {
-  //     const { isValid, errors } = validateProject({
-  //       ...form,
-  //       milestones,
-  //     });
+  const addDocRow = () =>
+    setDocRows((prev) => [...prev, { title: '', link: '' }]);
 
-  //     setErrors(errors);
+  const removeDocRow = (index: number) => {
+    const row = docRows[index];
+    if (row.id) setDeletedDocIds((prev) => [...prev, row.id!]);
+    setDocRows((prev) => prev.filter((_, i) => i !== index));
+  };
 
-  //     if (!isValid) return;
+  const updateDocRow = (
+    index: number,
+    field: 'title' | 'link',
+    value: string,
+  ) => {
+    setDocRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  };
 
-  //     // if (editIndex !== null) {
-  //     //   setProjects((prev: any[]) =>
-  //     //     prev.map((item, idx) =>
-  //     //       idx === editIndex ? { ...form, milestones } : item,
-  //     //     ),
-  //     //   );
-  //     // } else {
-  //     //   setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
-  //     // }
+  const resetState = () => {
+    setForm({ name: '', client: '', date: '', hours: 0, status: '' });
+    setMilestones([]);
+    setDocRows([]);
+    setDeletedDocIds([]);
+    setErrors({});
+  };
 
-  //      if (editIndex !== null) {
-  //       setProjects((prev: any[]) =>
-  //         prev.map((item, idx) =>
-  //           idx === editIndex ? { ...form, milestones } : item,
-  //         ),
-  //       );
-  //     }
-  //     if (onSubmitOverride) {
-  //   onSubmitOverride({ ...form, milestones });
-  // } else {
-  //   setProjects((prev:any) => [...prev, { ...form, milestones }]);
-  // }
+  const syncDocuments = async (projectId: string, isEdit: boolean) => {
+    const validRows = docRows.filter((d) => d.title.trim() && d.link.trim());
 
-  //     // Reset
-  //     setForm({
-  //       name: '',
-  //       client: '',
-  //       date: '',
-  //       hours: 0,
-  //       status: '',
-  //       docLink: '',
-  //     });
-
-  //     setMilestones([]);
-  //     setErrors({ milestones: [] });
-  //     setEditData(null);
-  //     setEditIndex(null);
-  //     setOpen(false);
-  //   };
+    if (isEdit) {
+      await Promise.all(
+        deletedDocIds.map((id) =>
+          PROJECT_DOCUMENT_API.deleteDocument(projectId, id),
+        ),
+      );
+      await Promise.all(
+        validRows.map((d) =>
+          d.id
+            ? PROJECT_DOCUMENT_API.updateDocument(projectId, d.id, d.title, d.link)
+            : PROJECT_DOCUMENT_API.addDocument(projectId, d.title, d.link),
+        ),
+      );
+    } else {
+      await Promise.all(
+        validRows.map((d) =>
+          PROJECT_DOCUMENT_API.addDocument(projectId, d.title, d.link),
+        ),
+      );
+    }
+  };
 
   const handleSubmit = async () => {
-    const { isValid, errors } = validateProject({
-      ...form,
-      milestones,
-    });
-
+    const { isValid, errors } = validateProject({ ...form, milestones });
     setErrors(errors);
     if (!isValid) return;
 
     try {
       if (onSubmitOverride) {
-        // 🔥 LEAD → PROJECT
         onSubmitOverride({ ...form, milestones });
       } else if (editIndex !== null) {
-        // 🔥 EDIT
         if (editData && editData.id) {
-          await PROJECT_API.updateProject(editData.id, {
-            ...form,
-            milestones,
-          });
+          await PROJECT_API.updateProject(editData.id, { ...form, milestones });
+          await syncDocuments(editData.id, true);
           if (fetchProjects) await fetchProjects();
         } else {
           setProjects((prev: any[]) =>
@@ -153,28 +156,15 @@ export default function ProjectModal({
           );
         }
       } else {
-        // 🔥 CREATE
-        await PROJECT_API.createProject({ ...form, milestones });
+        const created = await PROJECT_API.createProject({ ...form, milestones });
+        await syncDocuments(created.id, false);
         if (fetchProjects) await fetchProjects();
-        else {
-          setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
-        }
+        else setProjects((prev: any[]) => [...prev, { ...form, milestones }]);
       }
 
-      // Reset
-      setForm({
-        name: '',
-        client: '',
-        date: '',
-        hours: 0,
-        status: '',
-        docLink: '',
-      });
-
-      setMilestones([]);
-      setErrors({});
-      setEditData(null);
-      setEditIndex(null);
+      resetState();
+      if (setEditData) setEditData(null);
+      if (setEditIndex) setEditIndex(null);
       setOpen(false);
     } catch (error) {
       console.error('Failed to save project', error);
@@ -189,35 +179,16 @@ export default function ProjectModal({
         if (!isOpen) {
           if (setEditData) setEditData(null);
           if (setEditIndex) setEditIndex(null);
-          setForm({
-            name: '',
-            client: '',
-            date: '',
-            hours: 0,
-            status: '',
-            docLink: '',
-          });
-          setMilestones([]);
-          setErrors({});
+          resetState();
         }
       }}
     >
-      {/* Open Button */}
       {!isControlled && (
         <Button
           onClick={() => {
-            setForm({
-              name: '',
-              client: '',
-              date: '',
-              hours: 0,
-              status: '',
-              docLink: '',
-            });
-            setMilestones([]);
-            setErrors({});
-            setEditData(null);
-            setEditIndex(null);
+            resetState();
+            if (setEditData) setEditData(null);
+            if (setEditIndex) setEditIndex(null);
             setOpen(true);
           }}
         >
@@ -295,19 +266,42 @@ export default function ProjectModal({
             )}
           </div>
 
-          {/* Doc Link */}
-          <div className="space-y-1">
-            <Label>Project scope document Link (optional)</Label>
-            <Input
-              value={form.docLink}
-              onChange={(e) => {
-                setForm({ ...form, docLink: e.target.value });
-                setErrors((prev: any) => ({ ...prev, docLink: '' }));
-              }}
-            />
-            {errors.docLink && (
-              <p className="text-xs text-red-500">{errors.docLink}</p>
-            )}
+          {/* Documents */}
+          <div className="space-y-2">
+            <Label>Documents</Label>
+            {docRows.map((doc, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <Input
+                  placeholder="Title"
+                  value={doc.title}
+                  onChange={(e) => updateDocRow(i, 'title', e.target.value)}
+                  className="w-[35%] shrink-0"
+                />
+                <Input
+                  placeholder="https://..."
+                  value={doc.link}
+                  onChange={(e) => updateDocRow(i, 'link', e.target.value)}
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeDocRow(i)}
+                  className="shrink-0 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addDocRow}
+              className="gap-1.5 text-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Document
+            </Button>
           </div>
 
           {/* Status */}
@@ -323,24 +317,18 @@ export default function ProjectModal({
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
-
               <SelectContent>
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Archived">Archived</SelectItem>
               </SelectContent>
             </Select>
-
             {errors.status && (
               <p className="text-xs text-red-500">{errors.status}</p>
             )}
           </div>
 
           {/* Submit */}
-          <Button
-            onClick={handleSubmit}
-            size="lg"
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} size="lg" className="w-full">
             {editIndex !== null ? 'Update Project' : 'Add Project'}
           </Button>
         </div>

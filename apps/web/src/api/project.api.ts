@@ -27,10 +27,10 @@ const getAllProjects = async () => {
     name: p.name,
     client: p.clientName,
     hours: p.description,
-    docLink: p.documentLink,
     date: p.commencementDate.split('T')[0],
     status: p.projectStatus.charAt(0) + p.projectStatus.slice(1).toLowerCase(),
     milestones: p.milestones || [],
+    documents: (p.documents || []).map((d: any) => ({ id: d.id, title: d.title, link: d.link })),
   }));
 };
 
@@ -42,10 +42,6 @@ const updateProject = async (id: string, data: any) => {
     commencementDate: new Date(data.date).toISOString(),
     projectStatus: data.status.toUpperCase(),
   };
-
-  if (data.docLink) {
-    payload['documentLink'] = data.docLink;
-  }
 
   const result = await axiosInstance.patch(`/projects/${id}`, payload);
   return result.data;
@@ -66,6 +62,7 @@ const mapProjectForPM = (p: any) => ({
   name: p.name,
   description: p.description || '',
   status: p.projectStatus.charAt(0) + p.projectStatus.slice(1).toLowerCase(),
+  documents: (p.documents || []).map((d: any) => ({ id: d.id, title: d.title, link: d.link })),
   milestones: (p.milestones || []).map((m: any) => ({
     id: m.id,
     milestoneName: m.milestoneName,
@@ -85,6 +82,7 @@ const mapProjectForPM = (p: any) => ({
       parentTaskTitle: t.parentTask?.title || (t.parentTaskId ? m.tasks.find((pt: any) => pt.id === t.parentTaskId)?.title : undefined),
       taskType: (t.taskType || 'FEATURE').toLowerCase(),
       assignedTo: (t.assignedTo || []).map((r: any) => ({ id: r.id, name: r.name })),
+      commentsCount: t._count?.comments ?? 0,
       tasks: (t.subTasks || []).map((st: any) => ({
         id: st.id,
         title: st.title,

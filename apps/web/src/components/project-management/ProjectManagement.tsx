@@ -17,7 +17,13 @@ import {
   Layers,
   Link as LinkIcon,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 const statusToBackend: Record<Status, string> = {
   todo: 'TODO',
@@ -100,13 +106,44 @@ export default function ProjectManagement() {
   };
 
   const handleSave = (task: Milestone) => {
-    setKanbanItems((prev) => {
-      const exists = prev.find((t) => t.id === task.id);
-      if (exists) return prev.map((t) => (t.id === task.id ? task : t));
-      return [...prev, task];
-    });
+    const oldParentId = selectedTask?.parentTaskId;
+    const newParentId = task.parentTaskId;
 
-    // Keep project state in sync
+    const applySubtaskRelation = (items: Milestone[]): Milestone[] => {
+      // Update or add the task itself
+      let updated = items.find((t) => t.id === task.id)
+        ? items.map((t) => (t.id === task.id ? task : t))
+        : [...items, task];
+
+      // Remove from old parent's subtasks if parent changed
+      if (oldParentId && oldParentId !== newParentId) {
+        updated = updated.map((t) =>
+          t.id === oldParentId
+            ? { ...t, tasks: t.tasks.filter((s) => s.id !== task.id) }
+            : t,
+        );
+      }
+
+      // Add to new parent's subtasks
+      if (newParentId) {
+        updated = updated.map((t) => {
+          if (t.id !== newParentId) return t;
+          if (t.tasks.find((s) => s.id === task.id)) return t;
+          return {
+            ...t,
+            tasks: [
+              ...t.tasks,
+              { id: task.id, title: task.milestoneName, taskType: task.taskType ?? 'feature' },
+            ],
+          };
+        });
+      }
+
+      return updated;
+    };
+
+    setKanbanItems((prev) => applySubtaskRelation(prev));
+
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== selectedProjectId) return p;
@@ -114,14 +151,24 @@ export default function ProjectManagement() {
           ...p,
           milestones: p.milestones.map((m) => {
             if (m.id !== selectedMilestoneId) return m;
-            const existsInMilestone = m.tasks.find((t) => t.id === task.id);
-            return {
-              ...m,
-              tasks: existsInMilestone
-                ? m.tasks.map((t) => (t.id === task.id ? task : t))
-                : [...m.tasks, task],
-            };
+            return { ...m, tasks: applySubtaskRelation(m.tasks) };
           }),
+        };
+      }),
+    );
+  };
+
+  const handleCommentsCountChange = (taskId: string, count: number) => {
+    const patch = (tasks: Milestone[]) =>
+      tasks.map((t) => t.id === taskId ? { ...t, commentsCount: count } : t);
+
+    setKanbanItems(patch);
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== selectedProjectId) return p;
+        return {
+          ...p,
+          milestones: p.milestones.map((m) => ({ ...m, tasks: patch(m.tasks) })),
         };
       }),
     );
@@ -276,6 +323,35 @@ export default function ProjectManagement() {
         </div>
 
         <div className="flex gap-2">
+          {selectedProject?.documents && selectedProject.documents.length > 0 && (
+            <Popover>
+              <PopoverTrigger
+                className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <FileText className="h-4 w-4" />
+                Docs
+                <span className="ml-0.5 text-xs font-bold text-muted-foreground">
+                  ({selectedProject.documents.length})
+                </span>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-64 p-2">
+                <div className="flex flex-col gap-0.5">
+                  {selectedProject.documents.map((doc) => (
+                    <a
+                      key={doc.id}
+                      href={doc.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-2.5 py-2 rounded-md text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{doc.title}</span>
+                    </a>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
           {selectedMilestone?.bugSheet && (
             <Button
               variant="outline"
@@ -324,6 +400,7 @@ export default function ProjectManagement() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDragEnd={handleDragEnd}
+            onCommentsCountChange={handleCommentsCountChange}
           />
         )}
       </div>
