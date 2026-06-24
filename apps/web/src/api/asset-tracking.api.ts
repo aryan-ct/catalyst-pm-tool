@@ -60,6 +60,11 @@ const remove = async (id: string): Promise<void> => {
   await axiosInstance.delete(`/asset-tracking/${id}`);
 };
 
+const getHistory = async (id: string): Promise<any[]> => {
+  const response = await axiosInstance.get(`/asset-tracking/${id}/history`);
+  return response.data;
+};
+
 export const ASSET_API = {
   getAll,
   getMyAsset,
@@ -67,4 +72,5 @@ export const ASSET_API = {
   create,
   update,
   remove,
+  getHistory,
 };

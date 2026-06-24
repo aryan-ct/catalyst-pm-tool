@@ -3,7 +3,8 @@ import { ASSET_API, Asset, AssetStatus } from '@/api/asset-tracking.api';
 import AssetModal from './AssetModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Pencil, Search, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Search, Trash2, History } from 'lucide-react';
+import AssetHistoryModal from './AssetHistoryModal';
 
 type MainTab = AssetStatus | 'ALL';
 
@@ -36,6 +37,8 @@ export default function AssetTracking() {
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [revealedPins, setRevealedPins] = useState<Record<string, boolean>>({});
   const [deletingId, setDeletingId]     = useState<string | null>(null);
+  const [historyAssetId, setHistoryAssetId] = useState<string | null>(null);
+  const [historyAssetName, setHistoryAssetName] = useState<string>('');
 
   const fetchAssets = async () => {
     try { setAssets(await ASSET_API.getAll()); } catch { /* ignore */ }
@@ -160,6 +163,11 @@ export default function AssetTracking() {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                      onClick={() => { setHistoryAssetId(asset.id); setHistoryAssetName(asset.name); }}>
+                      <History className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
                       onClick={() => setEditAsset(asset)}>
                       <Pencil className="h-3.5 w-3.5" />
@@ -179,6 +187,14 @@ export default function AssetTracking() {
 
       {editAsset && (
         <AssetModal editData={editAsset} onClose={() => setEditAsset(null)} onRefresh={fetchAssets} />
+      )}
+
+      {historyAssetId && (
+        <AssetHistoryModal 
+          assetId={historyAssetId} 
+          assetName={historyAssetName} 
+          onClose={() => setHistoryAssetId(null)} 
+        />
       )}
     </div>
   );

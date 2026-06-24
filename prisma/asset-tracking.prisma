@@ -20,6 +20,18 @@ model AssetTracking {
   addedByResourceId    String?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
+  allocationHistory    AssetAllocationHistory[]
+}
+
+model AssetAllocationHistory {
+  id               String           @id @default(uuid())
+  assetId          String
+  asset            AssetTracking    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  allocatedTo      String
+  allocatedToName  String
+  allocatedAt      DateTime         @default(now())
+  returnedAt       DateTime?
+  comments         String?
 }
 
 enum AssetStatus {

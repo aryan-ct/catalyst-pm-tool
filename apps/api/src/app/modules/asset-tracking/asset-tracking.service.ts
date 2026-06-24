@@ -45,7 +45,7 @@ export class AssetTrackingService {
       );
     }
 
-    return prisma.assetTracking.create({
+    const newAsset = await prisma.assetTracking.create({
       data: {
         ...dto,
         assetPrice: dto.assetPrice !== undefined ? dto.assetPrice : undefined,
@@ -54,6 +54,19 @@ export class AssetTrackingService {
           : undefined,
       },
     });
+
+    if (dto.allocatedTo) {
+      await prisma.assetAllocationHistory.create({
+        data: {
+          assetId: newAsset.id,
+          allocatedTo: dto.allocatedTo,
+          allocatedToName: dto.allocatedToName || 'Unknown',
+          allocatedAt: dto.dateOfAllocation ? new Date(dto.dateOfAllocation) : new Date(),
+        },
+      });
+    }
+
+    return newAsset;
   }
 
   async createByResource(
@@ -73,7 +86,7 @@ export class AssetTrackingService {
       );
     }
 
-    return prisma.assetTracking.create({
+    const newAsset = await prisma.assetTracking.create({
       data: {
         ...dto,
         status: AssetStatus.ALLOCATED,
@@ -86,11 +99,46 @@ export class AssetTrackingService {
         previousUser: undefined,
       },
     });
+
+    await prisma.assetAllocationHistory.create({
+      data: {
+        assetId: newAsset.id,
+        allocatedTo: resourceId,
+        allocatedToName: resourceName,
+        allocatedAt: new Date(),
+      },
+    });
+
+    return newAsset;
   }
 
   async update(id: string, dto: UpdateAssetTrackingDto) {
     const asset = await prisma.assetTracking.findUnique({ where: { id } });
     if (!asset) throw new NotFoundException('Asset not found.');
+
+    if (dto.allocatedTo !== undefined && dto.allocatedTo !== asset.allocatedTo) {
+      // Close open allocations
+      await prisma.assetAllocationHistory.updateMany({
+        where: { assetId: id, returnedAt: null },
+        data: { returnedAt: new Date() },
+      });
+
+      // Create new allocation record
+      if (dto.allocatedTo) {
+        await prisma.assetAllocationHistory.create({
+          data: {
+            assetId: id,
+            allocatedTo: dto.allocatedTo,
+            allocatedToName: dto.allocatedToName || 'Unknown',
+            allocatedAt: dto.dateOfAllocation ? new Date(dto.dateOfAllocation) : new Date(),
+          },
+        });
+      }
+      
+      if (asset.allocatedToName) {
+        dto.previousUser = asset.allocatedToName;
+      }
+    }
 
     return prisma.assetTracking.update({
       where: { id },
@@ -114,5 +162,15 @@ export class AssetTrackingService {
 
   isHRRole(role: Role) {
     return role === Role.HR || role === Role.JR_HR;
+  }
+
+  async getHistory(id: string) {
+    const asset = await prisma.assetTracking.findUnique({ where: { id } });
+    if (!asset) throw new NotFoundException('Asset not found.');
+
+    return prisma.assetAllocationHistory.findMany({
+      where: { assetId: id },
+      orderBy: { allocatedAt: 'desc' },
+    });
   }
 }

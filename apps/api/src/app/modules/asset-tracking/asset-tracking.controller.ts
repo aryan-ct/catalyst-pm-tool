@@ -53,6 +53,12 @@ export class AssetTrackingController {
     return this.assetTrackingService.findByResourceId(user.id);
   }
 
+  @Get(':id/history')
+  @Roles(UserRole.HR, UserRole.JR_HR)
+  async getHistory(@Param('id') id: string) {
+    return this.assetTrackingService.getHistory(id);
+  }
+
   @Get(':id')
   @Roles(UserRole.HR, UserRole.JR_HR)
   async findById(@Param('id') id: string) {
