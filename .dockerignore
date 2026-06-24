@@ -1,0 +1,13 @@
+node_modules
+apps/web/node_modules
+apps/api/dist
+apps/web/dist
+.git
+.nx/cache
+.nx/workspace-data
+*.log
+.env
+.env.*
+dist
+scratch
+coverage

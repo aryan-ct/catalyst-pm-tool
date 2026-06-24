@@ -3,7 +3,22 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "concurrently \"nx serve api\" \"wait-on tcp:3000 && nx serve web\""
+    "start": "concurrently \"nx serve api\" \"wait-on tcp:3000 && nx serve web\"",
+
+    "docker:build": "docker build -t catalyst-api .",
+    "docker:up": "docker compose up",
+    "docker:up:build": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:down:volumes": "docker compose down -v",
+    "docker:logs": "docker compose logs -f api",
+    "docker:shell": "docker compose exec api sh",
+
+    "ecr:login": "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com",
+    "ecr:push": "docker tag catalyst-api:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalyst-api:latest && docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalyst-api:latest",
+
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "private": true,
   "devDependencies": {
