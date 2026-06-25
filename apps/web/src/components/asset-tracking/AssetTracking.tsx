@@ -3,8 +3,9 @@ import { ASSET_API, Asset, AssetStatus } from '@/api/asset-tracking.api';
 import AssetModal from './AssetModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Pencil, Search, Trash2, History } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Search, Trash2, History, Wrench } from 'lucide-react';
 import AssetHistoryModal from './AssetHistoryModal';
+import AssetRepairModal from './AssetRepairModal';
 
 type MainTab = AssetStatus | 'ALL';
 
@@ -39,6 +40,8 @@ export default function AssetTracking() {
   const [deletingId, setDeletingId]     = useState<string | null>(null);
   const [historyAssetId, setHistoryAssetId] = useState<string | null>(null);
   const [historyAssetName, setHistoryAssetName] = useState<string>('');
+  const [repairAssetId, setRepairAssetId] = useState<string | null>(null);
+  const [repairAssetName, setRepairAssetName] = useState<string>('');
 
   const fetchAssets = async () => {
     try { setAssets(await ASSET_API.getAll()); } catch { /* ignore */ }
@@ -163,6 +166,11 @@ export default function AssetTracking() {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-amber-600 hover:bg-amber-50"
+                      onClick={() => { setRepairAssetId(asset.id); setRepairAssetName(asset.name); }}>
+                      <Wrench className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
                       onClick={() => { setHistoryAssetId(asset.id); setHistoryAssetName(asset.name); }}>
                       <History className="h-3.5 w-3.5" />
@@ -194,6 +202,15 @@ export default function AssetTracking() {
           assetId={historyAssetId} 
           assetName={historyAssetName} 
           onClose={() => setHistoryAssetId(null)} 
+        />
+      )}
+
+      {repairAssetId && (
+        <AssetRepairModal 
+          assetId={repairAssetId} 
+          assetName={repairAssetName} 
+          onClose={() => setRepairAssetId(null)} 
+          onRefresh={fetchAssets}
         />
       )}
     </div>

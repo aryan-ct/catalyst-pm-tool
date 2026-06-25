@@ -2,6 +2,7 @@ import axiosInstance from './axios-instance';
 
 export type AssetStatus = 'AVAILABLE' | 'ALLOCATED' | 'IN_REPAIR' | 'RETIRED';
 export type WorkingCondition = 'GOOD' | 'FAIR' | 'POOR' | 'DAMAGED';
+export type RepairStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export type Asset = {
   id: string;
@@ -29,6 +30,34 @@ export type Asset = {
 
 export type CreateAssetPayload = Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdateAssetPayload = Partial<CreateAssetPayload>;
+
+export type AssetRepair = {
+  id: string;
+  assetId: string;
+  issueDescription: string;
+  reportedAt: string;
+  sentForRepairAt?: string | null;
+  expectedReturnAt?: string | null;
+  repairedAt?: string | null;
+  repairCost?: number | null;
+  vendorName?: string | null;
+  status: RepairStatus;
+  comments?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateRepairPayload = {
+  issueDescription: string;
+  sentForRepairAt?: string;
+  expectedReturnAt?: string;
+  repairCost?: number;
+  vendorName?: string;
+  status?: RepairStatus;
+  comments?: string;
+};
+
+export type UpdateRepairPayload = Partial<CreateRepairPayload> & { repairedAt?: string };
 
 const getAll = async (status?: AssetStatus): Promise<Asset[]> => {
   const params = status ? { status } : {};
@@ -65,6 +94,21 @@ const getHistory = async (id: string): Promise<any[]> => {
   return response.data;
 };
 
+const getRepairs = async (id: string): Promise<AssetRepair[]> => {
+  const response = await axiosInstance.get(`/asset-tracking/${id}/repairs`);
+  return response.data;
+};
+
+const createRepair = async (id: string, data: CreateRepairPayload): Promise<AssetRepair> => {
+  const response = await axiosInstance.post(`/asset-tracking/${id}/repairs`, data);
+  return response.data;
+};
+
+const updateRepair = async (repairId: string, data: UpdateRepairPayload): Promise<AssetRepair> => {
+  const response = await axiosInstance.patch(`/asset-tracking/repairs/${repairId}`, data);
+  return response.data;
+};
+
 export const ASSET_API = {
   getAll,
   getMyAsset,
@@ -73,4 +117,7 @@ export const ASSET_API = {
   update,
   remove,
   getHistory,
+  getRepairs,
+  createRepair,
+  updateRepair,
 };

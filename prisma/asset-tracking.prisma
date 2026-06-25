@@ -21,6 +21,7 @@ model AssetTracking {
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   allocationHistory    AssetAllocationHistory[]
+  repairHistory        AssetRepairHistory[]
 }
 
 model AssetAllocationHistory {
@@ -46,4 +47,28 @@ enum WorkingCondition {
   FAIR
   POOR
   DAMAGED
+}
+
+model AssetRepairHistory {
+  id               String           @id @default(uuid())
+  assetId          String
+  asset            AssetTracking    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  issueDescription String
+  reportedAt       DateTime         @default(now())
+  sentForRepairAt  DateTime?
+  expectedReturnAt DateTime?
+  repairedAt       DateTime?
+  repairCost       Decimal?
+  vendorName       String?
+  status           RepairStatus     @default(PENDING)
+  comments         String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum RepairStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

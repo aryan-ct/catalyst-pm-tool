@@ -8,6 +8,8 @@ import { AssetStatus, Role } from '@prisma/client';
 import {
   CreateAssetTrackingDto,
   UpdateAssetTrackingDto,
+  CreateRepairDto,
+  UpdateRepairDto,
 } from './dto/asset-tracking.dto';
 
 @Injectable()
@@ -172,5 +174,71 @@ export class AssetTrackingService {
       where: { assetId: id },
       orderBy: { allocatedAt: 'desc' },
     });
+  }
+
+  async getRepairs(assetId: string) {
+    const asset = await prisma.assetTracking.findUnique({ where: { id: assetId } });
+    if (!asset) throw new NotFoundException('Asset not found.');
+
+    return prisma.assetRepairHistory.findMany({
+      where: { assetId },
+      orderBy: { reportedAt: 'desc' },
+    });
+  }
+
+  async createRepair(assetId: string, dto: CreateRepairDto) {
+    const asset = await prisma.assetTracking.findUnique({ where: { id: assetId } });
+    if (!asset) throw new NotFoundException('Asset not found.');
+
+    const repair = await prisma.assetRepairHistory.create({
+      data: {
+        assetId,
+        issueDescription: dto.issueDescription,
+        sentForRepairAt: dto.sentForRepairAt ? new Date(dto.sentForRepairAt) : undefined,
+        expectedReturnAt: dto.expectedReturnAt ? new Date(dto.expectedReturnAt) : undefined,
+        repairCost: dto.repairCost,
+        vendorName: dto.vendorName,
+        status: dto.status,
+        comments: dto.comments,
+      },
+    });
+
+    if (dto.status === 'IN_PROGRESS') {
+      await prisma.assetTracking.update({
+        where: { id: assetId },
+        data: { status: 'IN_REPAIR' },
+      });
+    }
+
+    return repair;
+  }
+
+  async updateRepair(repairId: string, dto: UpdateRepairDto) {
+    const repair = await prisma.assetRepairHistory.findUnique({ where: { id: repairId } });
+    if (!repair) throw new NotFoundException('Repair record not found.');
+
+    const updatedRepair = await prisma.assetRepairHistory.update({
+      where: { id: repairId },
+      data: {
+        ...dto,
+        sentForRepairAt: dto.sentForRepairAt ? new Date(dto.sentForRepairAt) : undefined,
+        expectedReturnAt: dto.expectedReturnAt ? new Date(dto.expectedReturnAt) : undefined,
+        repairedAt: dto.repairedAt ? new Date(dto.repairedAt) : undefined,
+      },
+    });
+
+    if (dto.status === 'COMPLETED') {
+      await prisma.assetTracking.update({
+        where: { id: updatedRepair.assetId },
+        data: { status: 'AVAILABLE' },
+      });
+    } else if (dto.status === 'IN_PROGRESS') {
+      await prisma.assetTracking.update({
+        where: { id: updatedRepair.assetId },
+        data: { status: 'IN_REPAIR' },
+      });
+    }
+
+    return updatedRepair;
   }
 }
