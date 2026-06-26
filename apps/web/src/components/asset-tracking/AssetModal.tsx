@@ -198,7 +198,7 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
       ...f,
       allocatedTo: resourceId,
       allocatedToName: resource?.name ?? '',
-      status: resourceId ? 'ALLOCATED' : f.status,
+      status: resourceId ? 'ALLOCATED' : (f.status === 'ALLOCATED' ? 'AVAILABLE' : f.status),
     }));
   };
 
@@ -212,18 +212,18 @@ export default function AssetModal({ editData, onClose, onRefresh }: Props) {
       productName: form.productName,
       status: form.status,
       workingCondition: form.workingCondition,
-      ...(form.serialNumber && { serialNumber: form.serialNumber }),
-      ...(form.productConfiguration && { productConfiguration: form.productConfiguration }),
-      ...(form.laptopPin && { laptopPin: form.laptopPin }),
-      ...(form.laptopPassword && { laptopPassword: form.laptopPassword }),
-      ...(form.assetPrice && { assetPrice: Number(form.assetPrice) }),
-      ...(form.dateOfAllocation && { dateOfAllocation: form.dateOfAllocation }),
-      ...(form.loans && { loans: form.loans }),
-      ...(form.otherAccessories && { otherAccessories: form.otherAccessories }),
-      ...(form.comments && { comments: form.comments }),
-      ...(form.previousUser && { previousUser: form.previousUser }),
-      ...(form.allocatedTo && { allocatedTo: form.allocatedTo }),
-      ...(form.allocatedToName && { allocatedToName: form.allocatedToName }),
+      serialNumber: form.serialNumber || null,
+      productConfiguration: form.productConfiguration || null,
+      laptopPin: form.laptopPin || null,
+      laptopPassword: form.laptopPassword || null,
+      assetPrice: form.assetPrice ? Number(form.assetPrice) : null,
+      dateOfAllocation: form.dateOfAllocation || null,
+      loans: form.loans || null,
+      otherAccessories: form.otherAccessories || null,
+      comments: form.comments || null,
+      previousUser: form.previousUser || null,
+      allocatedTo: form.allocatedTo || null,
+      allocatedToName: form.allocatedToName || null,
     };
 
     try {

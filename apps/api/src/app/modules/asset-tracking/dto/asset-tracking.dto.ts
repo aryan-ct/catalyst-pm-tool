@@ -6,7 +6,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { AssetStatus, WorkingCondition } from '@prisma/client';
+import { AssetStatus, WorkingCondition, RepairStatus } from '@prisma/client';
 
 export class CreateAssetTrackingDto {
   @IsString()
@@ -145,4 +145,69 @@ export class UpdateAssetTrackingDto {
   @IsOptional()
   @IsString()
   allocatedToName?: string;
+}
+
+export class CreateRepairDto {
+  @IsString()
+  issueDescription!: string;
+
+  @IsOptional()
+  @IsDateString()
+  sentForRepairAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expectedReturnAt?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  repairCost?: number;
+
+  @IsOptional()
+  @IsString()
+  vendorName?: string;
+
+  @IsOptional()
+  @IsEnum(RepairStatus)
+  status?: RepairStatus;
+
+  @IsOptional()
+  @IsString()
+  comments?: string;
+}
+
+export class UpdateRepairDto {
+  @IsOptional()
+  @IsString()
+  issueDescription?: string;
+
+  @IsOptional()
+  @IsDateString()
+  sentForRepairAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expectedReturnAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  repairedAt?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  repairCost?: number;
+
+  @IsOptional()
+  @IsString()
+  vendorName?: string;
+
+  @IsOptional()
+  @IsEnum(RepairStatus)
+  status?: RepairStatus;
+
+  @IsOptional()
+  @IsString()
+  comments?: string;
 }

@@ -12,6 +12,8 @@ import { AssetTrackingService } from './asset-tracking.service';
 import {
   CreateAssetTrackingDto,
   UpdateAssetTrackingDto,
+  CreateRepairDto,
+  UpdateRepairDto,
 } from './dto/asset-tracking.dto';
 import { Roles, UserRole } from '../../decorators/roles.decorator';
 import { CurrentUser } from '../../decorators/current-user.decorator';
@@ -51,6 +53,30 @@ export class AssetTrackingController {
   )
   async findMyAsset(@CurrentUser() user: Resource) {
     return this.assetTrackingService.findByResourceId(user.id);
+  }
+
+  @Get(':id/history')
+  @Roles(UserRole.HR, UserRole.JR_HR)
+  async getHistory(@Param('id') id: string) {
+    return this.assetTrackingService.getHistory(id);
+  }
+
+  @Get(':id/repairs')
+  @Roles(UserRole.HR, UserRole.JR_HR)
+  async getRepairs(@Param('id') id: string) {
+    return this.assetTrackingService.getRepairs(id);
+  }
+
+  @Post(':id/repairs')
+  @Roles(UserRole.HR, UserRole.JR_HR)
+  async createRepair(@Param('id') id: string, @Body() dto: CreateRepairDto) {
+    return this.assetTrackingService.createRepair(id, dto);
+  }
+
+  @Patch('repairs/:repairId')
+  @Roles(UserRole.HR, UserRole.JR_HR)
+  async updateRepair(@Param('repairId') repairId: string, @Body() dto: UpdateRepairDto) {
+    return this.assetTrackingService.updateRepair(repairId, dto);
   }
 
   @Get(':id')
